@@ -1,0 +1,16 @@
+version: '3'
+services:
+  scan:
+    image: autumn27/scopesentry-scan:latest
+    container_name: scopesentry-scan
+    restart: always
+    environment:
+      NodeName: node-test
+      TimeZoneName: Asia/Shanghai
+      Mongodb_IP: 127.0.0.1
+      MONGODB_PORT: 27017
+      Mongodb_Username: root
+      Mongodb_Password: yourpassword
+      Redis_IP: 127.0.0.1
+      Redis_PORT: 6379
+      Redis_Password: yourpassword

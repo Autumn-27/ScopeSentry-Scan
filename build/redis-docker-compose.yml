@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:7.0.11
+    container_name: scopesentry-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass yourpassword
+    volumes:
+      - ./data/redis/data:/data
