@@ -70,6 +70,11 @@ type SpiderOutput struct {
 }
 
 func NewCrawler(site *url.URL, Cookie string, Headers []string, callBack func(msg string), respCallBack func(url string, msg string), MaxUrlNum int) *Crawler {
+	go func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
 	domain := GetDomain(site)
 	if domain == "" {
 		Logger.Error("Failed to parse domain")

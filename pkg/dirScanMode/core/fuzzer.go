@@ -56,7 +56,7 @@ func (f *Fuzzer) Start() {
 			scanners := f.GetScannersFor(path)
 			err := f.Scan(f.BasePath+path, scanners)
 			if err != nil {
-				if strings.Contains(fmt.Sprintf("%v", err), "timed out") {
+				if strings.Contains(fmt.Sprintf("%v", err), "timed out") || strings.Contains(fmt.Sprintf("%v", err), "the server closed connection") {
 					mu.Lock()
 					*flag += 1
 					if *flag >= MaxRetries {

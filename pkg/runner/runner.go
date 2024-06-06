@@ -84,19 +84,43 @@ func Process(Host string, op Option) {
 	domainList := []string{}
 	if ipIsValid {
 		if port != "" {
-			domainList = append(domainList, Host)
+			tmp := Host
+			dotIndex := strings.Index(Host, "*.")
+			if dotIndex != -1 {
+				substr := Host[dotIndex+2:]
+				tmp = substr
+			}
+			domainList = append(domainList, tmp)
 		}
-		domainList = append(domainList, hostWithoutPort)
+		tmp := hostWithoutPort
+		dotIndex := strings.Index(hostWithoutPort, "*.")
+		if dotIndex != -1 {
+			substr := hostWithoutPort[dotIndex+2:]
+			tmp = substr
+		}
+		domainList = append(domainList, tmp)
 	} else {
 		// 子域名扫描
 		domainDnsResult := subdomainMode.Verify([]string{hostWithoutPort})
 		SubDomainResults = append(SubDomainResults, domainDnsResult...)
 		if len(SubDomainResults) != 0 {
 			if port != "" {
-				domainList = append(domainList, Host)
+				tmp := Host
+				dotIndex := strings.Index(hostWithoutPort, "*.")
+				if dotIndex != -1 {
+					substr := hostWithoutPort[dotIndex+2:]
+					tmp = substr
+				}
+				domainList = append(domainList, tmp)
 			}
 		} else {
-			domainList = append(domainList, Host)
+			tmp := Host
+			dotIndex := strings.Index(Host, "*.")
+			if dotIndex != -1 {
+				substr := Host[dotIndex+2:]
+				tmp = substr
+			}
+			domainList = append(domainList, tmp)
 		}
 		if op.SubdomainScanEnabled {
 			system.SlogInfo(fmt.Sprintf("target %s subdomain enumeration begins", Host))
@@ -146,24 +170,26 @@ func Process(Host string, op Option) {
 				}
 			}
 			if !alreadyInDomainList {
-				domainList = append(domainList, result.Host)
+				tmp := result.Host
+				dotIndex := strings.Index(result.Host, "*.")
+				if dotIndex != -1 {
+					substr := result.Host[dotIndex+2:]
+					tmp = substr
+				}
+				domainList = append(domainList, tmp)
 			}
 			uniqueSubDomainResults = append(uniqueSubDomainResults, result)
 		}
 		system.SlogInfo(fmt.Sprintf("Get the number of %s unique subdomains as %v, raw subdoamins %v", Host, len(uniqueSubDomainResults), len(SubDomainResults)))
-		if len(uniqueSubDomainResults) == 0 {
-			scanResult.TaskEnds(Host, op.TaskId)
-			scanResult.ProgressEnd("scan", Host, op.TaskId)
-			system.EndTask()
-			return
-		}
-		f := scanResult.SubdoaminResult(uniqueSubDomainResults)
-		if !f {
-			system.SlogError(fmt.Sprintf("Insert subdomain error"))
-			scanResult.TaskEnds(Host, op.TaskId)
-			scanResult.ProgressEnd("scan", Host, op.TaskId)
-			system.EndTask()
-			return
+		if len(uniqueSubDomainResults) != 0 {
+			f := scanResult.SubdoaminResult(uniqueSubDomainResults)
+			if !f {
+				system.SlogError(fmt.Sprintf("Insert subdomain error"))
+				scanResult.TaskEnds(Host, op.TaskId)
+				scanResult.ProgressEnd("scan", Host, op.TaskId)
+				system.EndTask()
+				return
+			}
 		}
 		// 子域名接管
 		system.SlogInfo(fmt.Sprintf("target %s subdomainTakeover begins", Host))
