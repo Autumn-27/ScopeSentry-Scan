@@ -8,6 +8,7 @@
 package subdomainTakeoverMode
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
@@ -49,7 +50,12 @@ func sendhttp(tg string) string {
 	// 发送HTTP请求
 	resp, err := http.Get("http://" + tg)
 	if err != nil {
-		resp, err = http.Get("https://" + tg)
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+		resp, err = client.Get("https://" + tg)
 		if err != nil {
 			fmt.Println("发送HTTP和HTTPS请求失败:", err)
 			return ""

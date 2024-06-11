@@ -7,7 +7,6 @@
 package core
 
 import (
-	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"sort"
 	"strings"
@@ -56,15 +55,22 @@ func (f *Fuzzer) Start() {
 			scanners := f.GetScannersFor(path)
 			err := f.Scan(f.BasePath+path, scanners)
 			if err != nil {
-				if strings.Contains(fmt.Sprintf("%v", err), "timed out") || strings.Contains(fmt.Sprintf("%v", err), "the server closed connection") {
-					mu.Lock()
-					*flag += 1
-					if *flag >= MaxRetries {
-						mu.Unlock()
-						return
-					}
+				mu.Lock()
+				*flag += 1
+				if *flag >= MaxRetries {
 					mu.Unlock()
+					return
 				}
+				mu.Unlock()
+				//if strings.Contains(fmt.Sprintf("%v", err), "timed out") || strings.Contains(fmt.Sprintf("%v", err), "the server closed connection") {
+				//	mu.Lock()
+				//	*flag += 1
+				//	if *flag >= MaxRetries {
+				//		mu.Unlock()
+				//		return
+				//	}
+				//	mu.Unlock()
+				//}
 			}
 		}(path, &flag)
 	}

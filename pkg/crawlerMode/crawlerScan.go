@@ -68,6 +68,7 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			targetPath := filepath.Join(radModePath, "target", targetFileName)
 			resultPath := filepath.Join(radModePath, "result", targetFileName)
 			radConfigPath := filepath.Join(radModePath, "rad_config.yml")
+			system.SlogInfoLocal(fmt.Sprintf("crawler begin %v", targetFileName))
 			flag := util.WriteContentFile(targetPath, fileContent)
 			if !flag {
 				system.SlogError(fmt.Sprintf("Write target file error"))
@@ -89,16 +90,16 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			// 创建管道以捕获命令输出
 			stdoutPipe, err := cmd.StdoutPipe()
 			if err != nil {
-				system.SlogError(fmt.Sprintf("CrawlerScan 获取命令标准输出管道错误：%s", err))
+				system.SlogError(fmt.Sprintf("%v CrawlerScan 获取命令标准输出管道错误：%s", targetFileName, err))
 				return
 			}
 			stderrPipe, err := cmd.StderrPipe()
 			if err != nil {
-				system.SlogError(fmt.Sprintf("CrawlerScan 获取命令标准错误输出管道错误：%s", err))
+				system.SlogError(fmt.Sprintf("%v CrawlerScan 获取命令标准错误输出管道错误：%s", targetFileName, err))
 				return
 			}
 			if err := cmd.Start(); err != nil {
-				system.SlogError(fmt.Sprintf("CrawlerScan 启动命令错误：%s", err))
+				system.SlogError(fmt.Sprintf("%v CrawlerScan 启动命令错误：%s", targetFileName, err))
 				return
 			}
 			if system.AppConfig.System.Debug {
@@ -124,13 +125,16 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 				}()
 			}
 			if err := cmd.Wait(); err != nil {
-				system.SlogError(fmt.Sprintf("CrawlerScan 执行命令时出错：%s", err))
-				return
+				if ctx.Err() == context.DeadlineExceeded {
+					system.SlogDebugLocal(fmt.Sprintf("%v CrawlerScan 超时退出：%s", targetFileName, err))
+				} else {
+					system.SlogError(fmt.Sprintf("%v CrawlerScan 执行命令时出错：%s", targetFileName, err))
+				}
 			}
 			// Read the content of the file
 			resultContent, err := ioutil.ReadFile(resultPath)
 			if err != nil {
-				system.SlogInfo(fmt.Sprintf("CrawlerScan read result 0: %s", err))
+				system.SlogInfo(fmt.Sprintf("%v CrawlerScan read result 0: %s", targetFileName, err))
 				return
 			}
 			var requests []Request
@@ -138,7 +142,7 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			// Unmarshal the JSON data into the slice
 			err = json.Unmarshal(resultContent, &requests)
 			if err != nil {
-				system.SlogErrorLocal(fmt.Sprintf("CrawlerScan parse json err: %s", err))
+				system.SlogErrorLocal(fmt.Sprintf("%v CrawlerScan parse json err: %s", targetFileName, err))
 				return
 			}
 			defer util.DeleteFile(targetPath)
@@ -174,11 +178,11 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 				if key != "" {
 					dFlag := scanResult.CrawRedisDeduplication(key, task.Id)
 					if dFlag {
-						system.SlogDebugLocal(fmt.Sprintf("Get CrawlerScan Result Dedupli: %s %s ", req.Method, req.URL))
+						system.SlogDebugLocal(fmt.Sprintf("%v Get CrawlerScan Result Dedupli: %s %s ", targetFileName, req.Method, req.URL))
 						continue
 					}
 				}
-				system.SlogDebugLocal(fmt.Sprintf("Get CrawlerScan Result: %s %s ", req.Method, req.URL))
+				system.SlogDebugLocal(fmt.Sprintf("%v Get CrawlerScan Result: %s %s ", targetFileName, req.Method, req.URL))
 				crawlerResult := types.CrawlerResult{
 					Url:    req.URL,
 					Method: req.Method,
@@ -188,7 +192,7 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			}
 
 			scanResult.CrawlerResult(CrawlerResults)
-
+			system.SlogInfoLocal(fmt.Sprintf("crawler end %v", targetFileName))
 		}(fileContent, task)
 		time.Sleep(5 * time.Second)
 		wg.Wait()

@@ -278,6 +278,9 @@ func PageMonitoringInitResult(result []types.TmpPageMonitResult) {
 			if nHash != tmpHash {
 				diff := DiffContent(tmp.Content[len(tmp.Content)-1], r.Content)
 				tmp.Content = append(tmp.Content, r.Content)
+				if len(tmp.Content) > 2 {
+					tmp.Content = tmp.Content[len(tmp.Content)-2:]
+				}
 				tmp.Hash = append(tmp.Hash, nHash)
 				tmp.Diff = append(tmp.Diff, diff)
 				updateFields := bson.M{
@@ -358,7 +361,7 @@ func TaskEnds(target string, taskId string) {
 }
 
 func ProgressStart(typ string, target string, taskId string) {
-
+	system.SlogDebugLocal("ProgressStart begin")
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_start"
 	ProgressInfo := map[string]interface{}{
@@ -370,13 +373,10 @@ func ProgressStart(typ string, target string, taskId string) {
 	}
 	err := system.RedisClient.HMSet(context.Background(), key, ProgressInfo)
 	if err != nil {
-		myLog := system.CustomLog{
-			Status: "Error",
-			Msg:    fmt.Sprintf("ProgressStart redis error: %s", err),
-		}
-		system.PrintLog(myLog)
+		system.SlogError(fmt.Sprintf("ProgressStart redis error: %s", err))
 		return
 	}
+	system.SlogDebugLocal("ProgressStart end")
 }
 
 func ProgressEnd(typ string, target string, taskId string) {

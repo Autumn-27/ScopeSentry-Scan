@@ -92,7 +92,7 @@ func SetUp() bool {
 	CrawlerThreadUpdateFlag = make(chan bool)
 	SensRegChan = make(chan struct{}, 50)
 	CrawlerThreadNow = 0
-	VERSION = "1.1"
+	VERSION = "1.2"
 	UpdateUrl = "https://update.scope-sentry.top"
 	PocList = make(map[string]types.PocData)
 	dbFlag := InitDb()
@@ -188,12 +188,16 @@ func InitDb() bool {
 }
 
 func GetMongbClient() {
+	SlogDebugLocal("GetMongbClient begin")
 	MongoClient, _ = mongdbClient.Connect(AppConfig.Mongodb.Username, AppConfig.Mongodb.Password, AppConfig.Mongodb.IP, AppConfig.Mongodb.Port)
+	SlogDebugLocal("GetMongbClient end")
 }
 func GetRedisClient() {
+	SlogDebugLocal("GetRedisClient begin")
 	redisAddr := AppConfig.Redis.IP + ":" + AppConfig.Redis.Port
 	redisPassword := AppConfig.Redis.Password
 	RedisClient, _ = redisClient.NewRedisClient(redisAddr, redisPassword, 0)
+	SlogDebugLocal("GetRedisClient end")
 }
 
 func checkKsubdomain() bool {

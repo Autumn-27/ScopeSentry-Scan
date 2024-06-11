@@ -16,10 +16,10 @@ import (
 )
 
 func PageMRun(target string) {
-	system.SlogDebugLocal(fmt.Sprintf("Page monitoring start: %s", target))
+	system.SlogInfoLocal(fmt.Sprintf("Page monitoring start: %s", target))
 	tmp, err := util.HttpGet(target)
 	if err != nil {
-		system.SlogError(fmt.Sprintf("PageMRun HttpGet error: %s", err))
+		system.SlogDebugLocal(fmt.Sprintf("%v PageMRun HttpGet error: %s", target, err))
 	}
 	t := []types.TmpPageMonitResult{}
 	t = append(t,
@@ -28,5 +28,5 @@ func PageMRun(target string) {
 			Content: tmp.Body,
 		})
 	scanResult.PageMonitoringInitResult(t)
-	system.SlogDebugLocal(fmt.Sprintf("Page monitoring end: %s", target))
+	system.SlogInfoLocal(fmt.Sprintf("Page monitoring end: %s", target))
 }

@@ -24,11 +24,13 @@ func Connect(Username string, Password string, IP string, Port string) (*MongoDB
 	clientOptions.MinPoolSize = &MinPoolSizeValue
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
+		fmt.Printf("mongodb connect error: %v", err)
 		return nil, err
 	}
 
 	err = client.Ping(context.Background(), nil)
 	if err != nil {
+		fmt.Printf("mongodb ping error: %v", err)
 		return nil, err
 	}
 

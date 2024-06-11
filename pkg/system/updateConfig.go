@@ -37,7 +37,7 @@ func UpdateSubfinderApiConfig() bool {
 }
 
 func UpdateDomainDicConfig() bool {
-
+	SlogInfoLocal("domain dict load begin")
 	var result struct {
 		Value string `bson:"value"`
 	}
@@ -51,11 +51,12 @@ func UpdateDomainDicConfig() bool {
 		fmt.Printf("Write target file error")
 		return false
 	}
+	SlogInfoLocal("domain dict load end")
 	return true
 }
 
 func UpdateDirDicConfig() bool {
-
+	SlogInfoLocal("dir dict load begin")
 	var result struct {
 		Value string `bson:"value"`
 	}
@@ -66,10 +67,12 @@ func UpdateDirDicConfig() bool {
 	for _, dir := range strings.Split(result.Value, "\n") {
 		DirDict = append(DirDict, dir)
 	}
+	SlogInfoLocal("dir dict load end")
 	return true
 }
 
 func UpdateSystemConfig(flag bool) bool {
+	SlogInfoLocal("system config load begin")
 	// 定义一个通用的结果结构体
 	type ConfigResult struct {
 		Value string `bson:"value"`
@@ -79,6 +82,7 @@ func UpdateSystemConfig(flag bool) bool {
 	updateConfig := func(name string, target *string) bool {
 		var result ConfigResult
 		if err := MongoClient.FindOne("config", bson.M{"name": name}, bson.M{"_id": 0, "value": 1}, &result); err != nil {
+			SlogInfoLocal(fmt.Sprintf("system config load err: %v", err))
 			return false
 		}
 		*target = result.Value
@@ -112,12 +116,15 @@ func UpdateSystemConfig(flag bool) bool {
 		CrawlerThreadUpdateFlag <- true
 	}
 	if err != nil {
+		SlogInfoLocal(fmt.Sprintf("system config load err: %v", err))
 		return false
 	}
+	SlogInfoLocal("system config load end")
 	return true
 }
 
 func UpdateRadConfig() bool {
+	SlogInfoLocal("rad config load begin")
 	var result struct {
 		Value string `bson:"value"`
 	}
@@ -133,6 +140,7 @@ func UpdateRadConfig() bool {
 		fmt.Printf("Write target file error")
 		return false
 	}
+	SlogInfoLocal("dir dict load end")
 	return true
 }
 
@@ -145,6 +153,7 @@ type tmpSensitive struct {
 }
 
 func UpdateSensitive() bool {
+	SlogInfoLocal("sens rule load begin")
 	var tmpRule []tmpSensitive
 	if err := MongoClient.FindAll("SensitiveRule", bson.M{}, bson.M{"_id": 1, "regular": 1, "state": 1, "color": 1, "name": 1}, &tmpRule); err != nil {
 		SlogError(fmt.Sprintf("Get Sensitive error: %s", err))
@@ -160,10 +169,12 @@ func UpdateSensitive() bool {
 		r.Name = rule.Name
 		SensitiveRules = append(SensitiveRules, r)
 	}
+	SlogInfoLocal("sens rule load end")
 	return true
 }
 
 func UpdateNode(flag bool) {
+	SlogInfoLocal("node config load begin")
 	if !ConfigFileExists {
 		return
 	}
@@ -224,6 +235,7 @@ func UpdateNode(flag bool) {
 		CrawlerThreadUpdateFlag <- true
 	}
 	if err != nil {
+		SlogInfoLocal("node config load end")
 		return
 	}
 }
@@ -238,6 +250,7 @@ type tmpPortDict struct {
 }
 
 func UpdateProject() {
+	SlogInfoLocal("project load begin")
 	var tmpProjects []tmpProject
 	if err := MongoClient.FindAll("project", bson.M{}, bson.M{"_id": 1, "root_domains": 1}, &tmpProjects); err != nil {
 		return
@@ -251,9 +264,11 @@ func UpdateProject() {
 		proj.Target = tmpProj.RootDomains
 		Projects = append(Projects, proj)
 	}
+	SlogInfoLocal("project load end")
 }
 
 func UpdatePort() {
+	SlogInfoLocal("port load begin")
 	var tmpPort []tmpPortDict
 	if err := MongoClient.FindAll("PortDict", bson.M{}, bson.M{"_id": 1, "value": 1}, &tmpPort); err != nil {
 		return
@@ -266,6 +281,7 @@ func UpdatePort() {
 		PortDict = append(PortDict, pt)
 	}
 	err := WriteYamlConfigToFile(filepath.Join(ConfigDir, "ports.yaml"), PortDict)
+	SlogInfoLocal("port load end")
 	if err != nil {
 		return
 	}
@@ -280,7 +296,7 @@ type tmpPoc struct {
 }
 
 func UpdatePoc(flag bool) {
-
+	SlogInfoLocal("poc load begin")
 	var tmpPocR []tmpPoc
 	if err := MongoClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
 		SlogError(fmt.Sprintf("Get Poc List error: %s", err))
@@ -307,6 +323,7 @@ func UpdatePoc(flag bool) {
 			}
 		}
 	}
+	SlogInfoLocal("poc load end")
 }
 
 type tmpWebFinger struct {
@@ -316,6 +333,7 @@ type tmpWebFinger struct {
 }
 
 func UpdateWebFinger() {
+	SlogInfoLocal("WebFinger load begin")
 	var tmpWebF []tmpWebFinger
 	if err := MongoClient.FindAll("FingerprintRules", bson.M{}, bson.M{"_id": 1, "express": 1, "state": 1}, &tmpWebF); err != nil {
 		return
@@ -328,8 +346,10 @@ func UpdateWebFinger() {
 		wf.State = f.State
 		WebFingers = append(WebFingers, wf)
 	}
+	SlogInfoLocal("WebFinger load end")
 }
 func UpdateNotification() {
+	SlogInfoLocal("Notification load begin")
 	if err := MongoClient.FindAll("notification", bson.M{"state": true}, bson.M{"_id": 0, "method": 1, "url": 1, "contentType": 1, "data": 1, "state": 1}, &NotificationApi); err != nil {
 		SlogError(fmt.Sprintf("UpdateNotification error notification api: %s", err))
 		return
@@ -338,6 +358,7 @@ func UpdateNotification() {
 		SlogError(fmt.Sprintf("UpdateNotification error notification config: %s", err))
 		return
 	}
+	SlogInfoLocal("Notification load end")
 }
 
 func UpdateSetUp() {

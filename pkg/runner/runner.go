@@ -63,6 +63,7 @@ func Process(Host string, op Option) {
 	system.StartTask()
 	system.SlogInfo(fmt.Sprintf("target %s starts scanning", Host))
 	scanResult.ProgressStart("scan", Host, op.TaskId)
+	system.SlogDebugLocal("target Parse begin")
 	normalizedHttp := ""
 	if !strings.HasPrefix(Host, "http://") && !strings.HasPrefix(Host, "https://") {
 		normalizedHttp = "http://" + Host
@@ -122,6 +123,7 @@ func Process(Host string, op Option) {
 			}
 			domainList = append(domainList, tmp)
 		}
+		system.SlogDebugLocal("target Parse done")
 		if op.SubdomainScanEnabled {
 			system.SlogInfo(fmt.Sprintf("target %s subdomain enumeration begins", Host))
 			scanResult.ProgressStart("subdomain", Host, op.TaskId)

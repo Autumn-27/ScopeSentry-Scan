@@ -23,7 +23,7 @@ func (r *Request) Request(path string) (types.HttpResponse, error) {
 		for i := 0; i < MaxRetries-1; i++ {
 			response, err = util.HttpGet(r.Url + path)
 			if err != nil {
-				system.SlogErrorLocal(fmt.Sprintf("dirScan request error: %s", err))
+				system.SlogDebugLocal(fmt.Sprintf("dirScan request error: %s", err))
 				continue
 			}
 			return response, nil

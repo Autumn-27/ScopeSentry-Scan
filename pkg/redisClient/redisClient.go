@@ -34,6 +34,7 @@ func NewRedisClient(addr, password string, db int) (*RedisClient, error) {
 	// 检查连接是否正常
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
+		fmt.Printf("failed to connect to Redis: %v", err)
 		return nil, fmt.Errorf("failed to connect to Redis: %v", err)
 	}
 
