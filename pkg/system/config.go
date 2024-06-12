@@ -188,16 +188,16 @@ func InitDb() bool {
 }
 
 func GetMongbClient() {
-	SlogDebugLocal("GetMongbClient begin")
+	fmt.Println("GetMongbClient begin")
 	MongoClient, _ = mongdbClient.Connect(AppConfig.Mongodb.Username, AppConfig.Mongodb.Password, AppConfig.Mongodb.IP, AppConfig.Mongodb.Port)
-	SlogDebugLocal("GetMongbClient end")
+	fmt.Println("GetMongbClient end")
 }
 func GetRedisClient() {
-	SlogDebugLocal("GetRedisClient begin")
+	fmt.Println("GetRedisClient begin")
 	redisAddr := AppConfig.Redis.IP + ":" + AppConfig.Redis.Port
 	redisPassword := AppConfig.Redis.Password
 	RedisClient, _ = redisClient.NewRedisClient(redisAddr, redisPassword, 0)
-	SlogDebugLocal("GetRedisClient end")
+	fmt.Println("GetRedisClient end")
 }
 
 func checkKsubdomain() bool {
