@@ -1,0 +1,44 @@
+name: Daily Update ARL Tools
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Mkdir Tools
+      run: mkdir tools 
+    - name: Update Ksubdomain
+      run: |
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-linux.tar
+        tar xvf KSubdomain-v1.9.5-linux.tar
+        rm -rf KSubdomain-v1.9.5-linux.tar
+        mv ksubdomain tools/ksubdomain
+    - name: Update rad
+      run: |
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_linux_amd64.zip
+        unzip rad_linux_amd64.zip
+        rm -rf rad_linux_amd64.zip
+        mv rad_linux_amd64 tools/rad_linux_amd64
+
+    - name: Commit and Push changes
+      run: |
+        echo $(date +'%Y%m%d') > date.txt
+        git add .
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -am "$(date +'%Y%m%d')"
+        git push -v --progress
