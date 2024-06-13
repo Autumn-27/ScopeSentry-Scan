@@ -93,7 +93,7 @@ func SetUp() bool {
 	SensRegChan = make(chan struct{}, 50)
 	CrawlerThreadNow = 0
 	VERSION = "1.2"
-	UpdateUrl = "https://update.scope-sentry.top"
+	UpdateUrl = "https://raw.githubusercontent.com/Autumn-27/ScopeSentry/main/tools/"
 	PocList = make(map[string]types.PocData)
 	dbFlag := InitDb()
 	if !dbFlag {
@@ -241,7 +241,7 @@ func checkKsubdomain() bool {
 	KsubdomainPath = filepath.Join(ExtPath, "ksubdomain")
 	KsubdomainExecPath = filepath.Join(KsubdomainPath, path)
 	if _, err := os.Stat(KsubdomainExecPath); os.IsNotExist(err) {
-		resp, err := http.Get(fmt.Sprintf("%s/get/ksubdomain?system=%s&arch=%s", UpdateUrl, osType, runtime.GOARCH))
+		resp, err := http.Get(fmt.Sprintf("%s/get/ksubdomain", UpdateUrl))
 		if err != nil {
 			SlogError(fmt.Sprintf("Error: %s", err))
 			return false
@@ -344,7 +344,7 @@ func checkCrawler() bool {
 	CrawlerPath = filepath.Join(ExtPath, "rad")
 	CrawlerExecPath = filepath.Join(radPath, path)
 	if _, err := os.Stat(CrawlerExecPath); os.IsNotExist(err) {
-		resp, err := http.Get(fmt.Sprintf("%s/get/rad?system=%s&arch=%s", UpdateUrl, osType, runtime.GOARCH))
+		resp, err := http.Get(fmt.Sprintf("%s/get/rad", UpdateUrl))
 		if err != nil {
 			SlogError(fmt.Sprintf("Error: %s", err))
 			return false
