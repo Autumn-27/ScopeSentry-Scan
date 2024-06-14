@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 12 * * *'
 
 jobs:
   build:
@@ -19,21 +17,40 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    - name: Mkdir Tools
-      run: mkdir tools 
     - name: Update Ksubdomain
       run: |
         wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-linux.tar
         tar xvf KSubdomain-v1.9.5-linux.tar
         rm -rf KSubdomain-v1.9.5-linux.tar
-        mv ksubdomain tools/ksubdomain
+        mv ksubdomain tools/linux/ksubdomain
+        
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-darwin.tar
+        tar xvf KSubdomain-v1.9.5-darwin.tar
+        rm -rf KSubdomain-v1.9.5-darwin.tar
+        mv ksubdomain tools/darwin/ksubdomain
+        
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-windows.tar
+        tar xvf KSubdomain-windows.tar
+        rm -rf KSubdomain-windows.tar
+        mv ksubdomain.exe tools/win/ksubdomain.exe
+
     - name: Update rad
       run: |
         wget https://github.com/chaitin/rad/releases/download/1.0/rad_linux_amd64.zip
         unzip rad_linux_amd64.zip
         rm -rf rad_linux_amd64.zip
-        mv rad_linux_amd64 tools/rad_linux_amd64
-
+        mv rad_linux_amd64 tools/linux/rad
+        
+        
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_darwin_amd64.zip
+        unzip rad_darwin_amd64.zip
+        rm -rf rad_darwin_amd64.zip
+        mv rad_darwin_amd64 tools/darwin/rad
+        
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_windows_amd64.zip
+        unzip rad_windows_amd64.zip
+        rm -rf rad_windows_amd64.zip
+        mv rad_windows_amd64.exe tools/win/rad.exe
     - name: Commit and Push changes
       run: |
         echo $(date +'%Y%m%d') > date.txt

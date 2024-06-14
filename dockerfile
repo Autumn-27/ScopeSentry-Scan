@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     chromium \
     vim \
     tzdata \
+    libpcap-dev \
     && rm -rf /var/lib/apt/lists/*
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/linux_amd_x64/ScopeSentry /apps/ScopeSentry
