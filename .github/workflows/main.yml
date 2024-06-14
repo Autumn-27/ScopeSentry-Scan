@@ -13,10 +13,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+    - name: Mkdir Tools
+      run: |
+        if [ ! -d "tools/linux" ]; then
+          mkdir -p tools/linux
+        fi
+        if [ ! -d "tools/darwin" ]; then
+          mkdir -p tools/darwin
+        fi
+        if [ ! -d "tools/win" ]; then
+          mkdir -p tools/win
+        fi
     - name: Update Ksubdomain
       run: |
         wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-linux.tar
