@@ -101,11 +101,11 @@ func SetUp() bool {
 	}
 	LogInit(AppConfig.System.Debug)
 	go UpdateInit()
-	flagCheck := checkCrawler()
+	flagCheck := CheckCrawler()
 	if !flagCheck {
 		return false
 	}
-	flagCheck = checkKsubdomain()
+	flagCheck = CheckKsubdomain()
 	if !flagCheck {
 		return false
 	}
@@ -199,7 +199,7 @@ func GetRedisClient() {
 	fmt.Println("GetRedisClient end")
 }
 
-func checkKsubdomain() bool {
+func CheckKsubdomain() bool {
 	executableDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		SlogError(fmt.Sprintf("Failed to retrieve the directory of the executable file:", err))
@@ -229,21 +229,28 @@ func checkKsubdomain() bool {
 	osType := runtime.GOOS
 	// 判断操作系统类型
 	var path string
+	var dir string
 	switch osType {
 	case "windows":
 		path = "ksubdomain.exe"
+		dir = "win"
 	case "linux":
 		path = "ksubdomain"
+		dir = "linux"
 	default:
+		dir = "darwin"
 		path = "ksubdomain"
 	}
 	KsubdomainPath = filepath.Join(ExtPath, "ksubdomain")
 	KsubdomainExecPath = filepath.Join(KsubdomainPath, path)
 	if _, err := os.Stat(KsubdomainExecPath); os.IsNotExist(err) {
-		resp, err := http.Get(fmt.Sprintf("%s/get/ksubdomain", UpdateUrl))
+		resp, err := http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
 		if err != nil {
-			SlogError(fmt.Sprintf("Error: %s", err))
-			return false
+			resp, err = http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
+			if err != nil {
+				SlogError(fmt.Sprintf("Error: %s", err))
+				return false
+			}
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
@@ -302,7 +309,7 @@ func checkKsubdomain() bool {
 	return true
 }
 
-func checkCrawler() bool {
+func CheckCrawler() bool {
 	executableDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		SlogError(fmt.Sprintf("Failed to retrieve the directory of the executable file:", err))
@@ -332,21 +339,28 @@ func checkCrawler() bool {
 	osType := runtime.GOOS
 	// 判断操作系统类型
 	var path string
+	var dir string
 	switch osType {
 	case "windows":
 		path = "rad.exe"
+		dir = "win"
 	case "linux":
 		path = "rad"
+		dir = "linux"
 	default:
-		path = "ksubdomain"
+		path = "rad"
+		dir = "darwin"
 	}
 	CrawlerPath = filepath.Join(ExtPath, "rad")
 	CrawlerExecPath = filepath.Join(radPath, path)
 	if _, err := os.Stat(CrawlerExecPath); os.IsNotExist(err) {
-		resp, err := http.Get(fmt.Sprintf("%s/get/rad", UpdateUrl))
+		resp, err := http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
 		if err != nil {
-			SlogError(fmt.Sprintf("Error: %s", err))
-			return false
+			resp, err = http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
+			if err != nil {
+				SlogError(fmt.Sprintf("Error: %s", err))
+				return false
+			}
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
