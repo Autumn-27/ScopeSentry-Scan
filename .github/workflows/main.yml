@@ -1,0 +1,70 @@
+name: Download Tools
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_TOKEN }}
+
+    - name: Mkdir Tools
+      run: |
+        if [ ! -d "tools/linux" ]; then
+          mkdir -p tools/linux
+        fi
+        if [ ! -d "tools/darwin" ]; then
+          mkdir -p tools/darwin
+        fi
+        if [ ! -d "tools/win" ]; then
+          mkdir -p tools/win
+        fi
+    - name: Update Ksubdomain
+      run: |
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-linux.tar
+        tar xvf KSubdomain-v1.9.5-linux.tar
+        rm -rf KSubdomain-v1.9.5-linux.tar
+        mv ksubdomain tools/linux/ksubdomain
+
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-v1.9.5-darwin.tar
+        tar xvf KSubdomain-v1.9.5-darwin.tar
+        rm -rf KSubdomain-v1.9.5-darwin.tar
+        mv ksubdomain tools/darwin/ksubdomain
+
+        wget https://github.com/boy-hack/ksubdomain/releases/download/v1.9.5/KSubdomain-windows.tar
+        tar xvf KSubdomain-windows.tar
+        rm -rf KSubdomain-windows.tar
+        mv ksubdomain.exe tools/win/ksubdomain.exe
+
+    - name: Update rad
+      run: |
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_linux_amd64.zip
+        unzip rad_linux_amd64.zip
+        rm -rf rad_linux_amd64.zip
+        mv rad_linux_amd64 tools/linux/rad
+
+
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_darwin_amd64.zip
+        unzip rad_darwin_amd64.zip
+        rm -rf rad_darwin_amd64.zip
+        mv rad_darwin_amd64 tools/darwin/rad
+
+        wget https://github.com/chaitin/rad/releases/download/1.0/rad_windows_amd64.zip
+        unzip rad_windows_amd64.zip
+        rm -rf rad_windows_amd64.zip
+        mv rad_windows_amd64.exe tools/win/rad.exe
+    - name: Commit and Push changes
+      run: |
+        echo $(date +'%Y%m%d') > date.txt
+        git add .
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -am "$(date +'%Y%m%d')"
+        git push -v --progress

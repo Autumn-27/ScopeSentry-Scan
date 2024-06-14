@@ -93,15 +93,14 @@ func SetUp() bool {
 	SensRegChan = make(chan struct{}, 50)
 	CrawlerThreadNow = 0
 	VERSION = "1.2"
-	UpdateUrl = "https://raw.githubusercontent.com/Autumn-27/ScopeSentry/main/tools/"
+	UpdateUrl = "https://update.scope-sentry.top"
 	PocList = make(map[string]types.PocData)
 	dbFlag := InitDb()
 	if !dbFlag {
 		return dbFlag
 	}
 	LogInit(AppConfig.System.Debug)
-
-	UpdateInit()
+	go UpdateInit()
 	flagCheck := checkCrawler()
 	if !flagCheck {
 		return false
@@ -383,7 +382,7 @@ func UpdateInit() {
 		return
 	}
 	if resp["code"].(float64) != 200 {
-		SlogError(fmt.Sprintf("Update Init Error: %s", resp["message"]))
+		SlogDebugLocal(fmt.Sprintf("Update Init Error: %s", resp["message"]))
 	}
 }
 func WriteYamlConfigToFile(path string, content interface{}) error {
