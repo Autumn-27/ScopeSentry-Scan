@@ -361,7 +361,7 @@ func TaskEnds(target string, taskId string) {
 }
 
 func ProgressStart(typ string, target string, taskId string) {
-	system.SlogDebugLocal("ProgressStart begin")
+	//system.SlogDebugLocal("ProgressStart begin")
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_start"
 	ProgressInfo := map[string]interface{}{
@@ -376,7 +376,7 @@ func ProgressStart(typ string, target string, taskId string) {
 		system.SlogError(fmt.Sprintf("ProgressStart redis error: %s", err))
 		return
 	}
-	system.SlogDebugLocal("ProgressStart end")
+	//system.SlogDebugLocal("ProgressStart end")
 }
 
 func ProgressEnd(typ string, target string, taskId string) {

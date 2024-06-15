@@ -8,6 +8,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/runner"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"strings"
 	"sync"
@@ -180,16 +182,35 @@ func ParseTask(msg string, tasks <-chan taskType, wg *sync.WaitGroup) {
 		} else {
 			if task.op.PortScanEnabled {
 				if task.op.Ports != "" {
-					for _, p := range system.PortDict {
-						if p.ID == task.op.Ports {
-							task.op.Ports = parsePort(p.Value)
+					ports, err := getPortListById(task.op.Ports)
+					if err != nil {
+						for _, p := range system.PortDict {
+							if p.ID == task.op.Ports {
+								task.op.Ports = parsePort(p.Value)
+							}
 						}
 					}
+					task.op.Ports = parsePort(ports)
 				}
 			}
 			runner.Process(task.target, task.op)
 		}
 	}
+}
+
+func getPortListById(objectIDString string) (string, error) {
+	var result struct {
+		Value string `bson:"value"`
+	}
+	id, err := primitive.ObjectIDFromHex(objectIDString)
+	if err != nil {
+		system.SlogError(fmt.Sprintf("Invalid ObjectID: %v", err))
+	}
+	if err := system.MongoClient.FindOne("PortDict", bson.M{"_id": id}, bson.M{"_id": 0, "value": 1}, &result); err != nil {
+		system.SlogError(fmt.Sprintf("getPortListById error: %s", err))
+		return "", err
+	}
+	return result.Value, nil
 }
 
 func parsePort(ports string) string {

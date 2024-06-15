@@ -296,6 +296,9 @@ type tmpPoc struct {
 }
 
 func UpdatePoc(flag bool) {
+	if !flag {
+		return
+	}
 	SlogInfoLocal("poc load begin")
 	var tmpPocR []tmpPoc
 	if err := MongoClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
@@ -370,7 +373,7 @@ func UpdateSetUp() {
 	UpdateSensitive()
 	UpdateProject()
 	UpdatePort()
-	UpdatePoc(false)
+	UpdatePoc(true)
 	UpdateWebFinger()
 	UpdateNode(false)
 	UpdateNotification()
