@@ -214,7 +214,7 @@ func VulnResult(result []types.VulnResult) {
 		r.Project = project
 		interfaceSlice = append(interfaceSlice, r)
 		NotificationMsg += fmt.Sprintf("%v - %v\n", r.Url, r.VulName)
-		system.SlogInfo(fmt.Sprintf("Found vulnerable: %v - %v\n", r.Url, r.VulName))
+		system.SlogInfo(fmt.Sprintf("Found vulnerable: %v - %v", r.Url, r.VulName))
 	}
 	if len(interfaceSlice) != 0 {
 		if system.NotificationConfig.VulNotification {
