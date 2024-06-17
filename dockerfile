@@ -13,7 +13,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/linux_amd_x64/ScopeSentry /apps/ScopeSentry
-
+RUN mkdir /apps/ext
+RUN mkdir /apps/ext/rad
+RUN mkdir /apps/ext/ksubdomain
+COPY tools/linux/ksubdomain /apps/ext/ksubdomain/ksubdomain
+COPY tools/linux/rad /apps/ext/rad/rad
 # 设置时区为上海
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone

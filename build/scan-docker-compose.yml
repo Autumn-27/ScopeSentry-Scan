@@ -2,6 +2,7 @@ version: '3'
 services:
   scan:
     image: autumn27/scopesentry-scan:latest
+    network_mode: host
     container_name: scopesentry-scan
     restart: always
     environment:
