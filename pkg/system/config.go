@@ -92,7 +92,7 @@ func SetUp() bool {
 	CrawlerThreadUpdateFlag = make(chan bool)
 	SensRegChan = make(chan struct{}, 50)
 	CrawlerThreadNow = 0
-	VERSION = "1.2"
+	VERSION = "1.3"
 	UpdateUrl = "https://update.scope-sentry.top"
 	PocList = make(map[string]types.PocData)
 	dbFlag := InitDb()
