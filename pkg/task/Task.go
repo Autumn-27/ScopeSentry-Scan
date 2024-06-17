@@ -82,6 +82,7 @@ func GetTask() {
 				continue
 			}
 			if exists {
+				system.UpdateProject()
 				system.SlogInfo("Get a new task~")
 				r, err := system.RedisClient.PopFromListR(context.Background(), TaskNodeName)
 				if err != nil {
