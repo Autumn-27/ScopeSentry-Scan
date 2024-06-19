@@ -4,6 +4,8 @@ go 1.21
 
 toolchain go1.21.5
 
+replace git.cs.nctu.edu.tw/calee/sctp => git.cs.nycu.edu.tw/calee/sctp v1.1.0
+
 replace github.com/praetorian-inc/fingerprintx => ./libs/fingerprintx
 
 require github.com/projectdiscovery/httpx v1.6.0
