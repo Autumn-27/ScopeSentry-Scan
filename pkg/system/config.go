@@ -101,15 +101,21 @@ func SetUp() bool {
 	}
 	LogInit(AppConfig.System.Debug)
 	go UpdateInit()
+	SlogInfoLocal("Start check crawler tool")
 	flagCheck := CheckCrawler()
 	if !flagCheck {
 		return false
 	}
+	SlogInfoLocal("End check crawler tool")
+	SlogInfoLocal("Start check ksubdomain tool")
 	flagCheck = CheckKsubdomain()
 	if !flagCheck {
 		return false
 	}
+	SlogInfoLocal("End end ksubdomain tool")
+	SlogInfoLocal("Start pulling data")
 	UpdateSetUp()
+	SlogInfoLocal("End pulling data")
 	errj := json.Unmarshal(TakeOver_finger, &SubdomainTakerFingers)
 	if errj != nil {
 		fmt.Println("解析JSON失败:", errj)
