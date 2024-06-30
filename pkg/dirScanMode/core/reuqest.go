@@ -20,7 +20,7 @@ type Request struct {
 func (r *Request) Request(path string) (types.HttpResponse, error) {
 	response, err := util.HttpGet(r.Url + path)
 	if err != nil {
-		for i := 0; i < MaxRetries-1; i++ {
+		for i := 0; i < MaxRetries-5; i++ {
 			response, err = util.HttpGet(r.Url + path)
 			if err != nil {
 				system.SlogDebugLocal(fmt.Sprintf("dirScan request error: %s", err))

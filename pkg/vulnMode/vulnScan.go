@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-func Scan(target []string, template []string) {
+func Scan(target []string, template []string, taskId string) {
 	defer system.RecoverPanic("vulnMode")
 	_, err := os.Stat(filepath.Join(system.ConfigDir, "/poc"))
 	if err != nil {
@@ -32,10 +32,10 @@ func Scan(target []string, template []string) {
 		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{Templates: template}),
 		nuclei.WithTemplateUpdateCallback(true, func(newVersion string) {}),
 	)
-	var vulResults []types.VulnResult
 	if err != nil {
 		system.SlogError(fmt.Sprintf("Nuclei to err: %s", err))
 	}
+	NotificationMsg := "Vuln Result:\n"
 	callBackFunc := func(event *output.ResultEvent) {
 		vulName := system.PocList[strings.TrimSuffix(filepath.Base(event.TemplatePath), ".yaml")].Name
 		level := system.PocList[strings.TrimSuffix(filepath.Base(event.TemplatePath), ".yaml")].Level
@@ -54,8 +54,10 @@ func Scan(target []string, template []string) {
 			Time:     system.GetTimeNow(),
 			Request:  event.Request,
 			Response: event.Response,
+			TaskId:   taskId,
 		}
-		vulResults = append(vulResults, tmpResult)
+		NotificationMsg += fmt.Sprintf("%v - %v\n", event.URL, vulName)
+		scanResult.VulnResult([]types.VulnResult{tmpResult})
 	}
 	// load targets and optionally probe non http/https targets
 	ne.LoadTargets(target, false)
@@ -64,7 +66,9 @@ func Scan(target []string, template []string) {
 		system.SlogError(fmt.Sprintf("Nuclei to 2err: %s", err))
 	}
 	defer ne.Close()
-	defer scanResult.VulnResult(vulResults)
+	if system.NotificationConfig.VulNotification && len(NotificationMsg) > 16 {
+		go system.SendNotification(NotificationMsg)
+	}
 
 }
 

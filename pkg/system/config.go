@@ -502,7 +502,7 @@ type Message struct {
 }
 
 func RefreshConfig() {
-	ticker := time.Tick(20 * time.Second)
+	ticker := time.Tick(3 * time.Second)
 	for {
 		<-ticker
 		errorm := RedisClient.Ping(context.Background())
@@ -512,11 +512,7 @@ func RefreshConfig() {
 		RefreshConfigNodeName := "refresh_config:" + AppConfig.System.NodeName
 		exists, err := RedisClient.Exists(context.Background(), RefreshConfigNodeName)
 		if err != nil {
-			myLog := CustomLog{
-				Status: "Error",
-				Msg:    fmt.Sprintf("RefreshConfig Error", err),
-			}
-			PrintLog(myLog)
+			SlogError(fmt.Sprintf("RefreshConfig Error", err))
 			continue
 		}
 		if exists {

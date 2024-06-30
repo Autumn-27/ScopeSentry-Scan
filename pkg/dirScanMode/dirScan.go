@@ -17,19 +17,13 @@ import (
 	"strconv"
 )
 
-func Scan(urls []string) {
+func Scan(urls []string, taskId string) {
 	defer system.RecoverPanic("DirScan")
 	if len(system.DirDict) == 0 {
 		system.UpdateDirDicConfig()
 	}
 	NotificationMsg := "DirScan Result:\n"
-	var DirResults []types.DirResult
 	resultHandle := func(response types.HttpResponse) {
-		DirResults = append(DirResults, types.DirResult{
-			Url:    response.Url,
-			Status: response.StatusCode,
-			Msg:    response.Redirect,
-		})
 		if response.Redirect != "" {
 			NotificationMsg += fmt.Sprintf("%v - %v -%v\n", response.Url, response.StatusCode, response.Redirect)
 			//system.SlogInfo(fmt.Sprintf("%v - %v -%v", response.Url, response.StatusCode, response.Redirect))
@@ -37,6 +31,13 @@ func Scan(urls []string) {
 			NotificationMsg += fmt.Sprintf("%v - %v\n", response.Url, response.StatusCode)
 			//system.SlogInfo(fmt.Sprintf("%v - %v", response.Url, response.StatusCode))
 		}
+		scanResult.DirResult([]types.DirResult{{
+			Url:    response.Url,
+			Status: response.StatusCode,
+			Msg:    response.Redirect,
+			Length: response.ContentLength,
+			TaskId: taskId,
+		}})
 	}
 	if len(urls) != 0 {
 		controller := runner.Controller{Targets: urls, Dictionary: system.DirDict}
@@ -50,11 +51,8 @@ func Scan(urls []string) {
 			MatchCallback: resultHandle,
 		}
 		controller.Run(op)
-		if len(DirResults) != 0 {
-			if system.NotificationConfig.DirScanNotification {
-				go system.SendNotification(NotificationMsg)
-			}
-			scanResult.DirResult(DirResults)
+		if system.NotificationConfig.DirScanNotification && len(NotificationMsg) > 20 {
+			go system.SendNotification(NotificationMsg)
 		}
 	}
 }

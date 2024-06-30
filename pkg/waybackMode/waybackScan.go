@@ -36,11 +36,8 @@ func Runner(domains []string, taskId string) {
 		for _, wurl := range waybackResult {
 			urlInfos = append(urlInfos, types.UrlResult{Input: u, Source: "waybackurls", Output: wurl, Time: nowTime})
 		}
-
 	}
-	uniqueurResults := []types.UrlResult{}
 	tmpseenUrls := make(map[string]struct{})
-	var urlList []string
 	for _, result := range urlInfos {
 		if _, seen := tmpseenUrls[result.Output]; seen {
 			continue
@@ -49,12 +46,10 @@ func Runner(domains []string, taskId string) {
 		if flag {
 			continue
 		}
+		scanResult.UrlResult([]types.UrlResult{result}, taskId)
 		tmpseenUrls[result.Output] = struct{}{}
-		urlList = append(urlList, result.Output)
-		uniqueurResults = append(uniqueurResults, result)
 	}
-	system.SlogInfo(fmt.Sprintf("target[0] %v waybackMode get %v unique result", domains[0], len(uniqueurResults)))
-	scanResult.UrlResult(uniqueurResults)
+	system.SlogInfo(fmt.Sprintf("target[0] %v waybackMode get %v unique result", domains[0], len(tmpseenUrls)))
 }
 func Scan(domain string) []string {
 	defer system.RecoverPanic("waybackMode")

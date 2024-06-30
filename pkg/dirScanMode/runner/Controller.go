@@ -40,12 +40,13 @@ func (c *Controller) Run(options core.Options) {
 		c.SetUrl(target)
 		system.SlogInfo(fmt.Sprintf("target %v begin dirscan", target))
 		fuzz := core.Fuzzer{
-			Dictionary: c.Dictionary,
-			Threads:    c.Threads,
-			Request:    c.Request,
-			BasePath:   "",
-			Options:    options,
-			MaxSameLen: 30,
+			Dictionary:         c.Dictionary,
+			Threads:            c.Threads,
+			Request:            c.Request,
+			BasePath:           "",
+			Options:            options,
+			MaxSameLen:         30,
+			ResponseCodeLength: make(map[string]int),
 		}
 		fuzz.Start()
 		system.SlogInfo(fmt.Sprintf("target %v end dirscan", target))

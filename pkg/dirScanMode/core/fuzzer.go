@@ -7,6 +7,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"sort"
 	"strings"
@@ -15,14 +16,16 @@ import (
 )
 
 type Fuzzer struct {
-	Dictionary []string
-	Threads    int
-	BasePath   string
-	Scanners   map[string]map[string]*Scanner
-	Request    Request
-	Options    Options
-	MaxSameLen int
-	Mu         sync.Mutex
+	Dictionary         []string
+	Threads            int
+	BasePath           string
+	Scanners           map[string]map[string]*Scanner
+	Request            Request
+	Options            Options
+	MaxSameLen         int
+	Mu                 sync.Mutex
+	RCLMu              sync.Mutex
+	ResponseCodeLength map[string]int
 }
 
 func (f *Fuzzer) Start() {
@@ -71,6 +74,12 @@ func (f *Fuzzer) Start() {
 				//	}
 				//	mu.Unlock()
 				//}
+			} else {
+				mu.Lock()
+				if *flag > 0 {
+					*flag -= 1
+				}
+				mu.Unlock()
 			}
 		}(path, &flag)
 	}
@@ -116,7 +125,14 @@ func (f *Fuzzer) Scan(path string, scanners []*Scanner) error {
 			return nil
 		}
 	}
+	key := fmt.Sprintf("%d:%d", response.StatusCode, response.ContentLength)
+	if f.ResponseCodeLength[key] > 20 {
+		return nil
+	}
 	f.Options.MatchCallback(response)
+	f.RCLMu.Lock()
+	f.ResponseCodeLength[key]++
+	f.RCLMu.Unlock()
 	return nil
 }
 

@@ -15,7 +15,7 @@ import (
 	"github.com/dlclark/regexp2"
 )
 
-func Scan(url string, resp string, resMd5 string) {
+func Scan(url string, resp string, resMd5 string, taskId string) {
 	defer system.RecoverPanic("sensitiveMode")
 	if len(system.SensitiveRules) == 0 {
 		system.UpdateSensitive()
@@ -23,7 +23,6 @@ func Scan(url string, resp string, resMd5 string) {
 	chunkSize := 5120
 	overlapSize := 100
 	NotificationMsg := "SensitiveScan Result:\n"
-	Sresults := []types.SensitiveResult{}
 	//allstart := time.Now()
 	findFlag := false
 	for _, rule := range system.SensitiveRules {
@@ -43,7 +42,7 @@ func Scan(url string, resp string, resMd5 string) {
 					} else {
 						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: resp, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
 					}
-					Sresults = append(Sresults, tmpResult)
+					scanResult.SensitiveResult([]types.SensitiveResult{tmpResult}, taskId)
 					NotificationMsg += fmt.Sprintf("%v\n%v:%v", url, rule.Name, matches)
 					findFlag = true
 				}
@@ -59,11 +58,8 @@ func Scan(url string, resp string, resMd5 string) {
 	}
 	//allelapsed := time.Since(allstart)
 	//fmt.Printf("all Regex performance: %s\n", allelapsed)
-	if len(Sresults) != 0 {
-		if system.NotificationConfig.SensitiveNotification {
-			go system.SendNotification(NotificationMsg)
-		}
-		scanResult.SensitiveResult(Sresults)
+	if system.NotificationConfig.SensitiveNotification && len(NotificationMsg) > 25 {
+		go system.SendNotification(NotificationMsg)
 	}
 }
 

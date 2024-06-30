@@ -64,6 +64,9 @@ func HttpGet(uri string) (types.HttpResponse, error) {
 		}
 	}
 	tmp.ContentLength = resp.Header.ContentLength()
+	if tmp.ContentLength < 0 {
+		tmp.ContentLength = len(resp.Body())
+	}
 	return tmp, nil
 }
 func HttpGetByte(uri string) ([]byte, error) {

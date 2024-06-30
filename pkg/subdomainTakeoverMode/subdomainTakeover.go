@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-func Scan(input string, tg []string) {
+func Scan(input string, tg []string, taskId string) {
 	defer system.RecoverPanic("subdomainTakeoverMode")
 	var SubTakerRes []types.SubTakeResult
 	for _, t := range tg {
@@ -42,7 +42,7 @@ func Scan(input string, tg []string) {
 		}
 	}
 	if len(SubTakerRes) != 0 {
-		scanResult.SubTakerResult(SubTakerRes)
+		scanResult.SubTakerResult(SubTakerRes, taskId)
 	}
 }
 

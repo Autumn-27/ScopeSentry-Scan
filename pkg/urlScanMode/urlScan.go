@@ -118,7 +118,11 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 			if inputDomainRoot == outputDomainRoot {
 				if _, seen := seenUrls.Load(url); !seen {
 					seenUrls.Store(url, struct{}{})
-					urlInfos = append(urlInfos, urlInfo)
+					flag := scanResult.URLRedisDeduplication(urlInfo.Output, taskId)
+					if !flag {
+						scanResult.UrlResult([]types.UrlResult{urlInfo}, taskId)
+						urlInfos = append(urlInfos, urlInfo)
+					}
 				}
 			}
 			if pageMonitoring == "JS" {
@@ -131,6 +135,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 						Content: "",
 					}
 					PageMonitoringInitResults = append(PageMonitoringInitResults, tmpPage)
+					scanResult.PageMonitoringInitResult([]types.TmpPageMonitResult{tmpPage}, taskId)
 				}
 			}
 			if pageMonitoring == "All" {
@@ -139,6 +144,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 					Content: "",
 				}
 				PageMonitoringInitResults = append(PageMonitoringInitResults, tmpPage)
+				scanResult.PageMonitoringInitResult([]types.TmpPageMonitResult{tmpPage}, taskId)
 			}
 		}
 	}
@@ -154,7 +160,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 						}()
 						respMd5 := util.CalculateMD5(msg)
 						if !scanResult.SensRedisDeduplication(respMd5, taskId) {
-							sensitiveMode.Scan(url, msg, respMd5)
+							sensitiveMode.Scan(url, msg, respMd5, taskId)
 						}
 					}(url, msg)
 				}
@@ -212,26 +218,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 	time.Sleep(5 * time.Second)
 	close(inputChan)
 	wg.Wait()
-	uniqueurResults := []types.UrlResult{}
-	tmpseenUrls := make(map[string]struct{})
-	var urlList []string
-	for _, result := range urlInfos {
-		if _, seen := tmpseenUrls[result.Output]; seen {
-			continue
-		}
-		flag := scanResult.URLRedisDeduplication(result.Output, taskId)
-		if flag {
-			continue
-		}
-		tmpseenUrls[result.Output] = struct{}{}
-		urlList = append(urlList, result.Output)
-		uniqueurResults = append(uniqueurResults, result)
-	}
-	system.SlogInfo(fmt.Sprintf("Get Url result %v, get page monitoring result %v", len(uniqueurResults), len(PageMonitoringInitResults)))
-	scanResult.UrlResult(uniqueurResults)
-	if len(PageMonitoringInitResults) != 0 {
-		scanResult.PageMonitoringInitResult(PageMonitoringInitResults)
-	}
-	return uniqueurResults
+	system.SlogInfo(fmt.Sprintf("Get Url result %v, get page monitoring result %v", len(urlInfos), len(PageMonitoringInitResults)))
+	return urlInfos
 
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -131,6 +132,7 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 					system.SlogError(fmt.Sprintf("%v CrawlerScan 执行命令时出错：%s", targetFileName, err))
 				}
 			}
+
 			// Read the content of the file
 			resultContent, err := ioutil.ReadFile(resultPath)
 			if err != nil {
@@ -147,9 +149,27 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			}
 			defer util.DeleteFile(targetPath)
 			defer util.DeleteFile(resultPath)
-			var CrawlerResults []types.CrawlerResult
-			// Print the parsed JSON data
-			for _, req := range requests {
+
+			file, err := os.Open(resultPath)
+			if err != nil {
+				system.SlogError(fmt.Sprintf("无法打开文件 %v: %v", resultPath, err))
+				return
+			}
+			defer file.Close()
+
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				line := scanner.Text()
+				if line == "[" || line == "]" {
+					continue
+				}
+				line = strings.TrimRight(line, ",")
+				var req Request
+				err := json.Unmarshal([]byte(line), &req)
+				if err != nil {
+					system.SlogError(fmt.Sprintf("解析 JSON 错误: %s", err))
+					continue
+				}
 				body := ""
 				if req.B64Body != "" {
 					decodedBytes, err := base64.StdEncoding.DecodeString(req.B64Body)
@@ -188,10 +208,13 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 					Method: req.Method,
 					Body:   body,
 				}
-				CrawlerResults = append(CrawlerResults, crawlerResult)
+				scanResult.CrawlerResult([]types.CrawlerResult{crawlerResult}, task.Id)
 			}
 
-			scanResult.CrawlerResult(CrawlerResults)
+			if err := scanner.Err(); err != nil {
+				system.SlogError(fmt.Sprintf("读取文件错误: %v", err))
+				return
+			}
 			system.SlogInfoLocal(fmt.Sprintf("crawler end %v", targetFileName))
 		}(fileContent, task)
 		time.Sleep(5 * time.Second)

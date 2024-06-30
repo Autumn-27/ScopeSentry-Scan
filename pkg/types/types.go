@@ -20,6 +20,7 @@ type SubdomainResult struct {
 	IP      []string
 	Time    string
 	Project string
+	TaskId  string `bson:"taskId"`
 }
 
 type AssetHttp struct {
@@ -47,6 +48,7 @@ type AssetHttp struct {
 	WebFinger     []string               `json:"web_finger,omitempty" csv:"web_finger"`
 	IconContent   string                 `json:"iconContent"`
 	Domain        string                 `json:"domain"`
+	TaskId        string                 `bson:"taskId"`
 }
 
 type PortAlive struct {
@@ -70,6 +72,7 @@ type AssetOther struct {
 	Raw       json.RawMessage `json:"metadata"`
 	Project   string          `json:"project"`
 	Type      string
+	TaskId    string `bson:"taskId"`
 }
 
 type UrlResult struct {
@@ -81,6 +84,7 @@ type UrlResult struct {
 	Length     int    `json:"length"`
 	Time       string `json:"time"`
 	Project    string
+	TaskId     string `bson:"taskId"`
 }
 
 type SecretResults struct {
@@ -95,6 +99,7 @@ type CrawlerResult struct {
 	Method  string
 	Body    string
 	Project string
+	TaskId  string `bson:"taskId"`
 }
 
 type PortDict struct {
@@ -114,6 +119,7 @@ type SubTakeResult struct {
 	Cname    string
 	Response string
 	Project  string
+	TaskId   string `bson:"taskId"`
 }
 
 type DirResult struct {
@@ -121,6 +127,8 @@ type DirResult struct {
 	Status  int
 	Msg     string
 	Project string
+	Length  int
+	TaskId  string `bson:"taskId"`
 }
 
 type SensitiveRule struct {
@@ -140,6 +148,7 @@ type SensitiveResult struct {
 	Color   string
 	Time    string
 	Md5     string
+	TaskId  string `bson:"taskId"`
 }
 
 type VulnResult struct {
@@ -152,10 +161,12 @@ type VulnResult struct {
 	Time     string
 	Request  string
 	Response string
+	TaskId   string `bson:"taskId"`
 }
 type TmpPageMonitResult struct {
 	Url     string
 	Content string
+	TaskId  string `bson:"taskId"`
 }
 type PageMonitResult struct {
 	ID      primitive.ObjectID `bson:"_id"`
@@ -166,6 +177,7 @@ type PageMonitResult struct {
 	State   int                `bson:"state"`
 	Project string             `bson:"project"`
 	Time    string             `bson:"time"`
+	TaskId  string             `bson:"taskId"`
 }
 type WebFinger struct {
 	ID      string

@@ -17,7 +17,7 @@ import (
 	"net/url"
 )
 
-func SubdoaminResult(result []types.SubdomainResult) bool {
+func SubdoaminResult(result []types.SubdomainResult, taskId string) bool {
 
 	//util.GetAssetOwner(result)
 	NotificationMsg := "SubdomainScan Result"
@@ -25,6 +25,7 @@ func SubdoaminResult(result []types.SubdomainResult) bool {
 	for _, r := range result {
 		project := GetAssetOwner(r.Host)
 		r.Project = project
+		r.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, r)
 		NotificationMsg += fmt.Sprintf("%v - %v\n", r.Host, r.IP)
 	}
@@ -54,7 +55,7 @@ func ParseUrlToDomain(urlStr string) string {
 	domain := u.Hostname()
 	return domain
 }
-func AssetResult(httpRestlts []types.AssetHttp, assetOthers []types.AssetOther) bool {
+func AssetResult(httpRestlts []types.AssetHttp, assetOthers []types.AssetOther, taskId string) bool {
 	if len(system.WebFingers) == 0 {
 		system.UpdateWebFinger()
 	}
@@ -63,12 +64,14 @@ func AssetResult(httpRestlts []types.AssetHttp, assetOthers []types.AssetOther) 
 		project := GetAssetOwner(h.URL)
 		h.Project = project
 		h.Domain = ParseUrlToDomain(h.URL)
+		h.TaskId = taskId
 		hs := WebFingerScan(h)
 		interfaceSlice = append(interfaceSlice, hs)
 	}
 	for _, a := range assetOthers {
 		project := GetAssetOwner(a.Host)
 		a.Project = project
+		a.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, a)
 	}
 	if len(interfaceSlice) != 0 {
@@ -89,12 +92,13 @@ func AssetResult(httpRestlts []types.AssetHttp, assetOthers []types.AssetOther) 
 	return true
 }
 
-func SubTakerResult(result []types.SubTakeResult) {
+func SubTakerResult(result []types.SubTakeResult, taskId string) {
 	var interfaceSlice []interface{}
 	NotificationMsg := "SubTaker Result:\n"
 	for _, r := range result {
 		project := GetAssetOwner(r.Input)
 		r.Project = project
+		r.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, r)
 		NotificationMsg += fmt.Sprintf("%v - %v\n resp: %v\n", r.Input, r.Cname, r.Response)
 	}
@@ -141,11 +145,12 @@ func DirResult(result []types.DirResult) {
 
 }
 
-func SensitiveResult(result []types.SensitiveResult) {
+func SensitiveResult(result []types.SensitiveResult, taskId string) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
 		project := GetAssetOwner(r.Url)
 		r.Project = project
+		r.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -160,11 +165,12 @@ func SensitiveResult(result []types.SensitiveResult) {
 	}
 }
 
-func UrlResult(result []types.UrlResult) {
+func UrlResult(result []types.UrlResult, taskId string) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
 		project := GetAssetOwner(r.Input)
 		r.Project = project
+		r.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -183,11 +189,12 @@ func UrlResult(result []types.UrlResult) {
 	}
 }
 
-func CrawlerResult(result []types.CrawlerResult) {
+func CrawlerResult(result []types.CrawlerResult, taskId string) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
 		project := GetAssetOwner(r.Url)
 		r.Project = project
+		r.TaskId = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -208,18 +215,13 @@ func CrawlerResult(result []types.CrawlerResult) {
 
 func VulnResult(result []types.VulnResult) {
 	var interfaceSlice []interface{}
-	NotificationMsg := "Vuln Result:\n"
 	for _, r := range result {
 		project := GetAssetOwner(r.Url)
 		r.Project = project
 		interfaceSlice = append(interfaceSlice, r)
-		NotificationMsg += fmt.Sprintf("%v - %v\n", r.Url, r.VulName)
 		system.SlogInfo(fmt.Sprintf("Found vulnerable: %v - %v", r.Url, r.VulName))
 	}
 	if len(interfaceSlice) != 0 {
-		if system.NotificationConfig.VulNotification {
-			go system.SendNotification(NotificationMsg)
-		}
 		errorm := system.MongoClient.Ping()
 		if errorm != nil {
 			system.GetMongbClient()
@@ -243,9 +245,10 @@ type TmpPageMonitResultWithoutIdkey struct {
 	State   int      `bson:"state"`
 	Project string   `bson:"project"`
 	Time    string   `bson:"time"`
+	TaskId  string   `bson:"taskId"`
 }
 
-func PageMonitoringInitResult(result []types.TmpPageMonitResult) {
+func PageMonitoringInitResult(result []types.TmpPageMonitResult, taskId string) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
 		flag, tmp := PageMonitoringMongoDbDeduplication(r.Url)
@@ -311,6 +314,7 @@ func PageMonitoringInitResult(result []types.TmpPageMonitResult) {
 					Hash:    []string{},
 					Diff:    []string{},
 					State:   1,
+					TaskId:  taskId,
 				}
 				interfaceSlice = append(interfaceSlice, tmpR)
 			}

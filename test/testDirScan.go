@@ -56,7 +56,7 @@ func main() {
 	util.InitHttpClient()
 	controller := runner.Controller{Targets: []string{"https://giftcards.abercrombie.com"}, Dictionary: system.DirDict}
 	op := core.Options{Extensions: []string{"php", "aspx", "jsp", "html", "js"}, Thread: 100, MatchCallback: func(response types.HttpResponse) {
-		fmt.Println(response.Url)
+		fmt.Printf("%v - %v - %v\n", response.Url, response.StatusCode, response.ContentLength)
 	}}
 	controller.Run(op)
 	fmt.Println(system.GetTimeNow())

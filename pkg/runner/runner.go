@@ -184,7 +184,7 @@ func Process(Host string, op Option) {
 		}
 		system.SlogInfo(fmt.Sprintf("Get the number of %s unique subdomains as %v, raw subdoamins %v", Host, len(uniqueSubDomainResults), len(SubDomainResults)))
 		if len(uniqueSubDomainResults) != 0 {
-			f := scanResult.SubdoaminResult(uniqueSubDomainResults)
+			f := scanResult.SubdoaminResult(uniqueSubDomainResults, op.TaskId)
 			if !f {
 				system.SlogError(fmt.Sprintf("Insert subdomain error"))
 				scanResult.TaskEnds(Host, op.TaskId)
@@ -198,7 +198,7 @@ func Process(Host string, op Option) {
 		scanResult.ProgressStart("subdomainTakeover", Host, op.TaskId)
 		for _, sd := range uniqueSubDomainResults {
 			if sd.Type == "CNAME" {
-				subdomainTakeoverMode.Scan(sd.Host, sd.Value)
+				subdomainTakeoverMode.Scan(sd.Host, sd.Value, op.TaskId)
 			}
 		}
 		system.SlogInfo(fmt.Sprintf("target %s subdomainTakeover ends", Host))
@@ -256,7 +256,7 @@ func Process(Host string, op Option) {
 		}
 	}
 	// 存储资产结果
-	scanResult.AssetResult(uniqueHttpResults, uniqueassetOtherResults)
+	scanResult.AssetResult(uniqueHttpResults, uniqueassetOtherResults, op.TaskId)
 	system.SlogInfo(fmt.Sprintf("target %s asset mapping completed", Host))
 	scanResult.ProgressEnd("assetMapping", Host, op.TaskId)
 	//缓存污染 todo
@@ -316,7 +316,7 @@ func Process(Host string, op Option) {
 	if op.DirScanEnabled {
 		scanResult.ProgressStart("dirScan", Host, op.TaskId)
 		system.SlogInfo(fmt.Sprintf("target %s directory scan begins", Host))
-		dirScanMode.Scan(domainUrlScanList)
+		dirScanMode.Scan(domainUrlScanList, op.TaskId)
 		system.SlogInfo(fmt.Sprintf("target %s directory scan completed", Host))
 		scanResult.ProgressEnd("dirScan", Host, op.TaskId)
 	}
@@ -335,7 +335,7 @@ func Process(Host string, op Option) {
 				}
 			}
 			if len(domainUrlScanList) != 0 {
-				vulnMode.Scan(domainUrlScanList, template)
+				vulnMode.Scan(domainUrlScanList, template, op.TaskId)
 			}
 		}
 		system.SlogInfo(fmt.Sprintf("target %s vulnerability scan completed", Host))
