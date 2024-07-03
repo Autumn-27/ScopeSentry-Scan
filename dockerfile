@@ -19,7 +19,7 @@ RUN mkdir /apps/ext/ksubdomain
 COPY tools/linux/ksubdomain /apps/ext/ksubdomain/ksubdomain
 RUN chmod +x /apps/ext/ksubdomain/ksubdomain
 COPY tools/linux/rad /apps/ext/rad/rad
-RUn chmod +x /apps/ext/rad/rad
+RUN chmod +x /apps/ext/rad/rad
 # 设置时区为上海
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
