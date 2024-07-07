@@ -16,6 +16,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"net/http"
 	_ "net/http/pprof"
+	"path/filepath"
 )
 
 func main() {
@@ -54,7 +55,8 @@ func main() {
 	system.UpdateDirDicConfig()
 	fmt.Println(system.GetTimeNow())
 	util.InitHttpClient()
-	controller := runner.Controller{Targets: []string{"https://giftcards.abercrombie.com"}, Dictionary: system.DirDict}
+	dirDicConfigPath := filepath.Join(system.ConfigDir, "dirdict")
+	controller := runner.Controller{Targets: []string{"https://giftcards.abercrombie.com"}, Dictionary: dirDicConfigPath}
 	op := core.Options{Extensions: []string{"php", "aspx", "jsp", "html", "js"}, Thread: 100, MatchCallback: func(response types.HttpResponse) {
 		fmt.Printf("%v - %v - %v\n", response.Url, response.StatusCode, response.ContentLength)
 	}}

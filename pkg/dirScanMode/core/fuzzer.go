@@ -7,8 +7,10 @@
 package core
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -16,7 +18,7 @@ import (
 )
 
 type Fuzzer struct {
-	Dictionary         []string
+	Dictionary         string
 	Threads            int
 	BasePath           string
 	Scanners           map[string]map[string]*Scanner
@@ -37,8 +39,15 @@ func (f *Fuzzer) Start() {
 	semaphore := make(chan struct{}, f.Options.Thread)
 	flag := 0
 	var mu sync.Mutex
-
-	for _, path := range f.Dictionary {
+	file, err := os.Open(f.Dictionary) // 打开文件
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		path := scanner.Text()
 		semaphore <- struct{}{}
 		wg.Add(1)
 		if flag >= MaxRetries {

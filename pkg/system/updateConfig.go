@@ -15,7 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func UpdateSubfinderApiConfig() bool {
@@ -38,15 +37,12 @@ func UpdateSubfinderApiConfig() bool {
 
 func UpdateDomainDicConfig() bool {
 	SlogInfoLocal("domain dict load begin")
-	var result struct {
-		Value string `bson:"value"`
-	}
-	erro := MongoClient.FindOne("config", bson.M{"name": "DomainDic"}, bson.M{"_id": 0, "value": 1}, &result)
+	content, erro := MongoClient.FindFile("DomainDic")
 	if erro != nil {
 		return false
 	}
 	domainDicConfigPath := filepath.Join(ConfigDir, "domainDic")
-	flag := util.WriteContentFile(domainDicConfigPath, result.Value)
+	flag := util.WriteContentFile(domainDicConfigPath, string(content))
 	if !flag {
 		fmt.Printf("Write target file error")
 		return false
@@ -57,15 +53,15 @@ func UpdateDomainDicConfig() bool {
 
 func UpdateDirDicConfig() bool {
 	SlogInfoLocal("dir dict load begin")
-	var result struct {
-		Value string `bson:"value"`
-	}
-	erro := MongoClient.FindOne("config", bson.M{"name": "DirDic"}, bson.M{"_id": 0, "value": 1}, &result)
+	content, erro := MongoClient.FindFile("dirdict")
 	if erro != nil {
 		return false
 	}
-	for _, dir := range strings.Split(result.Value, "\n") {
-		DirDict = append(DirDict, dir)
+	dirDicConfigPath := filepath.Join(ConfigDir, "dirdict")
+	flag := util.WriteContentFile(dirDicConfigPath, string(content))
+	if !flag {
+		fmt.Printf("Write dirdict file error")
+		return false
 	}
 	SlogInfoLocal("dir dict load end")
 	return true
@@ -112,6 +108,23 @@ func UpdateSystemConfig(flag bool) bool {
 		return false
 	}
 	err := WriteYamlConfigToFile(filepath.Join(ConfigDir, "ScopeSentryConfig.yaml"), AppConfig)
+	nodeInfo := map[string]interface{}{
+		"maxTaskNum":     AppConfig.System.MaxTaskNum,
+		"dirscanThread":  AppConfig.System.DirscanThread,
+		"portscanThread": AppConfig.System.PortscanThread,
+		"crawlerThread":  AppConfig.System.CrawlerThread,
+		"urlThread":      AppConfig.System.UrlThread,
+		"urlMaxNum":      AppConfig.System.UrlMaxNum,
+	}
+	errorm := RedisClient.Ping(context.Background())
+	if errorm != nil {
+		GetRedisClient()
+	}
+	key := "node:" + AppConfig.System.NodeName
+	err = RedisClient.HMSet(context.Background(), key, nodeInfo)
+	if err != nil {
+		SlogErrorLocal(fmt.Sprintf("Error setting initial values: %s", err))
+	}
 	if flag {
 		CrawlerThreadUpdateFlag <- true
 	}

@@ -1,15 +1,18 @@
 package mongdbClient
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoDBClient struct {
-	client *mongo.Client
+	client   *mongo.Client
+	database *mongo.Database
 }
 
 // Connect 连接到MongoDB并返回一个MongoDBClient实例
@@ -33,8 +36,8 @@ func Connect(Username string, Password string, IP string, Port string) (*MongoDB
 		fmt.Printf("mongodb ping error: %v", err)
 		return nil, err
 	}
-
-	return &MongoDBClient{client: client}, nil
+	db := client.Database("ScopeSentry")
+	return &MongoDBClient{client: client, database: db}, nil
 }
 
 // GetCollection 获取指定集合
@@ -68,6 +71,27 @@ func (c *MongoDBClient) Aggregate(collectionName string, pipeline, result interf
 func (c *MongoDBClient) FindOne(collectionName string, query, selector, result interface{}) error {
 	collection := c.GetCollection(collectionName)
 	return collection.FindOne(context.Background(), query, options.FindOne().SetProjection(selector)).Decode(result)
+}
+
+func (c *MongoDBClient) FindFile(filename string) ([]byte, error) {
+	// 使用 GridFS bucket
+	bucket, err := gridfs.NewBucket(c.database)
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	dStream, err := bucket.OpenDownloadStreamByName(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer dStream.Close()
+
+	if _, err := buf.ReadFrom(dStream); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 // Update 更新单个文档

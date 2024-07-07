@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"path/filepath"
 	"strconv"
 )
 
@@ -40,7 +41,8 @@ func Scan(urls []string, taskId string) {
 		}})
 	}
 	if len(urls) != 0 {
-		controller := runner.Controller{Targets: urls, Dictionary: system.DirDict}
+		dirDicConfigPath := filepath.Join(system.ConfigDir, "dirdict")
+		controller := runner.Controller{Targets: urls, Dictionary: dirDicConfigPath}
 		DirscanThread, err := strconv.Atoi(system.AppConfig.System.DirscanThread)
 		if err != nil {
 			DirscanThread = 10

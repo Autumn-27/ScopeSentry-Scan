@@ -9,11 +9,9 @@ package node
 import (
 	"context"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/mongdbClient"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/shirou/gopsutil/v3/mem"
-	"go.mongodb.org/mongo-driver/bson"
 	"path/filepath"
 	"time"
 )
@@ -97,57 +95,5 @@ func Register() {
 			}
 		}
 		<-ticker
-	}
-}
-
-func Register2(mongoClient *mongdbClient.MongoDBClient) {
-	nodeName := system.AppConfig.System.NodeName
-	if nodeName == "" {
-		nodeName = util.GenerateRandomString(6)
-	}
-
-	filter := bson.M{"node_name": nodeName}
-	var result bson.M
-	err := mongoClient.FindOne("node", filter, nil, &result)
-	if err == nil {
-		// Key exists, generate a unique node name
-		nodeName = nodeName + "_repeat_" + util.GenerateRandomString(6)
-		filter = bson.M{"node_name": nodeName}
-	}
-
-	firstRegister := true
-	for {
-		if firstRegister {
-			nodeInfo := bson.M{
-				"node_name":  nodeName,
-				"updateTime": system.GetTimeNow(),
-				"running":    0,
-				"finished":   0,
-				"cpuNum":     0,
-				"memNum":     0,
-				"state":      1, //1运行中 2暂停 3未连接
-			}
-			_, err := mongoClient.Upsert("node", filter, bson.M{"$set": nodeInfo})
-			if err != nil {
-				fmt.Printf("Error upserting initial values: %v\n", err)
-				return
-			}
-			firstRegister = false
-		} else {
-			cpuNum, memNum := util.GetSystemUsage()
-			update := bson.M{
-				"$set": bson.M{
-					"last_time": system.GetTimeNow(),
-					"cpuNum":    cpuNum,
-					"memNum":    memNum,
-				},
-			}
-			_, err := mongoClient.Update("node", filter, update)
-			if err != nil {
-				fmt.Printf("Error updating node info: %v\n", err)
-				return
-			}
-		}
-		time.Sleep(30 * time.Second)
 	}
 }

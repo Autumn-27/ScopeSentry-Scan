@@ -18,7 +18,7 @@ import (
 
 type Controller struct {
 	Targets    []string
-	Dictionary []string
+	Dictionary string
 	Request    core.Request
 	Threads    int
 }
