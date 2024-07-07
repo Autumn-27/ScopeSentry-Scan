@@ -113,6 +113,12 @@ func SetUp() bool {
 		return false
 	}
 	SlogInfoLocal("End end ksubdomain tool")
+	SlogInfoLocal("Start check Rustscan tool")
+	flagCheck = CheckRustscan()
+	if !flagCheck {
+		return false
+	}
+	SlogInfoLocal("End end Rustscan tool")
 	SlogInfoLocal("Start pulling data")
 	UpdateSetUp()
 	SlogInfoLocal("End pulling data")
@@ -205,6 +211,73 @@ func GetRedisClient() {
 	fmt.Println("GetRedisClient end")
 }
 
+func CheckRustscan() bool {
+	executableDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		SlogError(fmt.Sprintf("Failed to retrieve the directory of the executable file:", err))
+		return false
+	}
+	ExtPath = filepath.Join(executableDir, "ext")
+	if err := os.MkdirAll(ExtPath, os.ModePerm); err != nil {
+		SlogError(fmt.Sprintf("Failed to create ext folder:", err))
+		return false
+	}
+	rustscanPath := filepath.Join(ExtPath, "rustscan")
+	if err := os.MkdirAll(rustscanPath, os.ModePerm); err != nil {
+		SlogError(fmt.Sprintf("Failed to create radPath folder:", err))
+		return false
+	}
+	osType := runtime.GOOS
+	// 判断操作系统类型
+	var path string
+	var dir string
+	switch osType {
+	case "windows":
+		path = "rustscan.exe"
+		dir = "win"
+	case "linux":
+		path = "rustscan"
+		dir = "linux"
+	default:
+		dir = "darwin"
+		path = "rustscan"
+	}
+	rustscanExecPath := filepath.Join(rustscanPath, path)
+	if _, err := os.Stat(rustscanExecPath); os.IsNotExist(err) {
+		resp, err := http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
+		if err != nil {
+			resp, err = http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
+			if err != nil {
+				SlogError(fmt.Sprintf("Error: %s", err))
+				return false
+			}
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			SlogError("Get rustscan Tool fail, go to https://github.com/boy-hack/ksubdomain/ Download the corresponding version and rename the executable program to ksubdomain/ksubdomain.exe and place it in the ext/rad file.")
+			return false
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			SlogError(fmt.Sprintf("Read rustscan Tool file error: %s", err))
+			return false
+		}
+		err = ioutil.WriteFile(KsubdomainExecPath, body, 0755)
+		if err != nil {
+			SlogError(fmt.Sprintf("Write Rad Tool Fail: %s", err))
+			return false
+		}
+		if osType == "linux" {
+			err = os.Chmod(KsubdomainExecPath, 0755)
+			if err != nil {
+				SlogError(fmt.Sprintf("Chmod rustscan Tool Fail: %s", err))
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func CheckKsubdomain() bool {
 	executableDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -294,10 +367,10 @@ func CheckKsubdomain() bool {
 		flag := 0
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			if strings.Contains(scanner.Text(), ".....") {
+			if strings.Contains(scanner.Text(), ".") {
 				flag += 1
 			}
-			if flag == 3 {
+			if flag == 20 {
 				SlogError("ksubdomain get device error,Check whether the proxy is enabled.")
 				return false
 			}
