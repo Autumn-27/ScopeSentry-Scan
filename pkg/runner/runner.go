@@ -23,6 +23,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/waybackMode"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -221,13 +222,41 @@ func Process(Host string, op Option) {
 		system.SlogInfo(fmt.Sprintf("%s port scan start", Host))
 		scanResult.ProgressStart("portScan", Host, op.TaskId)
 		var mutex sync.Mutex
+		var portWg sync.WaitGroup
 		for _, domain := range domainList {
-			assetHttpTemp, assetOtherTemp := portScanMode.PortScan(domain, op.Ports, op.Duplicates)
-			mutex.Lock()
-			httpxResults = append(httpxResults, assetHttpTemp...)
-			assetOthers = append(assetOthers, assetOtherTemp...)
-			mutex.Unlock()
+			portWg.Add(1)
+			go func(domain string) {
+				defer portWg.Done()
+
+				// 阻塞，直到计数器小于10
+				system.PortScanCond.L.Lock()
+				portscanThread, err := strconv.Atoi(system.AppConfig.System.PortscanThread)
+				if err != nil {
+					system.SlogError(fmt.Sprintf("Error converting PortscanThread to int: %v\n", err))
+					return
+				}
+				for system.PortScanCounter >= portscanThread {
+					system.PortScanCond.Wait()
+				}
+				system.PortScanCounter++
+				system.PortScanCond.L.Unlock()
+
+				assetHttpTemp, assetOtherTemp := portScanMode.PortScan2(domain, op.Ports, op.Duplicates)
+
+				// 加锁更新全局结果
+				mutex.Lock()
+				httpxResults = append(httpxResults, assetHttpTemp...)
+				assetOthers = append(assetOthers, assetOtherTemp...)
+				mutex.Unlock()
+
+				// 扫描完成后更新计数器并通知
+				system.PortScanCond.L.Lock()
+				system.PortScanCounter--
+				system.PortScanCond.Signal()
+				system.PortScanCond.L.Unlock()
+			}(domain)
 		}
+		portWg.Wait()
 		system.SlogInfo(fmt.Sprintf("%s port scan ends", Host))
 		scanResult.ProgressEnd("portScan", Host, op.TaskId)
 	}

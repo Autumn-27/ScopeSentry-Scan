@@ -61,6 +61,7 @@ var CrawlerPath string
 var CrawlerExecPath string
 var KsubdomainPath string
 var KsubdomainExecPath string
+var RustScanExecPath string
 var AppConfig ScopeSentryConfig
 var ConfigFileExists bool
 var DebugFlag bool
@@ -85,6 +86,8 @@ var CrawlerTarget chan types.CrawlerTask
 var CrawlerThreadUpdateFlag chan bool
 var CrawlerThreadNow int
 var SensRegChan chan struct{}
+var PortScanCounter int
+var PortScanCond = sync.NewCond(&sync.Mutex{})
 
 func SetUp() bool {
 	UpdateSystemFlag = make(chan bool)
@@ -242,8 +245,8 @@ func CheckRustscan() bool {
 		dir = "darwin"
 		path = "rustscan"
 	}
-	rustscanExecPath := filepath.Join(rustscanPath, path)
-	if _, err := os.Stat(rustscanExecPath); os.IsNotExist(err) {
+	RustScanExecPath = filepath.Join(rustscanPath, path)
+	if _, err := os.Stat(RustScanExecPath); os.IsNotExist(err) {
 		resp, err := http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
 		if err != nil {
 			resp, err = http.Get(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path))
@@ -262,13 +265,13 @@ func CheckRustscan() bool {
 			SlogError(fmt.Sprintf("Read rustscan Tool file error: %s", err))
 			return false
 		}
-		err = ioutil.WriteFile(KsubdomainExecPath, body, 0755)
+		err = ioutil.WriteFile(RustScanExecPath, body, 0755)
 		if err != nil {
 			SlogError(fmt.Sprintf("Write Rad Tool Fail: %s", err))
 			return false
 		}
 		if osType == "linux" {
-			err = os.Chmod(KsubdomainExecPath, 0755)
+			err = os.Chmod(RustScanExecPath, 0755)
 			if err != nil {
 				SlogError(fmt.Sprintf("Chmod rustscan Tool Fail: %s", err))
 				return false

@@ -187,11 +187,11 @@ func ParseTask(msg string, tasks <-chan taskType, wg *sync.WaitGroup) {
 					if err != nil {
 						for _, p := range system.PortDict {
 							if p.ID == task.op.Ports {
-								task.op.Ports = parsePort(p.Value)
+								task.op.Ports = p.Value
 							}
 						}
 					}
-					task.op.Ports = parsePort(ports)
+					task.op.Ports = ports
 				}
 			}
 			runner.Process(task.target, task.op)

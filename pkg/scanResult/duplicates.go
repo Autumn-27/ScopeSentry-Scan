@@ -157,7 +157,7 @@ type port struct {
 	Port string `bson:"port"`
 }
 
-func GetPortByHost(host string) []string {
+func GetPortByHost(host string) string {
 	ports := []port{}
 	errorm := system.MongoClient.Ping()
 	if errorm != nil {
@@ -182,12 +182,16 @@ func GetPortByHost(host string) []string {
 	}
 	err := system.MongoClient.Aggregate("asset", pipeline, &ports)
 	if err != nil {
-		return []string{}
+		return ""
 	}
 
-	var result []string
+	var result string
 	for _, p := range ports {
-		result = append(result, p.Port)
+		result += p.Port + ","
+	}
+	if strings.HasSuffix(result, ",") {
+		// 去掉最后一个逗号
+		result = result[:len(result)-1]
 	}
 	return result
 }
