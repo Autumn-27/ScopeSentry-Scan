@@ -510,8 +510,6 @@ github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO
 github.com/google/go-querystring v1.1.0 h1:AnCroh3fv4ZBgVIf1Iwtovgjaw/GiKJo8M8yD/fhyJ8=
 github.com/google/go-querystring v1.1.0/go.mod h1:Kcdr2DB4koayq7X8pmAG4sNG59So17icRSOU623lUBU=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
-github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=
-github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/martian/v3 v3.0.0/go.mod h1:y5Zk1BBys9G+gd6Jrk0W3cC1+ELVxBWuIGO+w/tUAp0=
 github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
@@ -915,8 +913,6 @@ github.com/projectdiscovery/hmap v0.0.41 h1:8IgTyDce3/2JzcfPVA4H+XpBRFfETULx8td3
 github.com/projectdiscovery/hmap v0.0.41/go.mod h1:bCrai6x5Eijqm2U+jtcH0wZX5ZcaZhcvzoMGTZgLAf0=
 github.com/projectdiscovery/interactsh v1.1.9 h1:b77SaSGrO+DtivmWwqGGY2dmNlQC3Zgmwlaj9L4Oqvc=
 github.com/projectdiscovery/interactsh v1.1.9/go.mod h1:0FRQXCildcTLq7Tsa4BVZAsFCXhpWs4C4quKWigXb5I=
-github.com/projectdiscovery/ipranger v0.0.22 h1:cdrBu9b9V8iFcE++l6ibJN/PEetBRz2WmhRclou6Fa0=
-github.com/projectdiscovery/ipranger v0.0.22/go.mod h1:7wI4d3hJgBKyCLkb+16nbqJTMZ+XJyz0Z9JpiDnfZPY=
 github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb h1:MGtI4oE12ruWv11ZlPXXd7hl/uAaQZrFvrIDYDeVMd8=
 github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb/go.mod h1:vmgC0DTFCfoCLp0RAfsfYTZZan0QMVs+cmTbH6blfjk=
 github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 h1:ZScLodGSezQVwsQDtBSMFp72WDq0nNN+KE/5DHKY5QE=

@@ -14,8 +14,6 @@ replace github.com/projectdiscovery/httpx => ./libs/httpx
 
 replace github.com/projectdiscovery/subfinder/v2 => ./libs/subfinder/v2
 
-require github.com/projectdiscovery/naabu/v2 v2.2.0
-
 replace github.com/projectdiscovery/naabu/v2 => ./libs/naabu/v2
 
 require github.com/jaeles-project/gospider v1.1.6
@@ -193,7 +191,6 @@ require (
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v30 v30.1.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20240227163752-401108e1b7e7 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
@@ -279,7 +276,6 @@ require (
 	github.com/projectdiscovery/gostruct v0.0.2 // indirect
 	github.com/projectdiscovery/gozero v0.0.2 // indirect
 	github.com/projectdiscovery/interactsh v1.1.9 // indirect
-	github.com/projectdiscovery/ipranger v0.0.22 // indirect
 	github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb // indirect
 	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 // indirect
 	github.com/projectdiscovery/n3iwf v0.0.0-20230523120440-b8cd232ff1f5 // indirect
