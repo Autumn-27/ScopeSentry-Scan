@@ -216,7 +216,12 @@ func CrawlerResult(result []types.CrawlerResult, taskId string) {
 func VulnResult(result []types.VulnResult) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
-		project := GetAssetOwner(r.Url)
+		project := ""
+		if r.Url != "" {
+			project = GetAssetOwner(r.Url)
+		} else {
+			project = GetAssetOwner(r.Matched)
+		}
 		r.Project = project
 		interfaceSlice = append(interfaceSlice, r)
 		system.SlogInfo(fmt.Sprintf("Found vulnerable: %v - %v", r.Url, r.VulName))

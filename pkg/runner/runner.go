@@ -228,7 +228,6 @@ func Process(Host string, op Option) {
 			go func(domain string) {
 				defer portWg.Done()
 
-				// 阻塞，直到计数器小于10
 				system.PortScanCond.L.Lock()
 				portscanThread, err := strconv.Atoi(system.AppConfig.System.PortscanThread)
 				if err != nil {
