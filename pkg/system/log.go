@@ -90,6 +90,11 @@ func LogInit(flag bool) {
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeTime:     customTimeEncoder, // 自定义时间格式
+		NameKey:        "logger",
+		FunctionKey:    zapcore.OmitKey,
+		StacktraceKey:  "stacktrace",
+		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 	atom := zap.NewAtomicLevelAt(zap.InfoLevel)
 	// 设置日志级别
