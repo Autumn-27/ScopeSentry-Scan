@@ -117,7 +117,7 @@ func LogInit(flag bool) {
 
 }
 func SlogInfo(msg string) {
-	ZapLog.Info(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Info(msg)
 	timeNow := GetTimeNow()
 	err := SendLogToRedis(fmt.Sprintf("%s - [%s] %s\n", timeNow, "INFO", msg))
 	if err != nil {
@@ -125,10 +125,10 @@ func SlogInfo(msg string) {
 	}
 }
 func SlogInfoLocal(msg string) {
-	ZapLog.Info(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Info(msg)
 }
 func SlogError(msg string) {
-	ZapLog.Error(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Error(msg)
 	timeNow := GetTimeNow()
 	err := SendLogToRedis(fmt.Sprintf("%s - [%s] %s\n", timeNow, "ERROR", msg))
 	if err != nil {
@@ -136,10 +136,10 @@ func SlogError(msg string) {
 	}
 }
 func SlogErrorLocal(msg string) {
-	ZapLog.Error(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Error(msg)
 }
 func SlogDebug(msg string) {
-	ZapLog.Debug(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Debug(msg)
 	timeNow := GetTimeNow()
 	err := SendLogToRedis(fmt.Sprintf("%s - [%s] %s\n", timeNow, "DEBUG", msg))
 	if err != nil {
@@ -147,7 +147,7 @@ func SlogDebug(msg string) {
 	}
 }
 func SlogDebugLocal(msg string) {
-	ZapLog.Debug(msg)
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Debug(msg)
 }
 func SendLogToRedis(msg string) error {
 	if redisLogClientInstance == nil || redisLogClientInstance.Client() == nil {
