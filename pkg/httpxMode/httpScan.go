@@ -28,6 +28,7 @@ func HttpxScan(Host []string, resultCallback func(r types.AssetHttp)) {
 		ExtractTitle:              true,
 		TechDetect:                true,
 		OutputWebSocket:           true,
+		OutputServerHeader:        true,
 		OutputIP:                  true,
 		OutputCName:               false,
 		ResponseHeadersInStdout:   true,
@@ -85,6 +86,7 @@ func httpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		StatusCode:   r.StatusCode,   // You may need to set an appropriate default value.
 		Webcheck:     false,
 		IconContent:  r.IconContent,
+		WebServer:    r.WebServer,
 	}
 	return ah
 

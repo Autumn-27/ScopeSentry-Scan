@@ -49,6 +49,7 @@ type AssetHttp struct {
 	IconContent   string                 `json:"iconContent"`
 	Domain        string                 `json:"domain"`
 	TaskId        string                 `bson:"taskId"`
+	WebServer     string                 `bson:"webServer"`
 }
 
 type PortAlive struct {
