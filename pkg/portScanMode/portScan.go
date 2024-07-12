@@ -166,6 +166,7 @@ func handleTcpConnection(host string, ip string, port string) (types.AssetOther,
 		Transport: "",
 		Version:   "",
 		Type:      "other",
+		Timestamp: system.GetTimeNow(),
 	}
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", ip, port), 5*time.Second)
 	if err != nil {

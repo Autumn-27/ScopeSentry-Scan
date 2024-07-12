@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	domainList := []string{"http://test:666:8888", "http://test:666"}
+	domainList := []string{"https://baidu.com"}
 	httpxResultsHandler := func(r types.AssetHttp) {
 		fmt.Println(r)
 	}
