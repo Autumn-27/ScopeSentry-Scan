@@ -120,6 +120,7 @@ func HttpSurvival(target string) (int, int, error) {
 		Jarm:                      false,
 		OutputCDN:                 false,
 		Location:                  false,
+		Timeout:                   3,
 		Hashes:                    "",
 		HostMaxErrors:             -1,
 		MaxResponseBodySizeToRead: 100000,

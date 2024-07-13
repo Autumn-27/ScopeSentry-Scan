@@ -173,7 +173,7 @@ func UrlResult(result []types.UrlResult, taskId string) {
 		if err != nil {
 			continue
 		}
-		r.StatusCode = StatusCode
+		r.Status = StatusCode
 		r.Length = ContentLength
 		project := GetAssetOwner(r.Input)
 		r.Project = project

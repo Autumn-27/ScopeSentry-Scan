@@ -81,7 +81,7 @@ type UrlResult struct {
 	Source     string `json:"source"`
 	OutputType string `json:"type"`
 	Output     string `json:"output"`
-	StatusCode int    `json:"status"`
+	Status     int    `json:"status"`
 	Length     int    `json:"length"`
 	Time       string `json:"time"`
 	Project    string

@@ -17,7 +17,7 @@ func main() {
 	//	fmt.Println(r.StatusCode)
 	//}
 	//httpxMode.HttpxScan(domainList, httpxResultsHandler)
-	StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://baidu.com")
+	StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{
 	//	Methods:                   "GET",
