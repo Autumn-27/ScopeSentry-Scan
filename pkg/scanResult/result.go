@@ -10,6 +10,7 @@ package scanResult
 import (
 	"context"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
@@ -168,6 +169,12 @@ func SensitiveResult(result []types.SensitiveResult, taskId string) {
 func UrlResult(result []types.UrlResult, taskId string) {
 	var interfaceSlice []interface{}
 	for _, r := range result {
+		StatusCode, ContentLength, err := httpxMode.HttpSurvival(r.Output)
+		if err != nil {
+			continue
+		}
+		r.StatusCode = StatusCode
+		r.Length = ContentLength
 		project := GetAssetOwner(r.Input)
 		r.Project = project
 		r.TaskId = taskId

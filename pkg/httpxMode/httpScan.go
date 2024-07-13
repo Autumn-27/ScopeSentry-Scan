@@ -7,6 +7,7 @@
 package httpxMode
 
 import (
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/cloudflare/cfssl/log"
@@ -30,30 +31,26 @@ func HttpxScan(Host []string, resultCallback func(r types.AssetHttp)) {
 		OutputWebSocket:           true,
 		OutputServerHeader:        true,
 		OutputIP:                  true,
-		OutputCName:               false,
+		OutputCName:               true,
 		ResponseHeadersInStdout:   true,
 		ResponseInStdout:          true,
 		Base64ResponseInStdout:    true,
 		Jarm:                      true,
 		OutputCDN:                 true,
-		Location:                  true,
+		Location:                  false,
 		HostMaxErrors:             -1,
 		MaxResponseBodySizeToRead: 100000,
 		//InputFile: "./targetDomains.txt", // path to file containing the target domains list
 		OnResult: func(r runner.Result) {
 			// handle error
 			if r.Err != nil {
-				//system.SlogErrorLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
+				system.SlogErrorLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
 			} else {
 				ah := httpxResultToAssetHttp(r)
 				//fmt.Printf("%s %s %d\n", r.Input, r.Host, r.StatusCode)
 				resultCallback(ah)
 			}
 		},
-	}
-
-	if err := options.ValidateOptions(); err != nil {
-		log.Fatal(err)
 	}
 
 	httpxRunner, err := runner.New(&options)
@@ -90,4 +87,57 @@ func httpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	}
 	return ah
 
+}
+
+func HttpSurvival(target string) (int, int, error) {
+	defer system.RecoverPanic("HttpSurvival")
+	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal)
+	var StatusCode int
+	var ContentLength int
+	var err error
+	httpxResultsHandler := func(code int, length int, e error) {
+		if e != nil {
+			err = e
+		}
+		StatusCode = code
+		ContentLength = length
+	}
+	options := runner.Options{
+		Methods:                   "GET",
+		JSONOutput:                false,
+		TLSProbe:                  false,
+		InputTargetHost:           []string{target},
+		Favicon:                   false,
+		ExtractTitle:              false,
+		TechDetect:                false,
+		OutputWebSocket:           false,
+		OutputServerHeader:        false,
+		OutputIP:                  false,
+		OutputCName:               false,
+		ResponseHeadersInStdout:   false,
+		ResponseInStdout:          false,
+		Base64ResponseInStdout:    false,
+		Jarm:                      false,
+		OutputCDN:                 false,
+		Location:                  false,
+		Hashes:                    "",
+		HostMaxErrors:             -1,
+		MaxResponseBodySizeToRead: 100000,
+		OnResult: func(r runner.Result) {
+			if r.Err != nil {
+				httpxResultsHandler(0, 0, r.Err)
+			} else {
+				httpxResultsHandler(r.StatusCode, r.ContentLength, nil)
+			}
+		},
+	}
+
+	httpxRunner, err := runner.New(&options)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer httpxRunner.Close()
+
+	httpxRunner.RunEnumeration()
+	return StatusCode, ContentLength, err
 }
