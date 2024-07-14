@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/shirou/gopsutil/v3/mem"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -20,7 +21,12 @@ func Register() {
 	defer system.RecoverPanic("Node Register")
 	nodeName := system.AppConfig.System.NodeName
 	if nodeName == "" {
-		nodeName = util.GenerateRandomString(6)
+		hostname, err := os.Hostname()
+		if err != nil {
+			fmt.Println("Error:", err)
+			hostname = util.GenerateRandomString(6)
+		}
+		nodeName = hostname + "-" + util.GenerateRandomString(6)
 	}
 	//if system.ConfigFileExists == false {
 	//	key = "node:" + nodeName
@@ -72,6 +78,7 @@ func Register() {
 			system.SlogInfo(fmt.Sprintf("Register Success:%v - version %v", nodeName, system.VERSION))
 			firstRegister = false
 		} else {
+			key = "node:" + system.AppConfig.System.NodeName
 			cpuNum, memNum := util.GetSystemUsage()
 			run, fin := system.GetRunFin()
 			nodeInfo := map[string]interface{}{

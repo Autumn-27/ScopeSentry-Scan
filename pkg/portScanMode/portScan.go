@@ -305,12 +305,19 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 	system.SlogDebugLocal("RustScan start")
 	defer wg.Done()
 	defer close(portResultChan)
+	PortBatchSize := system.AppConfig.System.PortBatchSize
+	if PortBatchSize == "" {
+		PortBatchSize = "1500"
+	}
+	PortTimeOut := system.AppConfig.System.PortTimeOut
+	if PortTimeOut == "" {
+		PortTimeOut = "3000"
+	}
 	var cmd *exec.Cmd
-	var args []string
+	args := []string{"-b", PortBatchSize, "-t", PortTimeOut, "-a", domain, "-r", ports, "--accessible", "--scripts", "None"}
 	if exclude != "" {
-		args = []string{"-a", domain, "-r", ports, "--accessible", "--scripts", "None", "-e", exclude}
-	} else {
-		args = []string{"-a", domain, "-r", ports, "--accessible", "--scripts", "None"}
+		args = append(args, "-e")
+		args = append(args, exclude)
 	}
 	rustScanExecPath := system.RustScanExecPath
 	cmd = exec.Command(rustScanExecPath, args...)

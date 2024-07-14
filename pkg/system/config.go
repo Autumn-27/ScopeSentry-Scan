@@ -33,6 +33,8 @@ type ScopeSentryConfig struct {
 		MaxTaskNum     string `yaml:"MaxTaskNum"`
 		DirscanThread  string `yaml:"DirscanThread"`
 		PortscanThread string `yaml:"PortscanThread"`
+		PortBatchSize  string `yaml:"PortBatchSize"`
+		PortTimeOut    string `yaml:"PortTimeOut"`
 		State          string `yaml:"State"`
 		Running        int    `yaml:"Running"`
 		Finished       int    `yaml:"Finished"`
@@ -161,7 +163,9 @@ func InitDb() bool {
 		AppConfig.System.NodeName = os.Getenv("NodeName")
 		AppConfig.System.TimeZoneName = os.Getenv("TimeZoneName")
 		AppConfig.System.MaxTaskNum = "7"
-		AppConfig.System.PortscanThread = "15"
+		AppConfig.System.PortscanThread = "5"
+		AppConfig.System.PortBatchSize = "1000"
+		AppConfig.System.PortTimeOut = "3000"
 		AppConfig.System.DirscanThread = "15"
 		AppConfig.System.CrawlerThread = "2"
 		AppConfig.System.UrlThread = "5"
@@ -641,6 +645,9 @@ func RefreshConfig() {
 					UpdateNotification()
 				case "UpdateSystem":
 					UpdateSystem()
+				case "UpdateNodeName":
+					UpdateNodeName(jsonData.Content)
+
 				}
 			}
 

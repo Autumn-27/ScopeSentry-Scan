@@ -53,6 +53,12 @@ func (r *RedisClient) HMSet(ctx context.Context, key string, fields map[string]i
 	}
 	return r.client.HMSet(ctx, key, fields).Err()
 }
+func (r *RedisClient) HDel(ctx context.Context, key string, fields ...string) error {
+	if r == nil {
+		return errors.New("redis client nil")
+	}
+	return r.client.HDel(ctx, key, fields...).Err()
+}
 func (r *RedisClient) Expire(ctx context.Context, key string, expiration time.Duration) error {
 	return r.client.Expire(ctx, key, expiration).Err()
 }

@@ -186,6 +186,20 @@ func UpdateSensitive() bool {
 	return true
 }
 
+func UpdateNodeName(name string) {
+	oldName := AppConfig.System.NodeName
+	AppConfig.System.NodeName = name
+	key := "node:" + oldName
+	err := RedisClient.HDel(context.Background(), key)
+	if err != nil {
+		return
+	}
+	err = WriteYamlConfigToFile(filepath.Join(ConfigDir, "ScopeSentryConfig.yaml"), AppConfig)
+	if err != nil {
+		return
+	}
+}
+
 func UpdateNode(flag bool) {
 	SlogInfoLocal("node config load begin")
 	if !ConfigFileExists {
