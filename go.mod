@@ -14,8 +14,6 @@ replace github.com/projectdiscovery/httpx => ./libs/httpx
 
 replace github.com/projectdiscovery/subfinder/v2 => ./libs/subfinder/v2
 
-replace github.com/projectdiscovery/naabu/v2 => ./libs/naabu/v2
-
 require github.com/jaeles-project/gospider v1.1.6
 
 replace github.com/jaeles-project/gospider => ./libs/gospider

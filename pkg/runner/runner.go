@@ -138,7 +138,7 @@ func Process(Host string, op Option) {
 				subfinderResult := subfinderMode.SubfinderScan(subfinderDomain)
 				SubDomainResults = append(SubDomainResults, subfinderResult...)
 			}
-			if op.SubdomainScanEnabled {
+			if op.KsubdomainScanEnabled {
 				// 判断是否泛解析，跳过泛解析
 				if !IsWildCard(hostWithoutPort) {
 					subDomainResult := subdomainMode.SubDomainRunner(hostWithoutPort)

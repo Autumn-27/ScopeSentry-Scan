@@ -8,6 +8,7 @@ package portScanMode
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
@@ -307,7 +308,7 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 	defer close(portResultChan)
 	PortBatchSize := system.AppConfig.System.PortBatchSize
 	if PortBatchSize == "" {
-		PortBatchSize = "1500"
+		PortBatchSize = "600"
 	}
 	PortTimeOut := system.AppConfig.System.PortTimeOut
 	if PortTimeOut == "" {
@@ -330,20 +331,28 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 		system.SlogError(fmt.Sprintf("RustScan cmd.Start error： %v", err))
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 1800*time.Second)
+	defer cancel()
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
-		r := scanner.Text()
-		system.SlogDebugLocal(r)
-		if strings.Contains(r, "Open") {
-			openParts := strings.SplitN(r, " ", 2)
-			portResultChan <- openParts[1]
-			continue
+		select {
+		case <-ctx.Done():
+			system.SlogError("RustScan Command execution timed out")
+			return
+		default:
+			r := scanner.Text()
+			system.SlogDebugLocal(r)
+			if strings.Contains(r, "Open") {
+				openParts := strings.SplitN(r, " ", 2)
+				portResultChan <- openParts[1]
+				continue
+			}
+			if strings.Contains(r, "->") {
+				system.SlogInfo(fmt.Sprintf("%v Port alive: %v", domain, r))
+				continue
+			}
+			system.SlogError(fmt.Sprintf("%v PortScan error: %v", domain, r))
 		}
-		if strings.Contains(r, "->") {
-			system.SlogInfo(fmt.Sprintf("%v Port alive: %v", domain, r))
-			continue
-		}
-		system.SlogError(fmt.Sprintf("%v PortScan error: %v", domain, r))
 	}
 	if err := scanner.Err(); err != nil {
 		system.SlogError(fmt.Sprintf("%v RustScan scanner.Err error： %v", domain, err))

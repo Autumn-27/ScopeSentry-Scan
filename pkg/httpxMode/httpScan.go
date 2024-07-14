@@ -44,7 +44,7 @@ func HttpxScan(Host []string, resultCallback func(r types.AssetHttp)) {
 		OnResult: func(r runner.Result) {
 			// handle error
 			if r.Err != nil {
-				system.SlogErrorLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
+				system.SlogDebugLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
 			} else {
 				ah := httpxResultToAssetHttp(r)
 				//fmt.Printf("%s %s %d\n", r.Input, r.Host, r.StatusCode)

@@ -20,9 +20,9 @@ import (
 
 func Scan(urls []string, taskId string) {
 	defer system.RecoverPanic("DirScan")
-	if len(system.DirDict) == 0 {
-		system.UpdateDirDicConfig()
-	}
+	//if len(system.DirDict) == 0 {
+	//	system.UpdateDirDicConfig()
+	//}
 	NotificationMsg := "DirScan Result:\n"
 	resultHandle := func(response types.HttpResponse) {
 		if response.Redirect != "" {

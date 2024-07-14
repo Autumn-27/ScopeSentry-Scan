@@ -164,7 +164,7 @@ func InitDb() bool {
 		AppConfig.System.TimeZoneName = os.Getenv("TimeZoneName")
 		AppConfig.System.MaxTaskNum = "7"
 		AppConfig.System.PortscanThread = "5"
-		AppConfig.System.PortBatchSize = "1000"
+		AppConfig.System.PortBatchSize = "500"
 		AppConfig.System.PortTimeOut = "3000"
 		AppConfig.System.DirscanThread = "15"
 		AppConfig.System.CrawlerThread = "2"
