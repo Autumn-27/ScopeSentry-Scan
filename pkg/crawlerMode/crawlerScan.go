@@ -106,8 +106,6 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			if system.AppConfig.System.Debug {
 				// 使用带缓冲的读取器来实时获取输出
 				stdoutScanner := bufio.NewScanner(stdoutPipe)
-				stderrScanner := bufio.NewScanner(stderrPipe)
-
 				// 循环读取标准输出
 				go func() {
 					for stdoutScanner.Scan() {
@@ -115,15 +113,12 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 						fmt.Println(outputLine)
 					}
 				}()
-
-				// 循环读取标准错误输出
-				go func() {
-					for stderrScanner.Scan() {
-						// 处理标准错误输出
-						errorLine := stderrScanner.Text()
-						fmt.Println(errorLine)
-					}
-				}()
+			}
+			stderrScanner := bufio.NewScanner(stderrPipe)
+			for stderrScanner.Scan() {
+				// 处理标准错误输出
+				errorLine := stderrScanner.Text()
+				system.SlogErrorLocal(errorLine)
 			}
 			if err := cmd.Wait(); err != nil {
 				if ctx.Err() == context.DeadlineExceeded {

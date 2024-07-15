@@ -135,9 +135,11 @@ func (f *Fuzzer) Scan(path string, scanners []*Scanner) error {
 		}
 	}
 	key := fmt.Sprintf("%d:%d", response.StatusCode, response.ContentLength)
+	f.RCLMu.Lock()
 	if f.ResponseCodeLength[key] > 20 {
 		return nil
 	}
+	f.RCLMu.Unlock()
 	f.Options.MatchCallback(response)
 	f.RCLMu.Lock()
 	f.ResponseCodeLength[key]++

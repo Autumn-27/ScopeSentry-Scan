@@ -93,7 +93,6 @@ func LogInit(flag bool) {
 		NameKey:        "logger",
 		FunctionKey:    zapcore.OmitKey,
 		StacktraceKey:  "stacktrace",
-		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 	}
 	atom := zap.NewAtomicLevelAt(zap.InfoLevel)
 	// 设置日志级别

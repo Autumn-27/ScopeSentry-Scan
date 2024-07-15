@@ -164,7 +164,7 @@ func InitDb() bool {
 		AppConfig.System.TimeZoneName = os.Getenv("TimeZoneName")
 		AppConfig.System.MaxTaskNum = "7"
 		AppConfig.System.PortscanThread = "5"
-		AppConfig.System.PortBatchSize = "500"
+		AppConfig.System.PortBatchSize = "800"
 		AppConfig.System.PortTimeOut = "3000"
 		AppConfig.System.DirscanThread = "15"
 		AppConfig.System.CrawlerThread = "2"
@@ -361,37 +361,37 @@ func CheckKsubdomain() bool {
 				return false
 			}
 		}
-		// 检查ksudomain是否可以执行
-		cmd := exec.Command(KsubdomainExecPath, "v", "-d", "scope-sentry.top")
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			SlogError(fmt.Sprintf("ksubdomain Tool error: %s", err))
+	}
+	// 检查ksudomain是否可以执行
+	cmd := exec.Command(KsubdomainExecPath, "v", "-d", "scope-sentry.top")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		SlogError(fmt.Sprintf("ksubdomain Tool error: %s", err))
+		return false
+	}
+	if err := cmd.Start(); err != nil {
+		SlogError(fmt.Sprintf("ksubdomain Tool run start error: %s", err))
+		return false
+	}
+	flag := 0
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), ".") {
+			flag += 1
+		}
+		if flag == 20 {
+			SlogError("ksubdomain get device error,Check whether the proxy is enabled.")
 			return false
 		}
-		if err := cmd.Start(); err != nil {
-			SlogError(fmt.Sprintf("ksubdomain Tool run start error: %s", err))
-			return false
-		}
-		flag := 0
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
-			if strings.Contains(scanner.Text(), ".") {
-				flag += 1
-			}
-			if flag == 20 {
-				SlogError("ksubdomain get device error,Check whether the proxy is enabled.")
-				return false
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			SlogError(fmt.Sprintf("ksubdomain Tool run start f error: %s", err))
-			return false
-		}
+	}
+	if err := scanner.Err(); err != nil {
+		SlogError(fmt.Sprintf("ksubdomain Tool run start f error: %s", err))
+		return false
+	}
 
-		if err := cmd.Wait(); err != nil {
-			SlogError(fmt.Sprintf("ksubdomain Tool run start f Command finished with error:: %s", err))
-			return false
-		}
+	if err := cmd.Wait(); err != nil {
+		SlogError(fmt.Sprintf("ksubdomain Tool run start f Command finished with error:: %s", err))
+		return false
 	}
 	return true
 }

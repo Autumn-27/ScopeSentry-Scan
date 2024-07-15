@@ -342,6 +342,21 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 		default:
 			r := scanner.Text()
 			system.SlogDebugLocal(r)
+			if strings.Contains(r, "File limit higher than batch size") {
+				continue
+			}
+			if strings.Contains(r, "Looks like I didn't find any open ports") {
+				system.SlogDebugLocal(r)
+				continue
+			}
+			if strings.Contains(r, "*I used") {
+				system.SlogDebugLocal(r)
+				continue
+			}
+			if strings.Contains(r, "Alternatively, increase") {
+				system.SlogDebugLocal(r)
+				continue
+			}
 			if strings.Contains(r, "Open") {
 				openParts := strings.SplitN(r, " ", 2)
 				portResultChan <- openParts[1]
@@ -355,11 +370,11 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		system.SlogError(fmt.Sprintf("%v RustScan scanner.Err error： %v", domain, err))
+		system.SlogErrorLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domain, err))
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
-		system.SlogError(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domain, err))
+		system.SlogErrorLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domain, err))
 	}
 	system.SlogDebugLocal("RustScan end")
 }

@@ -230,6 +230,9 @@ func Process(Host string, op Option) {
 
 				system.PortScanCond.L.Lock()
 				portscanThread, err := strconv.Atoi(system.AppConfig.System.PortscanThread)
+				if portscanThread > 5 {
+					portscanThread = 5
+				}
 				if err != nil {
 					system.SlogError(fmt.Sprintf("Error converting PortscanThread to int: %v\n", err))
 					return
