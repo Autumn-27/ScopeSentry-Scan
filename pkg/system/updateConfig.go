@@ -168,7 +168,7 @@ type tmpSensitive struct {
 func UpdateSensitive() bool {
 	SlogInfoLocal("sens rule load begin")
 	var tmpRule []tmpSensitive
-	if err := MongoClient.FindAll("SensitiveRule", bson.M{}, bson.M{"_id": 1, "regular": 1, "state": 1, "color": 1, "name": 1}, &tmpRule); err != nil {
+	if err := MongoClient.FindAll("SensitiveRule", bson.M{"state": true}, bson.M{"_id": 1, "regular": 1, "state": 1, "color": 1, "name": 1}, &tmpRule); err != nil {
 		SlogError(fmt.Sprintf("Get Sensitive error: %s", err))
 		return false
 	}

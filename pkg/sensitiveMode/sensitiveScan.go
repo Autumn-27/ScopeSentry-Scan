@@ -38,7 +38,7 @@ func Scan(url string, resp string, resMd5 string, taskId string) {
 				if len(matches) != 0 {
 					var tmpResult types.SensitiveResult
 					if findFlag {
-						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: fmt.Sprintf("由于存储空间问题，相同URL下只存储一份响应体，可根据md5==\"%v\"检索响应体记录。", resMd5), Time: system.GetTimeNow(), Color: rule.Color, Md5: ""}
+						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: "", Time: system.GetTimeNow(), Color: rule.Color, Md5: fmt.Sprintf("md5==%v", resMd5)}
 					} else {
 						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: resp, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
 					}
