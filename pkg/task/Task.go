@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -212,26 +211,4 @@ func getPortListById(objectIDString string) (string, error) {
 		return "", err
 	}
 	return result.Value, nil
-}
-
-func parsePort(ports string) string {
-	parts := strings.Split(ports, ",")
-	tmp := ""
-	for _, p := range parts {
-		if p == "80" || p == "443" {
-			continue
-		}
-		if strings.Contains(p, "-") {
-			s := strings.Split(p, "-")
-			start, _ := strconv.Atoi(s[0])
-			end, _ := strconv.Atoi(s[1])
-			for i := start; i <= end; i++ {
-				character := strconv.Itoa(i)
-				tmp += character + ","
-			}
-			continue
-		}
-		tmp += p + ","
-	}
-	return tmp[:len(tmp)-1]
 }

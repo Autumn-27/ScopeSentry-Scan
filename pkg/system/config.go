@@ -35,6 +35,7 @@ type ScopeSentryConfig struct {
 		PortscanThread string `yaml:"PortscanThread"`
 		PortBatchSize  string `yaml:"PortBatchSize"`
 		PortTimeOut    string `yaml:"PortTimeOut"`
+		VulScanThread  string `yaml:"VulScanThread"`
 		State          string `yaml:"State"`
 		Running        int    `yaml:"Running"`
 		Finished       int    `yaml:"Finished"`
@@ -90,6 +91,8 @@ var CrawlerThreadNow int
 var SensRegChan chan struct{}
 var PortScanCounter int
 var PortScanCond = sync.NewCond(&sync.Mutex{})
+var VulScanCounter int
+var VulScanCond = sync.NewCond(&sync.Mutex{})
 
 func SetUp() bool {
 	UpdateSystemFlag = make(chan bool)
@@ -166,6 +169,7 @@ func InitDb() bool {
 		AppConfig.System.PortscanThread = "5"
 		AppConfig.System.PortBatchSize = "800"
 		AppConfig.System.PortTimeOut = "3000"
+		AppConfig.System.VulScanThread = "3"
 		AppConfig.System.DirscanThread = "15"
 		AppConfig.System.CrawlerThread = "2"
 		AppConfig.System.UrlThread = "5"
@@ -363,7 +367,7 @@ func CheckKsubdomain() bool {
 		}
 	}
 	// 检查ksudomain是否可以执行
-	cmd := exec.Command(KsubdomainExecPath, "v", "-d", "scope-sentry.top")
+	cmd := exec.Command(KsubdomainExecPath, "v", "-d", "baidu.com")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		SlogError(fmt.Sprintf("ksubdomain Tool error: %s", err))
@@ -379,13 +383,13 @@ func CheckKsubdomain() bool {
 		if strings.Contains(scanner.Text(), ".") {
 			flag += 1
 		}
-		if flag == 20 {
-			SlogError("ksubdomain get device error,Check whether the proxy is enabled.")
+		if flag == 50 {
+			SlogError("ksubdomain get device error,Check whether the proxy is enabled.参考 https://github.com/Autumn-27/ScopeSentry/issues/11")
 			return false
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		SlogError(fmt.Sprintf("ksubdomain Tool run start f error: %s", err))
+		SlogError(fmt.Sprintf("ksubdomain Tool run start f error: %s 参考https://github.com/Autumn-27/ScopeSentry/issues/11", err))
 		return false
 	}
 

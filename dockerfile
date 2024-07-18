@@ -16,10 +16,13 @@ COPY dist/linux_amd_x64/ScopeSentry /apps/ScopeSentry
 RUN mkdir /apps/ext
 RUN mkdir /apps/ext/rad
 RUN mkdir /apps/ext/ksubdomain
+RUN mkdir /apps/ext/rustscan
 COPY tools/linux/ksubdomain /apps/ext/ksubdomain/ksubdomain
 RUN chmod +x /apps/ext/ksubdomain/ksubdomain
 COPY tools/linux/rad /apps/ext/rad/rad
 RUN chmod +x /apps/ext/rad/rad
+COPY tools/linux/rustscan /apps/ext/rustscan/rustscan
+RUN chmod +x /apps/ext/rustscan/rustscan
 # 设置时区为上海
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone

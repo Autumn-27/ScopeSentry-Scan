@@ -8,7 +8,6 @@ package portScanMode
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
@@ -218,6 +217,7 @@ func PortScan2(domain string, ports string, duplicates string) ([]types.AssetHtt
 	fingerPortFound := []string{}
 	for result := range portResultChan {
 		portParts := strings.SplitN(result, ":", 2)
+		system.SlogDebugLocal(fmt.Sprintf("%v", portParts))
 		if len(portParts) == 2 {
 			ip, _ := netip.ParseAddr(portParts[0])
 			p, _ := strconv.Atoi(portParts[1])
@@ -315,7 +315,12 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 		PortTimeOut = "3000"
 	}
 	var cmd *exec.Cmd
-	args := []string{"-b", PortBatchSize, "-t", PortTimeOut, "-a", domain, "-r", ports, "--accessible", "--scripts", "None"}
+	portParameter := "-r"
+	if strings.Contains(ports, ",") {
+		portParameter = "-p"
+		ports = parsePort(ports)
+	}
+	args := []string{"-b", PortBatchSize, "-t", PortTimeOut, "-a", domain, portParameter, ports, "--accessible", "--scripts", "None"}
 	if exclude != "" {
 		args = append(args, "-e")
 		args = append(args, exclude)
@@ -327,54 +332,78 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 		system.SlogError(fmt.Sprintf("RustScan StdoutPipe error： %v", err))
 		return
 	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		system.SlogError(fmt.Sprintf("RustScan StderrPipe error: %v", err))
+		return
+	}
 	if err := cmd.Start(); err != nil {
 		system.SlogError(fmt.Sprintf("RustScan cmd.Start error： %v", err))
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 1800*time.Second)
-	defer cancel()
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
-		select {
-		case <-ctx.Done():
-			system.SlogError("RustScan Command execution timed out")
-			return
-		default:
-			r := scanner.Text()
-			system.SlogDebugLocal(r)
-			if strings.Contains(r, "File limit higher than batch size") {
-				continue
-			}
-			if strings.Contains(r, "Looks like I didn't find any open ports") {
-				system.SlogDebugLocal(r)
-				continue
-			}
-			if strings.Contains(r, "*I used") {
-				system.SlogDebugLocal(r)
-				continue
-			}
-			if strings.Contains(r, "Alternatively, increase") {
-				system.SlogDebugLocal(r)
-				continue
-			}
-			if strings.Contains(r, "Open") {
-				openParts := strings.SplitN(r, " ", 2)
-				portResultChan <- openParts[1]
-				continue
-			}
-			if strings.Contains(r, "->") {
-				system.SlogInfo(fmt.Sprintf("%v Port alive: %v", domain, r))
-				continue
-			}
-			system.SlogError(fmt.Sprintf("%v PortScan error: %v", domain, r))
+		r := scanner.Text()
+		system.SlogDebugLocal(r)
+		if strings.Contains(r, "File limit higher than batch size") {
+			continue
 		}
+		if strings.Contains(r, "Looks like I didn't find any open ports") {
+			system.SlogDebugLocal(r)
+			continue
+		}
+		if strings.Contains(r, "*I used") {
+			system.SlogDebugLocal(r)
+			continue
+		}
+		if strings.Contains(r, "Alternatively, increase") {
+			system.SlogDebugLocal(r)
+			continue
+		}
+		if strings.Contains(r, "Open") {
+			openParts := strings.SplitN(r, " ", 2)
+			portResultChan <- openParts[1]
+			continue
+		}
+		if strings.Contains(r, "->") {
+			system.SlogInfo(fmt.Sprintf("%v Port alive: %v", domain, r))
+			continue
+		}
+		system.SlogError(fmt.Sprintf("%v PortScan error: %v", domain, r))
 	}
 	if err := scanner.Err(); err != nil {
 		system.SlogErrorLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domain, err))
+	}
+	scanner = bufio.NewScanner(stderr)
+	for scanner.Scan() {
+		system.SlogErrorLocal(fmt.Sprintf("RustScan stderr: %v", scanner.Text()))
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
 		system.SlogErrorLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domain, err))
 	}
 	system.SlogDebugLocal("RustScan end")
+	system.PortScanCond.L.Lock()
+	system.PortScanCounter--
+	system.PortScanCond.Signal()
+	system.PortScanCond.L.Unlock()
+}
+
+func parsePort(ports string) string {
+	parts := strings.Split(ports, ",")
+	tmp := ""
+	for _, p := range parts {
+		if strings.Contains(p, "-") {
+			s := strings.Split(p, "-")
+			start, _ := strconv.Atoi(s[0])
+			end, _ := strconv.Atoi(s[1])
+			for i := start; i <= end; i++ {
+				character := strconv.Itoa(i)
+				tmp += character + ","
+			}
+			continue
+		}
+		tmp += p + ","
+	}
+	return tmp[:len(tmp)-1]
 }

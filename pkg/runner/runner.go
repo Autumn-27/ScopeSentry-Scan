@@ -235,7 +235,7 @@ func Process(Host string, op Option) {
 				}
 				if err != nil {
 					system.SlogError(fmt.Sprintf("Error converting PortscanThread to int: %v\n", err))
-					return
+					portscanThread = 5
 				}
 				for system.PortScanCounter >= portscanThread {
 					system.PortScanCond.Wait()
@@ -251,11 +251,6 @@ func Process(Host string, op Option) {
 				assetOthers = append(assetOthers, assetOtherTemp...)
 				mutex.Unlock()
 
-				// 扫描完成后更新计数器并通知
-				system.PortScanCond.L.Lock()
-				system.PortScanCounter--
-				system.PortScanCond.Signal()
-				system.PortScanCond.L.Unlock()
 			}(domain)
 		}
 		portWg.Wait()
@@ -366,7 +361,25 @@ func Process(Host string, op Option) {
 				}
 			}
 			if len(domainUrlScanList) != 0 {
+				system.VulScanCond.L.Lock()
+				vulScanThread, err := strconv.Atoi(system.AppConfig.System.VulScanThread)
+				if err != nil {
+					system.SlogErrorLocal(fmt.Sprintf("Error converting VulScanThread to int: %v\n", err))
+					vulScanThread = 3
+				}
+				for system.VulScanCounter >= vulScanThread {
+					system.VulScanCond.Wait()
+				}
+				system.VulScanCounter++
+				system.VulScanCond.L.Unlock()
+
 				vulnMode.Scan(domainUrlScanList, template, op.TaskId)
+
+				// 扫描完成后更新计数器并通知
+				system.VulScanCond.L.Lock()
+				system.VulScanCounter--
+				system.VulScanCond.Signal()
+				system.VulScanCond.L.Unlock()
 			}
 		}
 		system.SlogInfo(fmt.Sprintf("target %s vulnerability scan completed", Host))
