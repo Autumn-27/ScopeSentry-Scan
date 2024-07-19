@@ -76,7 +76,7 @@ func Scan(domain string) []string {
 		fetch := fn
 		resp, err := fetch(domain, noSubs)
 		if err != nil {
-			system.SlogErrorLocal(fmt.Sprintf("waybackMode %s error: %v", domain, err))
+			system.SlogDebugLocal(fmt.Sprintf("waybackMode %s error: %v", domain, err))
 			continue
 		}
 		wg.Add(1)

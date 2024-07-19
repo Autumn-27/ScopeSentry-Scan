@@ -174,7 +174,7 @@ func InitDb() bool {
 		AppConfig.System.CrawlerThread = "2"
 		AppConfig.System.UrlThread = "5"
 		AppConfig.System.UrlMaxNum = "500"
-		AppConfig.System.CrawlerTimeout = "1"
+		AppConfig.System.CrawlerTimeout = "30"
 		AppConfig.Mongodb.IP = os.Getenv("Mongodb_IP")
 		AppConfig.Mongodb.Port = os.Getenv("MONGODB_PORT")
 		AppConfig.Mongodb.Username = os.Getenv("Mongodb_Username")

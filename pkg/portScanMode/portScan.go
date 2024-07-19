@@ -349,15 +349,12 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 			continue
 		}
 		if strings.Contains(r, "Looks like I didn't find any open ports") {
-			system.SlogDebugLocal(r)
 			continue
 		}
 		if strings.Contains(r, "*I used") {
-			system.SlogDebugLocal(r)
 			continue
 		}
 		if strings.Contains(r, "Alternatively, increase") {
-			system.SlogDebugLocal(r)
 			continue
 		}
 		if strings.Contains(r, "Open") {
@@ -369,7 +366,7 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 			system.SlogInfo(fmt.Sprintf("%v Port alive: %v", domain, r))
 			continue
 		}
-		system.SlogError(fmt.Sprintf("%v PortScan error: %v", domain, r))
+		system.SlogDebugLocal(fmt.Sprintf("%v PortScan error: %v", domain, r))
 	}
 	if err := scanner.Err(); err != nil {
 		system.SlogErrorLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domain, err))

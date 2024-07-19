@@ -16,7 +16,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -56,9 +55,9 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			}
 			CrawlerTimeout, err := strconv.Atoi(system.AppConfig.System.CrawlerTimeout)
 			if err != nil {
-				CrawlerTimeout = 1
+				CrawlerTimeout = 30
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(CrawlerTimeout)*time.Hour)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(CrawlerTimeout)*time.Minute)
 			defer cancel()
 			radModePath := system.CrawlerPath
 			radPath := system.CrawlerExecPath
@@ -129,19 +128,19 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 			}
 
 			// Read the content of the file
-			resultContent, err := ioutil.ReadFile(resultPath)
-			if err != nil {
-				system.SlogInfo(fmt.Sprintf("%v CrawlerScan read result 0: %s", targetFileName, err))
-				return
-			}
-			var requests []Request
-
-			// Unmarshal the JSON data into the slice
-			err = json.Unmarshal(resultContent, &requests)
-			if err != nil {
-				system.SlogErrorLocal(fmt.Sprintf("%v CrawlerScan parse json err: %s", targetFileName, err))
-				return
-			}
+			//resultContent, err := ioutil.ReadFile(resultPath)
+			//if err != nil {
+			//	system.SlogInfo(fmt.Sprintf("%v CrawlerScan read result 0: %s", targetFileName, err))
+			//	return
+			//}
+			//var requests []Request
+			//
+			//// Unmarshal the JSON data into the slice
+			//err = json.Unmarshal(resultContent, &requests)
+			//if err != nil {
+			//	system.SlogErrorLocal(fmt.Sprintf("%v CrawlerScan parse json err: %s", targetFileName, err))
+			//	return
+			//}
 			defer util.DeleteFile(targetPath)
 			defer util.DeleteFile(resultPath)
 
