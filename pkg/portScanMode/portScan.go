@@ -377,7 +377,7 @@ func RustScan(domain string, ports string, exclude string, portResultChan chan<-
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
-		system.SlogErrorLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domain, err))
+		system.SlogDebugLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domain, err))
 	}
 	system.SlogDebugLocal("RustScan end")
 	system.PortScanCond.L.Lock()

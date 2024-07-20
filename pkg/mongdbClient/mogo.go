@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"net/url"
 )
 
 type MongoDBClient struct {
@@ -17,7 +18,8 @@ type MongoDBClient struct {
 
 // Connect 连接到MongoDB并返回一个MongoDBClient实例
 func Connect(Username string, Password string, IP string, Port string) (*MongoDBClient, error) {
-	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", Username, Password, IP, Port)
+	encodedPassword := url.QueryEscape(Password)
+	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", Username, encodedPassword, IP, Port)
 	clientOptions := options.Client().ApplyURI(connectionURI)
 	var MaxPoolSizevalue uint64 = 50
 	clientOptions.MaxPoolSize = &MaxPoolSizevalue

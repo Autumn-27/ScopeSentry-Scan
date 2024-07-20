@@ -52,18 +52,18 @@ func UpdateDomainDicConfig() bool {
 }
 
 func UpdateDirDicConfig() bool {
-	//SlogInfoLocal("dir dict load begin")
-	//content, erro := MongoClient.FindFile("dirdict")
-	//if erro != nil {
-	//	return false
-	//}
-	//dirDicConfigPath := filepath.Join(ConfigDir, "dirdict")
-	//flag := util.WriteContentFile(dirDicConfigPath, string(content))
-	//if !flag {
-	//	fmt.Printf("Write dirdict file error")
-	//	return false
-	//}
-	//SlogInfoLocal("dir dict load end")
+	SlogInfoLocal("dir dict load begin")
+	content, erro := MongoClient.FindFile("dirdict")
+	if erro != nil {
+		return false
+	}
+	dirDicConfigPath := filepath.Join(ConfigDir, "dirdict")
+	flag := util.WriteContentFile(dirDicConfigPath, string(content))
+	if !flag {
+		fmt.Printf("Write dirdict file error")
+		return false
+	}
+	SlogInfoLocal("dir dict load end")
 	return true
 }
 

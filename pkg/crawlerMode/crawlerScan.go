@@ -146,7 +146,11 @@ func CrawlerScan(tasks <-chan types.CrawlerTask) {
 
 			file, err := os.Open(resultPath)
 			if err != nil {
-				system.SlogError(fmt.Sprintf("无法打开文件 %v: %v", resultPath, err))
+				if os.IsNotExist(err) {
+					system.SlogDebugLocal(fmt.Sprintf("爬虫无结果：文件 %v 不存在: %v", resultPath, err))
+				} else {
+					system.SlogDebugLocal(fmt.Sprintf("无法打开文件 %v: %v", resultPath, err))
+				}
 				return
 			}
 			defer file.Close()
