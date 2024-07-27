@@ -310,7 +310,7 @@ func Process(Host string, op Option) {
 		urlResu = urlScanMode.Run(urlScanOption, domainUrlScanList, op.SensitiveInfoScan, op.PageMonitoring, op.TaskId)
 		if op.WaybackurlEnabled {
 			system.SlogInfo(fmt.Sprintf("target %s waybackurl scan start", Host))
-			waybackMode.Runner(domainUrlScanList, op.TaskId)
+			waybackMode.Runner(domainUrlScanList, op.TaskId, op.SensitiveInfoScan)
 			system.SlogInfo(fmt.Sprintf("target %s waybackurl scan end", Host))
 		}
 		system.SlogInfo(fmt.Sprintf("targety %v URLScan get result %v", Host, len(urlResu)))

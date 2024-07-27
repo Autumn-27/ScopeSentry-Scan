@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -93,6 +94,7 @@ var PortScanCounter int
 var PortScanCond = sync.NewCond(&sync.Mutex{})
 var VulScanCounter int
 var VulScanCond = sync.NewCond(&sync.Mutex{})
+var DisallowedURLFilters []*regexp.Regexp
 
 func SetUp() bool {
 	UpdateSystemFlag = make(chan bool)
@@ -109,6 +111,7 @@ func SetUp() bool {
 		return dbFlag
 	}
 	LogInit(AppConfig.System.Debug)
+	InitFilterUrlRe()
 	go UpdateInit()
 	SlogInfoLocal("Start check crawler tool")
 	flagCheck := CheckCrawler()
@@ -140,7 +143,13 @@ func SetUp() bool {
 }
 func Test() {
 	InitDb()
+	InitFilterUrlRe()
 	LogInit(AppConfig.System.Debug)
+}
+
+func InitFilterUrlRe() {
+	disallowedRegex := `(?i)\.(png|apng|bmp|gif|ico|cur|jpg|jpeg|jfif|pjp|pjpeg|svg|tif|tiff|webp|xbm|3gp|aac|flac|mpg|mpeg|mp3|mp4|m4a|m4v|m4p|oga|ogg|ogv|mov|wav|webm|eot|woff|woff2|ttf|otf|css)(?:\?|#|$)`
+	DisallowedURLFilters = append(DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 }
 
 func InitDb() bool {

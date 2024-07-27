@@ -475,9 +475,9 @@ func (crawler *Crawler) Start(linkfinder bool) {
 					Input:      crawler.Input,
 					Source:     "body",
 					OutputType: "url",
-					StatusCode: response.StatusCode,
+					StatusCode: 0,
 					Output:     u,
-					Length:     strings.Count(respStr, "\n"),
+					Length:     0,
 				}
 				if data, err := jsoniter.MarshalToString(sout); err == nil {
 					outputFormat = data
@@ -502,7 +502,7 @@ func (crawler *Crawler) Start(linkfinder bool) {
 				//if crawler.Output != nil {
 				//	crawler.Output.WriteToFile(outputFormat)
 				//}
-				crawler.Output.respCallBack(u, respStr)
+				//crawler.Output.respCallBack(u, respStr)
 			}
 		}
 	})
@@ -774,7 +774,7 @@ func (crawler *Crawler) setupLinkFinder() {
 					//if crawler.Output != nil {
 					//	crawler.Output.WriteToFile(outputFormat)
 					//}
-					crawler.Output.respCallBack(u, respStr)
+					//crawler.Output.respCallBack(u, respStr)
 				}
 			}
 		}

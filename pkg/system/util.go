@@ -13,6 +13,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -68,4 +69,13 @@ func HTTPPostGetData(url string, jsonData interface{}) (map[string]interface{}, 
 	}
 
 	return result, nil
+}
+
+func IsMatchingFilter(fs []*regexp.Regexp, d []byte) bool {
+	for _, r := range fs {
+		if r.Match(d) {
+			return true
+		}
+	}
+	return false
 }

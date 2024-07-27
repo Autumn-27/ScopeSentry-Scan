@@ -10,14 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/sensitiveMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/jaeles-project/gospider/core"
 	"github.com/sirupsen/logrus"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,15 +25,6 @@ import (
 type Option struct {
 	Cookie  string
 	Headers []string
-}
-
-func isMatchingFilter(fs []*regexp.Regexp, d []byte) bool {
-	for _, r := range fs {
-		if r.Match(d) {
-			return true
-		}
-	}
-	return false
 }
 
 func isContentType(s string) bool {
@@ -85,9 +74,6 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 	robots := true
 	PageMonitoringInitResults := []types.TmpPageMonitResult{}
 	urlInfos := []types.UrlResult{}
-	var DisallowedURLFilters []*regexp.Regexp
-	disallowedRegex := `(?i)\.(png|apng|bmp|gif|ico|cur|jpg|jpeg|jfif|pjp|pjpeg|svg|tif|tiff|webp|xbm|3gp|aac|flac|mpg|mpeg|mp3|mp4|m4a|m4v|m4p|oga|ogg|ogv|mov|wav|webm|eot|woff|woff2|ttf|otf|css)(?:\?|#|$)`
-	DisallowedURLFilters = append(DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
 	var seenUrls sync.Map
 	urlScanResultHandler := func(msg string) {
 		urlInfo := types.UrlResult{}
@@ -104,7 +90,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 		if teFlag {
 			return
 		}
-		if !isMatchingFilter(DisallowedURLFilters, []byte(url)) {
+		if !system.IsMatchingFilter(system.DisallowedURLFilters, []byte(url)) {
 			urlInfo.Output = strings.TrimSpace(urlInfo.Output)
 			inputDomainRoot, err := util.GetRootDomain(urlInfo.Input)
 			if err != nil {
@@ -120,7 +106,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 					seenUrls.Store(url, struct{}{})
 					flag := scanResult.URLRedisDeduplication(urlInfo.Output, taskId)
 					if !flag {
-						scanResult.UrlResult([]types.UrlResult{urlInfo}, taskId)
+						scanResult.UrlResult([]types.UrlResult{urlInfo}, taskId, secretFlag)
 						urlInfos = append(urlInfos, urlInfo)
 					}
 				}
@@ -150,22 +136,22 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 	}
 	var wg sync.WaitGroup
 	respBodyHandler := func(url string, msg string) {
-		if secretFlag || pageMonitoring != "None" {
-			if !isMatchingFilter(DisallowedURLFilters, []byte(url)) {
-				if secretFlag {
-					wg.Add(1)
-					go func(url string, msg string) {
-						defer func() {
-							wg.Done()
-						}()
-						respMd5 := util.CalculateMD5(msg)
-						if !scanResult.SensRedisDeduplication(respMd5, taskId) {
-							sensitiveMode.Scan(url, msg, respMd5, taskId)
-						}
-					}(url, msg)
-				}
-			}
-		}
+		//if secretFlag || pageMonitoring != "None" {
+		//	if !system.IsMatchingFilter(system.DisallowedURLFilters, []byte(url)) {
+		//		if secretFlag {
+		//			wg.Add(1)
+		//			go func(url string, msg string) {
+		//				defer func() {
+		//					wg.Done()
+		//				}()
+		//				respMd5 := util.CalculateMD5(msg)
+		//				if !scanResult.SensRedisDeduplication(respMd5, taskId) {
+		//					sensitiveMode.Scan(url, msg, respMd5, taskId)
+		//				}
+		//			}(url, msg)
+		//		}
+		//	}
+		//}
 	}
 
 	inputChan := make(chan string, threads)
@@ -211,7 +197,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 		}
 	}()
 	for _, site := range siteList {
-		if !isMatchingFilter(DisallowedURLFilters, []byte(site)) {
+		if !system.IsMatchingFilter(system.DisallowedURLFilters, []byte(site)) {
 			inputChan <- site
 		}
 	}

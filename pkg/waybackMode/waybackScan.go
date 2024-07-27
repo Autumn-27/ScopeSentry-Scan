@@ -20,7 +20,7 @@ import (
 	"sync"
 )
 
-func Runner(domains []string, taskId string) {
+func Runner(domains []string, taskId string, secretFlag bool) {
 	var urlInfos []types.UrlResult
 	if len(domains) == 0 {
 		system.SlogInfo("target waybackMode in null")
@@ -50,7 +50,7 @@ func Runner(domains []string, taskId string) {
 		Wg.Add(1)
 		go func(result types.UrlResult) {
 			defer Wg.Done()
-			scanResult.UrlResult([]types.UrlResult{result}, taskId)
+			scanResult.UrlResult([]types.UrlResult{result}, taskId, secretFlag)
 		}(result)
 		tmpseenUrls[result.Output] = struct{}{}
 	}

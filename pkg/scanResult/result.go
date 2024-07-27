@@ -11,11 +11,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/sensitiveMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"net/url"
+	"sync"
 )
 
 func SubdoaminResult(result []types.SubdomainResult, taskId string) bool {
@@ -166,12 +168,29 @@ func SensitiveResult(result []types.SensitiveResult, taskId string) {
 	}
 }
 
-func UrlResult(result []types.UrlResult, taskId string) {
+func UrlResult(result []types.UrlResult, taskId string, secretFlag bool) {
 	var interfaceSlice []interface{}
+	var wg sync.WaitGroup
 	for _, r := range result {
-		StatusCode, ContentLength, err := httpxMode.HttpSurvival(r.Output)
+		StatusCode, ContentLength, RespBody, err := httpxMode.HttpSurvival(r.Output)
 		if err != nil {
 			continue
+		}
+		if secretFlag {
+			if !system.IsMatchingFilter(system.DisallowedURLFilters, []byte(r.Output)) {
+				if secretFlag {
+					wg.Add(1)
+					go func(url string, msg string) {
+						defer func() {
+							wg.Done()
+						}()
+						respMd5 := util.CalculateMD5(msg)
+						if !SensRedisDeduplication(respMd5, taskId) {
+							sensitiveMode.Scan(url, msg, respMd5, taskId)
+						}
+					}(r.Output, RespBody)
+				}
+			}
 		}
 		r.Status = StatusCode
 		r.Length = ContentLength
@@ -194,6 +213,7 @@ func UrlResult(result []types.UrlResult, taskId string) {
 			system.PrintLog(myLog)
 		}
 	}
+	wg.Wait()
 }
 
 func CrawlerResult(result []types.CrawlerResult, taskId string) {

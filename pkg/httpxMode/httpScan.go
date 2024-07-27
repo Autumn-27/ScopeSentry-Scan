@@ -89,18 +89,20 @@ func httpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 
 }
 
-func HttpSurvival(target string) (int, int, error) {
+func HttpSurvival(target string) (int, int, string, error) {
 	defer system.RecoverPanic("HttpSurvival")
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal)
 	var StatusCode int
 	var ContentLength int
+	var RespBody string
 	var err error
-	httpxResultsHandler := func(code int, length int, e error) {
+	httpxResultsHandler := func(code int, length int, respBody string, e error) {
 		if e != nil {
 			err = e
 		}
 		StatusCode = code
 		ContentLength = length
+		RespBody = respBody
 	}
 	options := runner.Options{
 		Methods:                   "GET",
@@ -126,9 +128,9 @@ func HttpSurvival(target string) (int, int, error) {
 		MaxResponseBodySizeToRead: 100000,
 		OnResult: func(r runner.Result) {
 			if r.Err != nil {
-				httpxResultsHandler(0, 0, r.Err)
+				httpxResultsHandler(0, 0, "", r.Err)
 			} else {
-				httpxResultsHandler(r.StatusCode, r.ContentLength, nil)
+				httpxResultsHandler(r.StatusCode, r.ContentLength, r.ResponseBody, nil)
 			}
 		},
 	}
@@ -140,5 +142,5 @@ func HttpSurvival(target string) (int, int, error) {
 	defer httpxRunner.Close()
 
 	httpxRunner.RunEnumeration()
-	return StatusCode, ContentLength, err
+	return StatusCode, ContentLength, RespBody, err
 }

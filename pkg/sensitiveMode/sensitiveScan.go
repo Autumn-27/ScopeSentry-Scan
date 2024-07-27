@@ -9,10 +9,11 @@ package sensitiveMode
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/dlclark/regexp2"
+	"strings"
 )
 
 func Scan(url string, resp string, resMd5 string, taskId string) {
@@ -42,7 +43,7 @@ func Scan(url string, resp string, resMd5 string, taskId string) {
 					} else {
 						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: resp, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
 					}
-					scanResult.SensitiveResult([]types.SensitiveResult{tmpResult}, taskId)
+					sensitiveResult([]types.SensitiveResult{tmpResult}, taskId)
 					NotificationMsg += fmt.Sprintf("%v\n%v:%v", url, rule.Name, matches)
 					findFlag = true
 				}
@@ -104,4 +105,39 @@ func findMatchesInChunk(regex *regexp2.Regexp, text string) ([]string, error) {
 		m, _ = regex.FindNextMatch(m)
 	}
 	return matches, nil
+}
+
+func sensitiveResult(result []types.SensitiveResult, taskId string) {
+	var interfaceSlice []interface{}
+	for _, r := range result {
+		project := GetAssetOwner(r.Url)
+		r.Project = project
+		r.TaskId = taskId
+		interfaceSlice = append(interfaceSlice, r)
+	}
+	if len(interfaceSlice) != 0 {
+		errorm := system.MongoClient.Ping()
+		if errorm != nil {
+			system.GetMongbClient()
+		}
+		_, err := system.MongoClient.InsertMany("SensitiveResult", interfaceSlice)
+		if err != nil {
+			system.SlogError(fmt.Sprintf("SensitiveResult error: %s", err))
+		}
+	}
+}
+
+func GetAssetOwner(domain string) string {
+	for _, p := range system.Projects {
+		for _, t := range p.Target {
+			domainRoot, err := util.GetRootDomain(domain)
+			if err != nil {
+				domainRoot = domain
+			}
+			if strings.Contains(domainRoot, t) {
+				return p.ID
+			}
+		}
+	}
+	return ""
 }
