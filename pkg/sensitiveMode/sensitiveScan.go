@@ -18,6 +18,9 @@ import (
 
 func Scan(url string, resp string, resMd5 string, taskId string) {
 	defer system.RecoverPanic("sensitiveMode")
+	if resp == "" {
+		return
+	}
 	if len(system.SensitiveRules) == 0 {
 		system.UpdateSensitive()
 	}

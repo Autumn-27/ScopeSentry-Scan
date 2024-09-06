@@ -174,6 +174,7 @@ func UrlResult(result []types.UrlResult, taskId string, secretFlag bool) {
 	for _, r := range result {
 		StatusCode, ContentLength, RespBody, err := httpxMode.HttpSurvival(r.Output)
 		if err != nil {
+			system.SlogDebugLocal(fmt.Sprintf("Url %v HttpSurvival eror: %v", r.Output, err))
 			continue
 		}
 		if secretFlag {

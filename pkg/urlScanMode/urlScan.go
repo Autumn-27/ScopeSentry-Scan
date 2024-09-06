@@ -85,7 +85,7 @@ func Run(op Option, siteList []string, secretFlag bool, pageMonitoring string, t
 		//system.SlogDebugLocal(fmt.Sprintf("urlScanResultHandler: %s", msg))
 		urlInfo.Time = system.GetTimeNow()
 		var url string
-		url = urlInfo.Output
+		url = strings.TrimSpace(urlInfo.Output)
 		teFlag := isContentType(url)
 		if teFlag {
 			return

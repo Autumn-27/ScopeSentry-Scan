@@ -400,7 +400,7 @@ func UpdateSetUp() {
 	UpdateSensitive()
 	UpdateProject()
 	UpdatePort()
-	UpdatePoc(true)
+	UpdatePoc(false)
 	UpdateWebFinger()
 	UpdateNode(false)
 	UpdateNotification()

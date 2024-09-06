@@ -117,7 +117,7 @@ func HttpSurvival(target string) (int, int, string, error) {
 		OutputIP:                  false,
 		OutputCName:               false,
 		ResponseHeadersInStdout:   false,
-		ResponseInStdout:          false,
+		ResponseInStdout:          true,
 		Base64ResponseInStdout:    false,
 		Jarm:                      false,
 		OutputCDN:                 false,
