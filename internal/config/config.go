@@ -12,13 +12,14 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"log"
 	"os"
+	"path/filepath"
 )
 
-// Config 结构体用来存储读取的配置
+// Config 结构体
 type Config struct {
 	NodeName     string        `yaml:"NodeName"`
 	TimeZoneName string        `yaml:"TimeZoneName"`
-	Debug        bool          `yaml:"Debug"`
+	Debug        bool          `yaml:"debug"`
 	MongoDB      MongoDBConfig `yaml:"mongodb"`
 	Redis        RedisConfig   `yaml:"redis"`
 }
@@ -37,15 +38,22 @@ type RedisConfig struct {
 	Password string `yaml:"password"`
 }
 
-// AppConfig Global variable to hold the loaded configuration
-var AppConfig Config
+var (
+	// AbsolutePath 全局变量
+	AbsolutePath string
+	ConfigPath   string
+	ConfigDir    string
+	// AppConfig Global variable to hold the loaded configuration
+	AppConfig Config
+	VERSION   string
+)
 
 // LoadConfig 读取配置文件并解析
-func LoadConfig(configFile string) error {
+func LoadConfig() error {
 	// 尝试打开配置文件
-	if _, err := os.Stat(configFile); err == nil {
+	if _, err := os.Stat(ConfigPath); err == nil {
 		// 配置文件存在，从文件读取
-		if err := utils.ReadYAMLFile(configFile, &AppConfig); err != nil {
+		if err := utils.ReadYAMLFile(ConfigPath, &AppConfig); err != nil {
 			return err
 		}
 	} else {
@@ -67,7 +75,7 @@ func LoadConfig(configFile string) error {
 			},
 		}
 		// 创建配置文件
-		if err := createConfigFile(configFile, AppConfig); err != nil {
+		if err := createConfigFile(ConfigPath, AppConfig); err != nil {
 			return err
 		}
 		if AppConfig.MongoDB.IP == "" {
@@ -75,7 +83,6 @@ func LoadConfig(configFile string) error {
 		}
 
 	}
-
 	return nil
 }
 
@@ -91,12 +98,15 @@ func createConfigFile(configFile string, config Config) error {
 	if err := utils.WriteYAMLFile(configFile, config); err != nil {
 		return err
 	}
-	log.Printf("Configuration file created from environment variables: %s", configFile)
+	log.Printf("Configuration file created: %s", configFile)
 	return nil
 }
 
-func Initialize(configFile string) {
-	err := LoadConfig(configFile)
+func Initialize() {
+	AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	ConfigDir = filepath.Join(AbsolutePath, "config")
+	ConfigPath = filepath.Join(ConfigDir, "config.yaml")
+	err := LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}

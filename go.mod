@@ -58,6 +58,7 @@ require (
 	github.com/cloudflare/cfssl v1.6.4
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/dlclark/regexp2 v1.11.0
+	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/praetorian-inc/fingerprintx v1.1.9
 	github.com/projectdiscovery/nuclei/v3 v3.2.4
 	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000

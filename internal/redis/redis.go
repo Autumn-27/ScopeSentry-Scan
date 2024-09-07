@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -22,12 +23,33 @@ type Client struct {
 
 var RedisClient *Client
 
-// NewRedisConnect 用于创建一个新的 Redis 客户端
-func NewRedisConnect(addr, password string, db int) (*Client, error) {
+//// NewRedisConnect 用于创建一个新的 Redis 客户端
+//func NewRedisConnect(ip, port, password string, db int) (*Client, error) {
+//	client := redis.NewClient(&redis.Options{
+//		Addr:           ip + ":" + port,
+//		Password:       password,
+//		DB:             db,
+//		ReadTimeout:    -2,
+//		MaxActiveConns: 50,
+//		MinIdleConns:   5,
+//		MaxIdleConns:   10,
+//	})
+//
+//	// 检查连接是否正常
+//	_, err := client.Ping(context.Background()).Result()
+//	if err != nil {
+//		fmt.Printf("failed to connect to Redis: %v", err)
+//		return nil, fmt.Errorf("failed to connect to Redis: %v", err)
+//	}
+//
+//	return &Client{client: client}, nil
+//}
+
+func Initialize() {
 	client := redis.NewClient(&redis.Options{
-		Addr:           addr,
-		Password:       password,
-		DB:             db,
+		Addr:           config.AppConfig.Redis.IP + ":" + config.AppConfig.Redis.Port,
+		Password:       config.AppConfig.Redis.Password,
+		DB:             0,
 		ReadTimeout:    -2,
 		MaxActiveConns: 50,
 		MinIdleConns:   5,
@@ -38,10 +60,9 @@ func NewRedisConnect(addr, password string, db int) (*Client, error) {
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		fmt.Printf("failed to connect to Redis: %v", err)
-		return nil, fmt.Errorf("failed to connect to Redis: %v", err)
 	}
 
-	return &Client{client: client}, nil
+	RedisClient = &Client{client: client}
 }
 
 func (r *Client) Client() *redis.Client {

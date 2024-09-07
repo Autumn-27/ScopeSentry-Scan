@@ -12,6 +12,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -25,10 +26,36 @@ type Client struct {
 
 var MongodbClient *Client
 
-// NewMongoDbConnect 连接到MongoDB并返回一个MongoDBClient实例
-func NewMongoDbConnect(Username string, Password string, IP string, Port string, Database string) (*Client, error) {
-	encodedPassword := url.QueryEscape(Password)
-	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", Username, encodedPassword, IP, Port)
+//// NewMongoDbConnect 连接到MongoDB并返回一个MongoDBClient实例
+//func NewMongoDbConnect(Username string, Password string, IP string, Port string, Database string) (*Client, error) {
+//
+//	encodedPassword := url.QueryEscape(Password)
+//	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", Username, encodedPassword, IP, Port)
+//	clientOptions := options.Client().ApplyURI(connectionURI)
+//	var MaxPoolSizevalue uint64 = 50
+//	clientOptions.MaxPoolSize = &MaxPoolSizevalue
+//	var MaxConnectingValue uint64 = 10
+//	clientOptions.MaxConnecting = &MaxConnectingValue
+//	var MinPoolSizeValue uint64 = 5
+//	clientOptions.MinPoolSize = &MinPoolSizeValue
+//	client, err := mongo.Connect(context.Background(), clientOptions)
+//	if err != nil {
+//		fmt.Printf("mongodb connect error: %v", err)
+//		return nil, err
+//	}
+//
+//	err = client.Ping(context.Background(), nil)
+//	if err != nil {
+//		fmt.Printf("mongodb ping error: %v", err)
+//		return nil, err
+//	}
+//	db := client.Database(Database)
+//	return &Client{client: client, database: db}, nil
+//}
+
+func Initialize() {
+	encodedPassword := url.QueryEscape(config.AppConfig.MongoDB.Password)
+	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", config.AppConfig.MongoDB.User, encodedPassword, config.AppConfig.MongoDB.IP, config.AppConfig.MongoDB.Port)
 	clientOptions := options.Client().ApplyURI(connectionURI)
 	var MaxPoolSizevalue uint64 = 50
 	clientOptions.MaxPoolSize = &MaxPoolSizevalue
@@ -39,16 +66,15 @@ func NewMongoDbConnect(Username string, Password string, IP string, Port string,
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
 		fmt.Printf("mongodb connect error: %v", err)
-		return nil, err
 	}
 
 	err = client.Ping(context.Background(), nil)
 	if err != nil {
 		fmt.Printf("mongodb ping error: %v", err)
-		return nil, err
 	}
-	db := client.Database(Database)
-	return &Client{client: client, database: db}, nil
+	db := client.Database(config.AppConfig.MongoDB.Database)
+
+	MongodbClient = &Client{client: client, database: db}
 }
 
 // GetCollection 获取指定集合
