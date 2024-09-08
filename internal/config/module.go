@@ -9,7 +9,6 @@ package config
 
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"path/filepath"
 )
 
 type SubdomainScanConfig struct {
@@ -65,7 +64,6 @@ var ModulesConfigPath string
 var ModulesConfig *ModulesConfigStruct
 
 func ModulesInitialize() error {
-	ModulesConfigPath = filepath.Join(ConfigDir, "modules.yaml")
 	if err := utils.ReadYAMLFile(ModulesConfigPath, &ModulesConfig); err != nil {
 		return err
 	}

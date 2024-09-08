@@ -46,14 +46,15 @@ func Register() {
 		if firstRegister {
 			memInfo, _ := mem.VirtualMemory()
 			nodeInfo := map[string]interface{}{
-				"updateTime": config.GetTimeNow(),
-				"running":    0,
-				"finished":   0,
-				"cpuNum":     0,
-				"TotleMem":   float64(memInfo.Total) / 1024 / 1024,
-				"memNum":     0,
-				"state":      1, //1运行中 2暂停 3未连接
-				"version":    config.VERSION,
+				"updateTime":    config.GetTimeNow(),
+				"running":       0,
+				"finished":      0,
+				"cpuNum":        0,
+				"TotleMem":      float64(memInfo.Total) / 1024 / 1024,
+				"memNum":        0,
+				"state":         1, //1运行中 2暂停 3未连接
+				"version":       config.VERSION,
+				"modulesConfig": utils.MarshalYAMLToString(config.ModulesConfig),
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {
@@ -70,7 +71,7 @@ func Register() {
 				"updateTime": config.GetTimeNow(),
 				"cpuNum":     cpuNum,
 				"memNum":     memNum,
-				"maxTaskNum": system.AppConfig.System.MaxTaskNum,
+				"maxTaskNum": config.ModulesConfig.MaxGoroutineCount,
 				"running":    run,
 				"finished":   fin,
 				"state":      1,

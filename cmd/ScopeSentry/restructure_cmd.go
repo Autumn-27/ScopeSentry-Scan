@@ -9,7 +9,9 @@ package main
 
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/task"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -32,5 +34,15 @@ func main() {
 	}
 	// 初始化任务计数器
 	task.InitHandle()
+	// 更新配置、加载字典
+	configupdater.Initialize()
+	// 初始化模块配置
+	err = config.ModulesInitialize()
+	if err != nil {
+		log.Fatalf("Failed to init ModulesConfig: %v", err)
+		return
+	}
+	// 初始化协程池
+	pool.Initialize()
 
 }

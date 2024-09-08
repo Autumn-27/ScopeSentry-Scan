@@ -15,48 +15,17 @@ import (
 	"path/filepath"
 )
 
-// Config 结构体
-type Config struct {
-	NodeName     string        `yaml:"NodeName"`
-	TimeZoneName string        `yaml:"TimeZoneName"`
-	Debug        bool          `yaml:"debug"`
-	MongoDB      MongoDBConfig `yaml:"mongodb"`
-	Redis        RedisConfig   `yaml:"redis"`
-}
-
-type MongoDBConfig struct {
-	IP       string `yaml:"ip"`
-	Port     string `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
-}
-
-type RedisConfig struct {
-	IP       string `yaml:"ip"`
-	Port     string `yaml:"port"`
-	Password string `yaml:"password"`
-}
-
-var (
-	// AbsolutePath 全局变量
-	AbsolutePath string
-	ConfigPath   string
-	ConfigDir    string
-	// AppConfig Global variable to hold the loaded configuration
-	AppConfig Config
-	VERSION   string
-)
-
 // LoadConfig 读取配置文件并解析
 func LoadConfig() error {
 	// 尝试打开配置文件
 	if _, err := os.Stat(ConfigPath); err == nil {
+		FirstRun = false
 		// 配置文件存在，从文件读取
 		if err := utils.ReadYAMLFile(ConfigPath, &AppConfig); err != nil {
 			return err
 		}
 	} else {
+		FirstRun = true
 		// 配置文件不存在，从环境变量读取
 		AppConfig = Config{
 			NodeName:     getEnv("NodeName", ""),
@@ -106,6 +75,7 @@ func Initialize() {
 	AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	ConfigDir = filepath.Join(AbsolutePath, "config")
 	ConfigPath = filepath.Join(ConfigDir, "config.yaml")
+	ModulesConfigPath = filepath.Join(ConfigDir, "modules.yaml")
 	err := LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)

@@ -84,3 +84,22 @@ func GetSystemUsage() (int, float64) {
 	}
 	return cpuNum, memInfo.UsedPercent
 }
+
+func WriteContentFile(filPath string, fileContent string) error {
+	// 将字符串写入文件
+	err := ioutil.WriteFile(filPath, []byte(fileContent), 0666)
+	if err != nil {
+		fmt.Printf("Failed to create filPath: %s - %s", filPath, err)
+		return err
+	}
+	return nil
+}
+
+// MarshalYAMLToString 将目标结构体序列化为 YAML 字符串
+func MarshalYAMLToString(data interface{}) (string, error) {
+	yamlData, err := yaml.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(yamlData), nil
+}
