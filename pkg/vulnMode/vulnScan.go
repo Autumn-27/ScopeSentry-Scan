@@ -9,9 +9,9 @@ package vulnMode
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"

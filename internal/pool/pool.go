@@ -34,11 +34,15 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 
 	// Initialize pools for each module
 	var err error
+	pm.pools["task"], err = ants.NewPool(cfg.MaxGoroutineCount)
+	if err != nil {
+		log.Fatalf("Failed to create pool for subdomainScan: %v", err)
+	}
 	pm.pools["subdomainScan"], err = ants.NewPool(cfg.SubdomainScan.GoroutineCount)
 	if err != nil {
 		log.Fatalf("Failed to create pool for subdomainScan: %v", err)
 	}
-	pm.pools["subdomainResultHandl"], err = ants.NewPool(cfg.SubdomainResultHandl.GoroutineCount)
+	pm.pools["subdomainResultHandl"], err = ants.NewPool(cfg.SubdomainResultHandle.GoroutineCount)
 	if err != nil {
 		log.Fatalf("Failed to create pool for subdomainResultHandl: %v", err)
 	}
@@ -50,7 +54,7 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	if err != nil {
 		log.Fatalf("Failed to create pool for portScan: %v", err)
 	}
-	pm.pools["assetResultHandl"], err = ants.NewPool(cfg.AssetResultHandl.GoroutineCount)
+	pm.pools["assetResultHandl"], err = ants.NewPool(cfg.AssetResultHandle.GoroutineCount)
 	if err != nil {
 		log.Fatalf("Failed to create pool for assetResultHandl: %v", err)
 	}
@@ -58,7 +62,7 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	if err != nil {
 		log.Fatalf("Failed to create pool for URLScan: %v", err)
 	}
-	pm.pools["URLScanResultHandl"], err = ants.NewPool(cfg.URLScanResultHandl.GoroutineCount)
+	pm.pools["URLScanResultHandl"], err = ants.NewPool(cfg.URLScanResultHandle.GoroutineCount)
 	if err != nil {
 		log.Fatalf("Failed to create pool for URLScanResultHandl: %v", err)
 	}

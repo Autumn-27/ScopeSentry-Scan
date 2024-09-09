@@ -76,3 +76,35 @@ func (p *PebbleDB) Compact() error {
 	// 调用 Compact 方法进行压缩
 	return p.db.Compact(start, end, true)
 }
+
+func (p *PebbleDB) GetKeysWithPrefix(prefix string) (map[string][]byte, error) {
+	result := make(map[string][]byte)
+
+	// 创建迭代器并设置范围
+	lowerBound := []byte(prefix)          // 设置下界为指定前缀
+	upperBound := []byte(prefix + "\xff") // 设置上界为指定前缀后加上一个字符
+
+	iter, _ := p.db.NewIter(&pebble.IterOptions{
+		LowerBound: lowerBound,
+		UpperBound: upperBound,
+	})
+	defer func(iter *pebble.Iterator) {
+		err := iter.Close()
+		if err != nil {
+
+		}
+	}(iter) // 确保在函数结束时关闭迭代器
+
+	// 遍历所有符合条件的键
+	for iter.First(); iter.Valid(); iter.Next() {
+		key := iter.Key()
+		value := iter.Value()
+		result[string(key)] = value
+	}
+
+	if err := iter.Error(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

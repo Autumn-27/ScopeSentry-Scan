@@ -9,6 +9,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -59,4 +60,19 @@ func GetTimeNow() string {
 	currentTime := time.Now()
 	var easternTime = currentTime.In(location)
 	return easternTime.Format("2006-01-02 15:04:05")
+}
+
+func EnsureDir(dirPath string) error {
+	// 检查目录是否存在
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		// 如果目录不存在，则创建目录
+		err := os.MkdirAll(dirPath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("创建目录失败: %w", err)
+		}
+		return nil
+	} else {
+		return nil
+	}
+	return nil
 }

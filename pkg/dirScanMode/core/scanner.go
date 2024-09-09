@@ -7,8 +7,8 @@
 package core
 
 import (
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode/utils"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"net/url"
 	"regexp"
 	"strings"

@@ -15,7 +15,7 @@ type SubdomainScanConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
-type SubdomainResultHandlConfig struct {
+type SubdomainResultHandleConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
@@ -27,7 +27,7 @@ type PortScanConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
-type AssetResultHandlConfig struct {
+type AssetResultHandleConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
@@ -35,7 +35,7 @@ type URLScanConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
-type URLScanResultHandlConfig struct {
+type URLScanResultHandleConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
@@ -48,16 +48,16 @@ type VulnerabilityScanConfig struct {
 }
 
 type ModulesConfigStruct struct {
-	MaxGoroutineCount    int                        `yaml:"maxGoroutineCount"`
-	SubdomainScan        SubdomainScanConfig        `yaml:"subdomainScan"`
-	SubdomainResultHandl SubdomainResultHandlConfig `yaml:"subdomainResultHandl"`
-	AssetMapping         AssetMappConfig            `yaml:"assetMapping"`
-	PortScan             PortScanConfig             `yaml:"portScan"`
-	AssetResultHandl     AssetResultHandlConfig     `yaml:"assetResultHandl"`
-	URLScan              URLScanConfig              `yaml:"URLScan"`
-	URLScanResultHandl   URLScanResultHandlConfig   `yaml:"URLScanResultHandl"`
-	WebCrawler           WebCrawlerConfig           `yaml:"webCrawler"`
-	VulnerabilityScan    VulnerabilityScanConfig    `yaml:"vulnerabilityScan"`
+	MaxGoroutineCount     int                         `yaml:"maxGoroutineCount"`
+	SubdomainScan         SubdomainScanConfig         `yaml:"subdomainScan"`
+	SubdomainResultHandle SubdomainResultHandleConfig `yaml:"subdomainResultHandle"`
+	AssetMapping          AssetMappConfig             `yaml:"assetMapping"`
+	PortScan              PortScanConfig              `yaml:"portScan"`
+	AssetResultHandle     AssetResultHandleConfig     `yaml:"assetResultHandle"`
+	URLScan               URLScanConfig               `yaml:"URLScan"`
+	URLScanResultHandle   URLScanResultHandleConfig   `yaml:"URLScanResultHandle"`
+	WebCrawler            WebCrawlerConfig            `yaml:"webCrawler"`
+	VulnerabilityScan     VulnerabilityScanConfig     `yaml:"vulnerabilityScan"`
 }
 
 var ModulesConfigPath string

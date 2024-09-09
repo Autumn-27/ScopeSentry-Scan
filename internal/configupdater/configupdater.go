@@ -13,9 +13,12 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"path/filepath"
 )
 
 // UpdateGlobalModulesConfig 拉取server的全局模块配置
@@ -52,9 +55,228 @@ func UpdateNodeModulesConfig() {
 	logger.SlogInfoLocal("node config load end")
 }
 
-func Initialize() {
-	UpdateGlobalModulesConfig()
-	if !config.FirstRun {
-		UpdateNodeModulesConfig()
+func UpdateSubDomainDicConfig() {
+	logger.SlogInfoLocal("UpdateSubDomainDicConfig load begin")
+	results, err := mongodb.MongodbClient.FindFilesByPattern("domain_")
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("UpdateSubDomainDicConfig load error: %v", err))
+		return
 	}
+	for id, content := range results {
+		filePath := filepath.Join(config.DictPath, "subdomain", id)
+		err := utils.WriteByteContentFile(filePath, content)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
+		}
+	}
+	logger.SlogInfoLocal("UpdateSubDomainDicConfig load end")
+	return
+}
+
+func UpdateDirDicConfig() {
+	logger.SlogInfoLocal("UpdateDirDicConfig load begin")
+	results, err := mongodb.MongodbClient.FindFilesByPattern("dir_")
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("UpdateDirDicConfig load error: %v", err))
+		return
+	}
+	for id, content := range results {
+		filePath := filepath.Join(config.DictPath, "dir", id)
+		err := utils.WriteByteContentFile(filePath, content)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("DirDic writing file error: %v - %v", id, err))
+		}
+	}
+	logger.SlogInfoLocal("UpdateDirDicConfig load end")
+	return
+}
+
+func UpdateSubfinderApiConfig() {
+	logger.SlogInfoLocal("UpdateSubfinderApiConfig load begin")
+	//var err error
+	var result struct {
+		Value string `bson:"value"`
+	}
+	err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "SubfinderApiConfig"}, bson.M{"_id": 0, "value": 1}, &result)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("UpdateSubfinderApiConfig load error: %v", err))
+		return
+	}
+	subfinderConfigPath := filepath.Join(config.ConfigDir, "subfinderConfig.yaml")
+	err = utils.WriteContentFile(subfinderConfigPath, result.Value)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("Subfinder writing file error: %v", err))
+	}
+	logger.SlogInfoLocal("UpdateSubfinderApiConfig load end")
+	return
+}
+
+func UpdateRadConfig() {
+	logger.SlogInfoLocal("UpdateRadConfig load begin")
+	var result struct {
+		Value string `bson:"value"`
+	}
+	radConfigPath := filepath.Join(config.ExtDir, "rad", "rad_config.yml")
+	err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "RadConfig"}, bson.M{"_id": 0, "value": 1}, &result)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("UpdateRadConfig load error: %v", err))
+		return
+	}
+	err = utils.WriteContentFile(radConfigPath, result.Value)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("Rad writing file error: %v", err))
+	}
+	logger.SlogInfoLocal("UpdateRadConfig load end")
+	return
+}
+
+type tmpSensitive struct {
+	ID      primitive.ObjectID `bson:"_id"`
+	Name    string             `bson:"name"`
+	Regular string             `bson:"regular"`
+	State   bool               `bson:"state"`
+	Color   string             `bson:"color"`
+}
+
+func UpdateSensitive() {
+	logger.SlogInfoLocal("sens rule load begin")
+	var tmpRule []tmpSensitive
+	if err := mongodb.MongodbClient.FindAll("SensitiveRule", bson.M{"state": true}, bson.M{"_id": 1, "regular": 1, "state": 1, "color": 1, "name": 1}, &tmpRule); err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("Get Sensitive error: %v", err))
+		return
+	}
+	config.SensitiveRules = []types.SensitiveRule{}
+	for _, rule := range tmpRule {
+		var r types.SensitiveRule
+		r.ID = rule.ID.Hex()
+		r.Regular = rule.Regular
+		r.State = rule.State
+		r.Color = rule.Color
+		r.Name = rule.Name
+		config.SensitiveRules = append(config.SensitiveRules, r)
+	}
+	logger.SlogInfoLocal("sens rule load end")
+	return
+}
+
+func UpdateNodeName(name string) {
+	logger.SlogInfoLocal("UpdateNodeName begin")
+	oldName := config.AppConfig.NodeName
+	config.AppConfig.NodeName = name
+	key := "node:" + oldName
+	err := redis.RedisClient.HDel(context.Background(), key)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("update node name error: %v", err))
+		return
+	}
+	if err := utils.WriteYAMLFile(config.ConfigPath, config.AppConfig); err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("update node name write error: %v", err))
+		return
+	}
+	logger.SlogInfoLocal("UpdateNodeName end")
+	return
+}
+
+type tmpProject struct {
+	ID          primitive.ObjectID `bson:"_id"`
+	RootDomains []string           `bson:"root_domains"`
+}
+
+func UpdateProject() {
+	logger.SlogInfoLocal("project load begin")
+	var tmpProjects []tmpProject
+	if err := mongodb.MongodbClient.FindAll("project", bson.M{}, bson.M{"_id": 1, "root_domains": 1}, &tmpProjects); err != nil {
+		return
+	}
+	config.Projects = []types.Project{}
+	for _, tmpProj := range tmpProjects {
+		// 创建一个 types.Project 类型的值
+		var proj types.Project
+		// 将 tmpProject 的值赋给 types.Project 的对应字段
+		proj.ID = tmpProj.ID.Hex()
+		proj.Target = tmpProj.RootDomains
+		config.Projects = append(config.Projects, proj)
+	}
+	logger.SlogInfoLocal("project load end")
+}
+
+type tmpPoc struct {
+	ID      primitive.ObjectID `bson:"_id"`
+	Hash    string             `bson:"hash"`
+	Content string             `bson:"content"`
+	Name    string             `bson:"name"`
+	Level   int                `bson:"level"`
+}
+
+func UpdatePoc() {
+	logger.SlogInfoLocal("poc load begin")
+	var tmpPocR []tmpPoc
+	if err := mongodb.MongodbClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
+		logger.SlogError(fmt.Sprintf("Get Poc List error: %s", err))
+		return
+	}
+	if len(tmpPocR) != 0 {
+		for _, poc := range tmpPocR {
+			id := poc.ID.Hex()
+			err := utils.WriteContentFile(filepath.Join(config.PocDir, string(id)+".yaml"), poc.Content)
+			if err != nil {
+				logger.SlogError(fmt.Sprintf("Failed to write poc %s: %s", poc.Hash, err))
+			}
+		}
+	}
+	logger.SlogInfoLocal("poc load end")
+}
+
+type tmpWebFinger struct {
+	ID      primitive.ObjectID `bson:"_id"`
+	Express []string           `bson:"express"`
+	State   bool               `bson:"state"`
+}
+
+func UpdateWebFinger() {
+	logger.SlogInfoLocal("WebFinger load begin")
+	var tmpWebF []tmpWebFinger
+	if err := mongodb.MongodbClient.FindAll("FingerprintRules", bson.M{}, bson.M{"_id": 1, "express": 1, "state": 1}, &tmpWebF); err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("WebFinger load error: %v", err))
+		return
+	}
+	config.WebFingers = []types.WebFinger{}
+	for _, f := range tmpWebF {
+		var wf types.WebFinger
+		wf.ID = f.ID.Hex() // 将 ObjectId 转换为字符串
+		wf.Express = f.Express
+		wf.State = f.State
+		config.WebFingers = append(config.WebFingers, wf)
+	}
+	logger.SlogInfoLocal("WebFinger load end")
+}
+
+func UpdateNotification() {
+	logger.SlogInfoLocal("Notification load begin")
+	if err := mongodb.MongodbClient.FindAll("notification", bson.M{"state": true}, bson.M{"_id": 0, "method": 1, "url": 1, "contentType": 1, "data": 1, "state": 1}, &config.NotificationApi); err != nil {
+		logger.SlogError(fmt.Sprintf("UpdateNotification error notification api: %s", err))
+		return
+	}
+	if err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "notification"}, bson.M{"_id": 0, "dirScanNotification": 1, "portScanNotification": 1, "sensitiveNotification": 1, "subdomainTakeoverNotification": 1, "pageMonNotification": 1, "subdomainNotification": 1, "vulNotification": 1}, &config.NotificationConfig); err != nil {
+		logger.SlogError(fmt.Sprintf("UpdateNotification error notification config: %s", err))
+		return
+	}
+	logger.SlogInfoLocal("Notification load end")
+}
+
+func Initialize() {
+	//UpdateGlobalModulesConfig()
+	if config.FirstRun {
+		UpdateSubDomainDicConfig()
+		UpdateDirDicConfig()
+		UpdateSubfinderApiConfig()
+		UpdateRadConfig()
+		UpdatePoc()
+	} else {
+		//UpdateNodeModulesConfig()
+	}
+	UpdateSensitive()
+	UpdateProject()
+	UpdateWebFinger()
+	UpdateNotification()
 }

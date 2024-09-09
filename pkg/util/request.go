@@ -9,7 +9,7 @@ package util
 
 import (
 	"crypto/tls"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/valyala/fasthttp"
 	"time"
 )

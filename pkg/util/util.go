@@ -12,7 +12,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"io/ioutil"

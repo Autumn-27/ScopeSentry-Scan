@@ -71,11 +71,36 @@ func createConfigFile(configFile string, config Config) error {
 	return nil
 }
 
+func CreateDir() {
+	dirs := []string{
+		ConfigDir,
+		filepath.Join(ConfigDir, "dir"),
+		filepath.Join(ConfigDir, "subdomain"),
+		DictPath,
+		ExtDir,
+		filepath.Join(ExtDir, "rad"),
+		PocDir,
+		filepath.Join(AbsolutePath, "data"),
+	}
+
+	for _, dir := range dirs {
+		err := EnsureDir(dir)
+		if err != nil {
+			log.Fatalf("%s create error: %v", dir, err)
+		}
+	}
+
+}
+
 func Initialize() {
 	AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	ConfigDir = filepath.Join(AbsolutePath, "config")
 	ConfigPath = filepath.Join(ConfigDir, "config.yaml")
 	ModulesConfigPath = filepath.Join(ConfigDir, "modules.yaml")
+	DictPath = filepath.Join(AbsolutePath, "dictionaries")
+	ExtDir = filepath.Join(AbsolutePath, "ext")
+	PocDir = filepath.Join(AbsolutePath, "poc")
+	CreateDir()
 	err := LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)

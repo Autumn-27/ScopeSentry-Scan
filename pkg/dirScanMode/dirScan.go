@@ -9,11 +9,11 @@ package dirScanMode
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode/core"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode/runner"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"path/filepath"
 	"strconv"
 )

@@ -13,6 +13,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -182,4 +184,58 @@ func (c *Client) Ping() error {
 		return fmt.Errorf("MongoDB Ping失败: %v", err)
 	}
 	return nil
+}
+
+func (c *Client) FindFilesByPattern(pattern string) (map[string][]byte, error) {
+	// 使用 GridFS bucket
+	bucket, err := gridfs.NewBucket(c.database)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建正则表达式
+	regex := primitive.Regex{Pattern: pattern, Options: "i"} // "i" 选项表示不区分大小写
+
+	// 查询 GridFS 的 files 集合
+	collection := c.database.Collection("fs.files")
+	filter := bson.M{"filename": regex}
+	cursor, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	results := make(map[string][]byte)
+	for cursor.Next(context.TODO()) {
+		var fileInfo bson.M
+		if err := cursor.Decode(&fileInfo); err != nil {
+			return nil, err
+		}
+
+		// 获取文件的 _id 字段
+		id, ok := fileInfo["_id"].(primitive.ObjectID)
+		if !ok {
+			return nil, fmt.Errorf("文件信息中没有 _id 字段")
+		}
+
+		// 通过 _id 查找文件内容
+		dStream, err := bucket.OpenDownloadStream(id)
+		if err != nil {
+			return nil, err
+		}
+		defer dStream.Close()
+
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(dStream); err != nil {
+			return nil, err
+		}
+		idStr := id.Hex()
+		results[idStr] = buf.Bytes()
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

@@ -8,8 +8,8 @@ package core
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 )
 

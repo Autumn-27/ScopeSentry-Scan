@@ -8,6 +8,7 @@ package runner
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/portScanMode"
@@ -16,7 +17,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/subdomainTakeoverMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/subfinderMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/urlScanMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/vulnMode"

@@ -9,27 +9,13 @@ package pebbledb
 
 import (
 	"github.com/cockroachdb/pebble"
-	"time"
 )
 
 // Settings 用于 PebbleDB 的配置
 type Settings struct {
 	DBPath       string
-	CacheSize    int64         // 缓存大小
-	MaxOpenFiles int           // 最大打开文件数
-	L0Compaction int           // L0 层的压缩触发条件
-	Timeout      time.Duration // 操作超时时间
-}
-
-// DefaultSettings 返回默认的 PebbleDB 设置
-func DefaultSettings() *Settings {
-	return &Settings{
-		DBPath:       "./data/pebbledb",
-		CacheSize:    64 << 20, // 64MB
-		MaxOpenFiles: 500,
-		L0Compaction: 4,
-		Timeout:      30 * time.Second,
-	}
+	CacheSize    int64 // 缓存大小
+	MaxOpenFiles int   // 最大打开文件数
 }
 
 // GetPebbleOptions 根据 Settings 生成 pebble.Options

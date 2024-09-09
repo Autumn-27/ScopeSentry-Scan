@@ -9,7 +9,7 @@ package system
 import (
 	"context"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

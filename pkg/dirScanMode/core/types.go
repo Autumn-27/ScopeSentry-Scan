@@ -6,7 +6,9 @@
 // -------------------------------------------
 package core
 
-import "github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+import (
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+)
 
 type Options struct {
 	Extensions         []string

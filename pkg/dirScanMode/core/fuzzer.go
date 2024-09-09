@@ -9,7 +9,7 @@ package core
 import (
 	"bufio"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"os"
 	"sort"
 	"strings"

@@ -8,6 +8,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
@@ -87,8 +88,12 @@ func GetSystemUsage() (int, float64) {
 
 func WriteContentFile(filPath string, fileContent string) error {
 	// 将字符串写入文件
-	err := ioutil.WriteFile(filPath, []byte(fileContent), 0666)
-	if err != nil {
+	return WriteByteContentFile(filPath, []byte(fileContent))
+}
+
+func WriteByteContentFile(filPath string, fileContent []byte) error {
+	// 将字符串写入文件
+	if err := ioutil.WriteFile(filPath, fileContent, 0666); err != nil {
 		fmt.Printf("Failed to create filPath: %s - %s", filPath, err)
 		return err
 	}
@@ -102,4 +107,17 @@ func MarshalYAMLToString(data interface{}) (string, error) {
 		return "", err
 	}
 	return string(yamlData), nil
+}
+
+func StructToJSON(data interface{}) (string, error) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
+}
+
+// JSONToStruct 将 JSON 字符串反序列化为结构体
+func JSONToStruct(jsonStr []byte, result interface{}) error {
+	return json.Unmarshal(jsonStr, result)
 }

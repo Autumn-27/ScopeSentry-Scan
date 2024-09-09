@@ -10,10 +10,10 @@ package scanResult
 import (
 	"context"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/sensitiveMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"net/url"
