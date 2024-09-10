@@ -10,7 +10,9 @@ package main
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
@@ -37,7 +39,7 @@ func main() {
 		log.Fatalf("Failed to init logger: %v", err)
 	}
 	// 初始化任务计数器
-	task.InitHandle()
+	handle.InitHandle()
 	// 更新配置、加载字典
 	configupdater.Initialize()
 	// 初始化模块配置
@@ -58,6 +60,9 @@ func main() {
 		MaxOpenFiles: 500,
 	}
 	pebbledbOption := pebbledb.GetPebbleOptions(&pebbledbSetting)
+	if !config.AppConfig.Debug {
+		pebbledbOption.Logger = nil
+	}
 	pedb, err := pebbledb.NewPebbleDB(pebbledbOption, pebbledbSetting.DBPath)
 	if err != nil {
 		return
@@ -67,34 +72,60 @@ func main() {
 		_ = PebbleStore.Close()
 	}(pebbledb.PebbleStore)
 
-	taskE := task.Options{
-		ID:                    "12321321321",
-		TaskName:              "test",
-		SubdomainScan:         []string{"subfinder"},
-		SubdomainResultHandle: []string{"takeover"},
-		AssetMapping:          []string{"httpx"},
-		AssetResultHandle:     []string{""},
-		PortScan:              []string{"rustscan"},
-		URLScan:               []string{"test"},
-		URLScanResultHandle:   []string{"test"},
-		WebCrawler:            []string{"test"},
-		VulnerabilityScan:     []string{"nuclei"},
+	taskE := options.TaskOptions{
+		ID:                "1",
+		TaskName:          "test",
+		SubdomainScan:     []string{"subfinder"},
+		SubdomainSecurity: []string{"takeover"},
+		AssetMapping:      []string{"httpx"},
+		AssetHandle:       []string{""},
+		PortScan:          []string{"rustscan"},
+		URLScan:           []string{"test"},
+		URLSecurity:       []string{"test"},
+		WebCrawler:        []string{"test"},
+		VulnerabilityScan: []string{"nuclei"},
 	}
 	jsonStr, err := utils.StructToJSON(taskE)
 	if err != nil {
 		return
 	}
-	pebbledb.PebbleStore.Put([]byte("task:12321321321"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("12321321321:baidu.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:google.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes1t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes2t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes3t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes4t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes5t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes6t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("12321321321:tes7t.com"), []byte("1"))
-
+	pebbledb.PebbleStore.Put([]byte("task:1"), []byte(jsonStr))
+	taskE = options.TaskOptions{
+		ID:                "2",
+		TaskName:          "test",
+		SubdomainScan:     []string{"subfinder"},
+		SubdomainSecurity: []string{"takeover"},
+		AssetMapping:      []string{"httpx"},
+		AssetHandle:       []string{""},
+		PortScan:          []string{"rustscan"},
+		URLScan:           []string{"test"},
+		URLSecurity:       []string{"test"},
+		WebCrawler:        []string{"test"},
+		VulnerabilityScan: []string{"nuclei"},
+	}
+	jsonStr, err = utils.StructToJSON(taskE)
+	if err != nil {
+		return
+	}
+	pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
+	pebbledb.PebbleStore.Put([]byte("1:baidu.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:google.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes1t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes2t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes3t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes4t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes5t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes6t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:tes7t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes2t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes3t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes4t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes5t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes6t.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("2:tes7t.com"), []byte("1"))
 	task.GetTask()
 	time.Sleep(10 * time.Second)
 

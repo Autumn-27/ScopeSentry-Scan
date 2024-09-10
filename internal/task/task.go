@@ -9,8 +9,10 @@ package task
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/runner"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
@@ -26,7 +28,7 @@ func GetTask() {
 	// 打印所有以 "task:" 开头的键值对
 	for _, value := range keys {
 		logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
-		var runnerOption Options
+		var runnerOption options.TaskOptions
 		err = utils.JSONToStruct(value, &runnerOption)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("task JSONToStruct error: %v - %v", string(value), err))
@@ -52,9 +54,9 @@ func GetTask() {
 			optionCopy.Target = target
 
 			// 使用局部变量创建闭包
-			taskFunc := func(op Options) func() {
+			taskFunc := func(op options.TaskOptions) func() {
 				return func() {
-					Run(op)
+					runner.Run(op)
 				}
 			}(optionCopy)
 
@@ -63,5 +65,7 @@ func GetTask() {
 			if err != nil {
 			}
 		}
+		// 记得判断是否需要增加一个等待 所有目标执行完毕再任务结束
+		fmt.Printf("任务结束: %v\n", runnerOption.ID)
 	}
 }

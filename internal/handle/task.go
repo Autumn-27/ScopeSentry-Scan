@@ -5,15 +5,16 @@
 // @time      : 2024/9/7 19:17
 // -------------------------------------------
 
-package task
+package handle
 
 import (
+	"context"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"sync"
 )
-
-var AppRFMutex sync.Mutex
 
 type Handle struct {
 	RunningNum int
@@ -50,4 +51,36 @@ func (h *Handle) GetRunFin() (int, int) {
 	h.mu.Lock()         // 锁定互斥锁
 	defer h.mu.Unlock() // 确保在函数结束时解锁
 	return h.RunningNum, h.FinNum
+}
+
+func (h *Handle) ProgressStart(typ string, target string, taskId string, flag int) {
+	if flag == 0 {
+		return
+	}
+	key := "TaskInfo:progress:" + taskId + ":" + target
+	ty := typ + "_start"
+	ProgressInfo := map[string]interface{}{
+		ty: config.GetTimeNow(),
+	}
+	err := redis.RedisClient.HMSet(context.Background(), key, ProgressInfo)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("ProgressStart redis error: %s", err))
+		return
+	}
+}
+
+func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int) {
+	if flag == 0 {
+		return
+	}
+	key := "TaskInfo:progress:" + taskId + ":" + target
+	ty := typ + "_end"
+	ProgressInfo := map[string]interface{}{
+		ty: config.GetTimeNow(),
+	}
+	err := redis.RedisClient.HMSet(context.Background(), key, ProgressInfo)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("ProgressEnd redis error: %s", err))
+		return
+	}
 }
