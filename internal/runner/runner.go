@@ -11,11 +11,28 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
+	"sync"
 	"time"
 )
 
 func Run(op options.TaskOptions) {
-	fmt.Println(op.Target)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	op.TargetParser = append(op.TargetParser, "")
+	process := modules.CreateScanProcess(op)
+	ch := make(chan interface{})
+	process.SetInput(ch)
+	go func() {
+		defer wg.Done()
+		err := process.ModuleRun()
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+	}()
+	ch <- op.Target
+	close(ch)
 	time.Sleep(10 * time.Second)
-	modules.CreateScanProcess(op)
+	wg.Wait()
+	fmt.Printf("ModuleRun completed: %v %v\n", op.ID, op.Target)
 }

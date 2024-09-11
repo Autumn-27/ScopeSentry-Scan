@@ -15,8 +15,8 @@ type TaskOptions struct {
 	SubdomainScan     []string
 	SubdomainSecurity []string
 	AssetMapping      []string
-	PortScan          []string
 	AssetHandle       []string
+	PortScan          []string
 	URLScan           []string
 	URLSecurity       []string
 	WebCrawler        []string

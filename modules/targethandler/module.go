@@ -12,12 +12,14 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 )
 
 type Runner struct {
 	Option     *options.TaskOptions
 	NextModule interfaces.ModuleRunner
 	Input      chan interface{}
+	Name       string
 }
 
 func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Runner {
@@ -25,6 +27,14 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 		Option:     op,
 		NextModule: nextModule,
 	}
+}
+
+func (r *Runner) SetInput(ch chan interface{}) {
+	r.Input = ch
+}
+
+func (r *Runner) GetName() string {
+	return "TargetParser"
 }
 
 func (r *Runner) ModuleRun() error {
@@ -37,10 +47,11 @@ func (r *Runner) ModuleRun() error {
 				handle.TaskHandle.ProgressEnd("TargetParser", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				return nil
 			}
+			fmt.Printf("tareget parser: %v ", data)
 			// 处理输入数据
-			for pluginName, _ := range r.Option.TargetParser {
+			for _, pluginName := range r.Option.TargetParser {
 				fmt.Println(pluginName)
-				fmt.Println(data)
+				plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 			}
 		}
 	}

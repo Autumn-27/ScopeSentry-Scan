@@ -8,6 +8,7 @@
 package plugins
 
 import (
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"sync"
 )
 
@@ -48,6 +49,10 @@ func (pm *PluginManager) GetPlugin(module, name string) (Plugin, bool) {
 
 // InitializePlugins 初始化插件
 func (pm *PluginManager) InitializePlugins() error {
+	// TargetParser
+	plugin := targetparser.NewPlugin()
+	pm.RegisterPlugin("TargetParser", plugin.Name, plugin)
 
+	//
 	return nil
 }

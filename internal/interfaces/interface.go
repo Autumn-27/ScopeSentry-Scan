@@ -9,4 +9,6 @@ package interfaces
 
 type ModuleRunner interface {
 	ModuleRun() error
+	SetInput(chan interface{})
+	GetName() string
 }

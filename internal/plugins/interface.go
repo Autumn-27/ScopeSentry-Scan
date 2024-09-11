@@ -12,5 +12,6 @@ type Plugin interface {
 	SetName(name string)
 	GetModule() string
 	SetModule(name string)
-	Execute(input interface{}) (interface{}, error)
+	SetResult(ch chan interface{})
+	Execute(input interface{}) error
 }

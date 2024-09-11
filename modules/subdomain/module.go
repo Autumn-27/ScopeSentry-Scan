@@ -28,3 +28,11 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	return nil
 }
+
+func (r *Runner) SetInput(ch chan interface{}) {
+	r.Input = ch
+}
+
+func (r *Runner) GetName() string {
+	return "SubdomainScan"
+}
