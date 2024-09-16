@@ -64,6 +64,7 @@ func toASCII(domain string) (string, error) {
 }
 
 // Execute
+//
 //  1. IP 地址
 //     输入: "192.168.1.1"
 //     输出: "192.168.1.1"
@@ -159,7 +160,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		p.Result <- target
 	} else {
 		// 处理无效输入
-		logger.SlogError(fmt.Sprintf("%v error Invalid input:%v \n", p.Name, input))
+		logger.SlogInfoLocal(fmt.Sprintf("%v error Invalid input:%v ", p.Name, input))
 	}
 
 	return nil

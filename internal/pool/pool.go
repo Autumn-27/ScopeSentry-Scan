@@ -18,6 +18,7 @@ import (
 type Manager struct {
 	pools map[string]*ants.Pool
 	mu    sync.Mutex
+	locks map[string]*sync.Mutex
 }
 
 var PoolManage *Manager
@@ -25,6 +26,7 @@ var PoolManage *Manager
 func Initialize() {
 	PoolManage = &Manager{
 		pools: make(map[string]*ants.Pool),
+		locks: make(map[string]*sync.Mutex),
 	}
 }
 
@@ -34,51 +36,32 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 
 	// Initialize pools for each module
 	var err error
-	pm.pools["task"], err = ants.NewPool(cfg.MaxGoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for subdomainScan: %v", err)
+	modules := []string{
+		"task", "targetHandler", "subdomainScan", "subdomainSecurity",
+		"assetMapping", "portScan", "assetResultHandl", "URLScan",
+		"URLSecurity", "webCrawler", "vulnerabilityScan",
 	}
-	pm.pools["subdomainScan"], err = ants.NewPool(cfg.SubdomainScan.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for subdomainScan: %v", err)
-	}
-	pm.pools["subdomainSecurity"], err = ants.NewPool(cfg.SubdomainSecurity.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for subdomainSecurity: %v", err)
-	}
-	pm.pools["assetMapping"], err = ants.NewPool(cfg.AssetMapping.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for assetMapping: %v", err)
-	}
-	pm.pools["portScan"], err = ants.NewPool(cfg.PortScan.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for portScan: %v", err)
-	}
-	pm.pools["assetResultHandl"], err = ants.NewPool(cfg.AssetHandle.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for assetResultHandl: %v", err)
-	}
-	pm.pools["URLScan"], err = ants.NewPool(cfg.URLScan.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for URLScan: %v", err)
-	}
-	pm.pools["URLSecurity"], err = ants.NewPool(cfg.URLSecurity.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for URLSecurity: %v", err)
-	}
-	pm.pools["webCrawler"], err = ants.NewPool(cfg.WebCrawler.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for webCrawler: %v", err)
-	}
-	pm.pools["vulnerabilityScan"], err = ants.NewPool(cfg.VulnerabilityScan.GoroutineCount)
-	if err != nil {
-		log.Fatalf("Failed to create pool for vulnerabilityScan: %v", err)
+
+	for _, moduleName := range modules {
+		pm.pools[moduleName], err = ants.NewPool(cfg.GetGoroutineCount(moduleName))
+		if err != nil {
+			log.Fatalf("Failed to create pool for %s: %v", moduleName, err)
+		}
+		pm.locks[moduleName] = &sync.Mutex{}
 	}
 }
 
 func (pm *Manager) SetGoroutineCount(moduleName string, count int) error {
 	pm.mu.Lock()
-	defer pm.mu.Unlock()
+	lock, exists := pm.locks[moduleName]
+	if !exists {
+		pm.mu.Unlock()
+		return errors.New("module not found")
+	}
+	pm.mu.Unlock()
+
+	lock.Lock()
+	defer lock.Unlock()
 
 	pool, exists := pm.pools[moduleName]
 	if !exists {
@@ -93,7 +76,15 @@ func (pm *Manager) SetGoroutineCount(moduleName string, count int) error {
 
 func (pm *Manager) SubmitTask(moduleName string, task func()) error {
 	pm.mu.Lock()
-	defer pm.mu.Unlock()
+	lock, exists := pm.locks[moduleName]
+	if !exists {
+		pm.mu.Unlock()
+		return errors.New("module not found")
+	}
+	pm.mu.Unlock()
+
+	lock.Lock()
+	defer lock.Unlock()
 
 	pool, exists := pm.pools[moduleName]
 	if !exists {

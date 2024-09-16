@@ -22,6 +22,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"log"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -116,7 +117,7 @@ func main() {
 	//if err != nil {
 	//	return
 	//}
-	pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
+	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
 	pebbledb.PebbleStore.Put([]byte("1:baidu.com"), []byte("1"))
 	pebbledb.PebbleStore.Put([]byte("1:google.com"), []byte("1"))
 	pebbledb.PebbleStore.Put([]byte("1:tes1t.com"), []byte("1"))
@@ -135,7 +136,12 @@ func main() {
 	//pebbledb.PebbleStore.Put([]byte("2:tes5t.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes6t.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes7t.com"), []byte("1"))
-	task.GetTask()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done() // 减少计数器，表示任务完成
+		task.GetTask()
+	}()
 	time.Sleep(10 * time.Second)
-
+	wg.Wait()
 }

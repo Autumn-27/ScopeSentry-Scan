@@ -16,6 +16,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
+	"strings"
+	"sync"
 )
 
 func GetTask() {
@@ -27,6 +29,7 @@ func GetTask() {
 	}
 	// 打印所有以 "task:" 开头的键值对
 	for _, value := range keys {
+		var wg sync.WaitGroup
 		logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
 		var runnerOption options.TaskOptions
 		err = utils.JSONToStruct(value, &runnerOption)
@@ -48,14 +51,16 @@ func GetTask() {
 			}
 			continue
 		}
-		for target, _ := range targets {
+		for idTarget, _ := range targets {
+			wg.Add(1)
 			// 创建 runnerOption 的副本
 			optionCopy := runnerOption
-			optionCopy.Target = target
-
+			target := strings.Split(idTarget, ":")
+			optionCopy.Target = target[1]
 			// 使用局部变量创建闭包
 			taskFunc := func(op options.TaskOptions) func() {
 				return func() {
+					defer wg.Done()
 					runner.Run(op)
 				}
 			}(optionCopy)
@@ -63,9 +68,15 @@ func GetTask() {
 			// 提交任务
 			err := pool.PoolManage.SubmitTask("task", taskFunc)
 			if err != nil {
+				logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 			}
 		}
+		wg.Done()
 		// 记得判断是否需要增加一个等待 所有目标执行完毕再任务结束
 		fmt.Printf("任务结束: %v\n", runnerOption.ID)
 	}
+}
+
+func GetPebbledbTaskTarget(id string) {
+
 }

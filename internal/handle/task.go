@@ -57,6 +57,7 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 	if flag == 0 {
 		return
 	}
+	logger.SlogInfoLocal(fmt.Sprintf("%v module start scanning the target: %v", typ, target))
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_start"
 	ProgressInfo := map[string]interface{}{
@@ -73,6 +74,7 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int)
 	if flag == 0 {
 		return
 	}
+	logger.SlogInfoLocal(fmt.Sprintf("%v module end scanning the target: %v", typ, target))
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_end"
 	ProgressInfo := map[string]interface{}{
