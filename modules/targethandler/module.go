@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
 )
 
@@ -41,7 +42,7 @@ func (r *Runner) GetName() string {
 }
 
 func (r *Runner) ModuleRun() error {
-	handle.TaskHandle.ProgressStart(r.Name, r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+	handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 	var plgWg sync.WaitGroup
 	var nextModuleWg sync.WaitGroup
 	// 创建一个共享的 result 通道
@@ -61,7 +62,7 @@ func (r *Runner) ModuleRun() error {
 	go func() {
 		for result := range resultChan {
 			// 处理每个插件的结果
-			logger.SlogInfoLocal(fmt.Sprintf("%v modlue result: %v", r.Name, result))
+			logger.SlogInfoLocal(fmt.Sprintf("%v modlue result: %v", r.GetName(), result))
 			nextInput <- result
 		}
 		close(nextInput)
@@ -73,7 +74,7 @@ func (r *Runner) ModuleRun() error {
 			if !ok {
 				// 通道已关闭，结束处理
 				close(resultChan)
-				handle.TaskHandle.ProgressEnd(r.Name, r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+				handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				return nil
 			}
 			// 处理输入数据
@@ -82,6 +83,10 @@ func (r *Runner) ModuleRun() error {
 				plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 				if flag {
 					plgWg.Add(1)
+					args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+					if argsFlag {
+						plg.SetParameter(args)
+					}
 					plg.SetResult(resultChan)
 					pluginFunc := func(data interface{}) func() {
 						return func() {
@@ -91,7 +96,7 @@ func (r *Runner) ModuleRun() error {
 							}
 						}
 					}(data)
-					err := pool.PoolManage.SubmitTask(r.Name, pluginFunc)
+					err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
 					if err != nil {
 						plgWg.Done()
 						logger.SlogError(fmt.Sprintf("task pool error: %v", err))

@@ -21,4 +21,5 @@ type TaskOptions struct {
 	URLSecurity       []string
 	WebCrawler        []string
 	VulnerabilityScan []string
+	Parameters        map[string]map[string]interface{}
 }

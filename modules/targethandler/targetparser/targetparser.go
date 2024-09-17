@@ -19,9 +19,10 @@ import (
 )
 
 type Plugin struct {
-	Name   string
-	Module string
-	Result chan interface{}
+	Name      string
+	Module    string
+	Parameter string
+	Result    chan interface{}
 }
 
 func NewPlugin() *Plugin {
@@ -61,6 +62,22 @@ func isValidDomain(domain string) bool {
 // 转换中文域名为 ASCII 兼容格式
 func toASCII(domain string) (string, error) {
 	return idna.ToASCII(domain)
+}
+
+func (p *Plugin) Install() bool {
+	return true
+}
+
+func (p *Plugin) Check() bool {
+	return true
+}
+
+func (p *Plugin) SetParameter(args string) {
+	p.Parameter = args
+}
+
+func (p *Plugin) GetParameter() string {
+	return p.Parameter
 }
 
 // Execute

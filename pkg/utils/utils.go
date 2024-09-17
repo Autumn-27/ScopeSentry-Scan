@@ -9,6 +9,7 @@ package utils
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
@@ -16,6 +17,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -128,4 +130,51 @@ func (t *UtilTools) StructToJSON(data interface{}) (string, error) {
 // JSONToStruct 将 JSON 字符串反序列化为结构体
 func (t *UtilTools) JSONToStruct(jsonStr []byte, result interface{}) error {
 	return json.Unmarshal(jsonStr, result)
+}
+
+func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, error) {
+	// 将参数字符串分割为切片
+	argsSlice := strings.Fields(args)
+
+	// 创建一个 FlagSet 对象来解析参数
+	fs := flag.NewFlagSet("ParseArgs", flag.ContinueOnError)
+
+	// 创建一个 map 用于存储 flag 的值
+	values := make(map[string]*string)
+	for _, key := range keys {
+		// 初始化 map 并创建对应的 flag
+		value := ""
+		values[key] = &value
+		fs.String(key, "", "a placeholder") // 创建一个 flag 用于存储 key 的值
+	}
+
+	// 解析参数
+	err := fs.Parse(argsSlice)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 key 对应的值并填充到结果 map 中
+	result := make(map[string]string)
+	for _, key := range keys {
+		if valuePtr, ok := values[key]; ok {
+			result[key] = *valuePtr
+		} else {
+			result[key] = ""
+		}
+	}
+
+	return result, nil
+}
+
+func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, module string, plugin string) (string, bool) {
+	// 查找 module 是否存在
+	if plugins, modOk := Parameters[module]; modOk {
+		// 查找 plugin 是否存在
+		if param, plugOk := plugins[plugin]; plugOk {
+			return param.(string), true
+		}
+	}
+	// 没有找到对应的参数，返回 false
+	return "", false
 }

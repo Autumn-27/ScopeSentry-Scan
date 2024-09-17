@@ -14,13 +14,14 @@ import (
 )
 
 type SubdomainResult struct {
-	Host    string
-	Type    string
-	Value   []string
-	IP      []string
-	Time    string
-	Project string
-	TaskId  string `bson:"taskId"`
+	Host       string
+	Type       string
+	Value      []string
+	IP         []string
+	Time       string
+	Project    string
+	TaskId     string `bson:"taskId"`
+	RootDomain string
 }
 
 type AssetHttp struct {
