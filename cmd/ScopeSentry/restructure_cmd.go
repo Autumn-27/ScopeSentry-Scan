@@ -52,6 +52,7 @@ func main() {
 	}
 	// 初始化tools
 	utils.InitializeTools()
+	utils.InitializeDnsTools()
 	// 初始化协程池
 	pool.Initialize()
 	// 初始化个模块的协程池

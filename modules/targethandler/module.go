@@ -91,7 +91,7 @@ func (r *Runner) ModuleRun() error {
 							}
 						}
 					}(data)
-					err := pool.PoolManage.SubmitTask("targetHandler", pluginFunc)
+					err := pool.PoolManage.SubmitTask(r.Name, pluginFunc)
 					if err != nil {
 						plgWg.Done()
 						logger.SlogError(fmt.Sprintf("task pool error: %v", err))

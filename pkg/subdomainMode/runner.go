@@ -72,6 +72,32 @@ func Verify(target []string) []types.SubdomainResult {
 	}
 	return result
 }
+func Verify2(target []string) []types.SubdomainResult {
+	randomString := util.GenerateRandomString(6)
+	if len(target) == 0 {
+		return []types.SubdomainResult{}
+	}
+	filename := util.CalculateMD5(target[0] + randomString)
+	targetPath := filepath.Join(system.KsubdomainPath, "target", filename)
+	resultPath := filepath.Join(system.KsubdomainPath, "result", filename)
+	defer util.DeleteFile(targetPath)
+	defer util.DeleteFile(resultPath)
+
+	SubdomainWriteTarget(targetPath, target)
+	args := []string{"v", "-f", targetPath, "-o", resultPath}
+	cmd := exec.Command(system.KsubdomainExecPath, args...)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		//system.SlogError(fmt.Sprintf("ksubdomain verify 执行命令时出错：%s %s\n", err, output))
+		return []types.SubdomainResult{}
+	}
+	result := GetSubdomainResult(resultPath)
+	if len(result) == 0 {
+		//system.SlogInfo(fmt.Sprintf("verify target[0] %v get dns result 0", target[0]))
+		return []types.SubdomainResult{}
+	}
+	return result
+}
 
 //func enum(target []string) []types.SubdomainResult {
 //	randomString := util.GenerateRandomString(6)
