@@ -32,7 +32,7 @@ func GetTask() {
 		var wg sync.WaitGroup
 		logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
 		var runnerOption options.TaskOptions
-		err = utils.JSONToStruct(value, &runnerOption)
+		err = utils.Tools.JSONToStruct(value, &runnerOption)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("task JSONToStruct error: %v - %v", string(value), err))
 			err = pebbledb.PebbleStore.Delete([]byte(fmt.Sprintf("task:%s", value)))

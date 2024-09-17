@@ -50,6 +50,8 @@ func main() {
 		log.Fatalf("Failed to init ModulesConfig: %v", err)
 		return
 	}
+	// 初始化tools
+	utils.InitializeTools()
 	// 初始化协程池
 	pool.Initialize()
 	// 初始化个模块的协程池
@@ -95,7 +97,7 @@ func main() {
 		WebCrawler:        []string{"test"},
 		VulnerabilityScan: []string{"nuclei"},
 	}
-	jsonStr, err := utils.StructToJSON(taskE)
+	jsonStr, err := utils.Tools.StructToJSON(taskE)
 	if err != nil {
 		return
 	}

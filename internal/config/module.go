@@ -68,7 +68,7 @@ var ModulesConfigPath string
 var ModulesConfig *ModulesConfigStruct
 
 func ModulesInitialize() error {
-	if err := utils.ReadYAMLFile(ModulesConfigPath, &ModulesConfig); err != nil {
+	if err := utils.Tools.ReadYAMLFile(ModulesConfigPath, &ModulesConfig); err != nil {
 		return err
 	}
 	return nil

@@ -14,7 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomain"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan"
@@ -33,7 +33,7 @@ func CreateScanProcess(op options.TaskOptions) interfaces.ModuleRunner {
 	portScanModule := portscan.NewRunner(&op, assetMappingModule)
 	portScanPreparationModule := portscanpreparation.NewRunner(&op, portScanModule)
 	subdomainSecurityModule := subdomainsecurity.NewRunner(&op, portScanPreparationModule)
-	subdomainModule := subdomain.NewRunner(&op, subdomainSecurityModule)
-	targetHandlerModule := targethandler.NewRunner(&op, subdomainModule)
+	subdomainScanModule := subdomainscan.NewRunner(&op, subdomainSecurityModule)
+	targetHandlerModule := targethandler.NewRunner(&op, subdomainScanModule)
 	return targetHandlerModule
 }

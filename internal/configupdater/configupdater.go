@@ -30,7 +30,7 @@ func UpdateGlobalModulesConfig() {
 		logger.SlogErrorLocal(fmt.Sprintf("system config load error: %v", err))
 		return
 	}
-	err = utils.WriteContentFile(config.ModulesConfigPath, result.Value)
+	err = utils.Tools.WriteContentFile(config.ModulesConfigPath, result.Value)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("system config writing file error: %v", err))
 		return
@@ -47,7 +47,7 @@ func UpdateNodeModulesConfig() {
 		logger.SlogErrorLocal(fmt.Sprintf("node config load error: %v", err))
 		return
 	}
-	err = utils.WriteContentFile(config.ModulesConfigPath, modulesConfigString)
+	err = utils.Tools.WriteContentFile(config.ModulesConfigPath, modulesConfigString)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("node config writing file error: %v", err))
 		return
@@ -64,7 +64,7 @@ func UpdateSubDomainDicConfig() {
 	}
 	for id, content := range results {
 		filePath := filepath.Join(config.DictPath, "subdomain", id)
-		err := utils.WriteByteContentFile(filePath, content)
+		err := utils.Tools.WriteByteContentFile(filePath, content)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
 		}
@@ -82,7 +82,7 @@ func UpdateDirDicConfig() {
 	}
 	for id, content := range results {
 		filePath := filepath.Join(config.DictPath, "dir", id)
-		err := utils.WriteByteContentFile(filePath, content)
+		err := utils.Tools.WriteByteContentFile(filePath, content)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("DirDic writing file error: %v - %v", id, err))
 		}
@@ -103,7 +103,7 @@ func UpdateSubfinderApiConfig() {
 		return
 	}
 	subfinderConfigPath := filepath.Join(config.ConfigDir, "subfinderConfig.yaml")
-	err = utils.WriteContentFile(subfinderConfigPath, result.Value)
+	err = utils.Tools.WriteContentFile(subfinderConfigPath, result.Value)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("Subfinder writing file error: %v", err))
 	}
@@ -122,7 +122,7 @@ func UpdateRadConfig() {
 		logger.SlogErrorLocal(fmt.Sprintf("UpdateRadConfig load error: %v", err))
 		return
 	}
-	err = utils.WriteContentFile(radConfigPath, result.Value)
+	err = utils.Tools.WriteContentFile(radConfigPath, result.Value)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("Rad writing file error: %v", err))
 	}
@@ -169,7 +169,7 @@ func UpdateNodeName(name string) {
 		logger.SlogErrorLocal(fmt.Sprintf("update node name error: %v", err))
 		return
 	}
-	if err := utils.WriteYAMLFile(config.ConfigPath, config.AppConfig); err != nil {
+	if err := utils.Tools.WriteYAMLFile(config.ConfigPath, config.AppConfig); err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("update node name write error: %v", err))
 		return
 	}
@@ -218,7 +218,7 @@ func UpdatePoc() {
 	if len(tmpPocR) != 0 {
 		for _, poc := range tmpPocR {
 			id := poc.ID.Hex()
-			err := utils.WriteContentFile(filepath.Join(config.PocDir, string(id)+".yaml"), poc.Content)
+			err := utils.Tools.WriteContentFile(filepath.Join(config.PocDir, string(id)+".yaml"), poc.Content)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("Failed to write poc %s: %s", poc.Hash, err))
 			}

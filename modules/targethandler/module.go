@@ -37,21 +37,34 @@ func (r *Runner) SetInput(ch chan interface{}) {
 }
 
 func (r *Runner) GetName() string {
-	return "TargetParser"
+	return "TargetHandler"
 }
 
 func (r *Runner) ModuleRun() error {
-	handle.TaskHandle.ProgressStart("TargetParser", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+	handle.TaskHandle.ProgressStart(r.Name, r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 	var plgWg sync.WaitGroup
+	var nextModuleWg sync.WaitGroup
 	// 创建一个共享的 result 通道
 	resultChan := make(chan interface{})
-
+	// 创建下一个模块的输入
+	nextInput := make(chan interface{})
+	r.NextModule.SetInput(nextInput)
+	nextModuleWg.Add(1)
+	go func() {
+		defer nextModuleWg.Done()
+		err := r.NextModule.ModuleRun()
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("Next module run error: %v", err))
+		}
+	}()
 	// 结果处理 goroutine，异步读取插件的结果
 	go func() {
 		for result := range resultChan {
 			// 处理每个插件的结果
-			logger.SlogInfoLocal(fmt.Sprintf("Plugin result: %v", result))
+			logger.SlogInfoLocal(fmt.Sprintf("%v modlue result: %v", r.Name, result))
+			nextInput <- result
 		}
+		close(nextInput)
 	}()
 
 	for {
@@ -60,7 +73,7 @@ func (r *Runner) ModuleRun() error {
 			if !ok {
 				// 通道已关闭，结束处理
 				close(resultChan)
-				handle.TaskHandle.ProgressEnd("TargetParser", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+				handle.TaskHandle.ProgressEnd(r.Name, r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				return nil
 			}
 			// 处理输入数据

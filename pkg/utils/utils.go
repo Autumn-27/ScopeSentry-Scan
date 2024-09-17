@@ -19,8 +19,16 @@ import (
 	"time"
 )
 
+type UtilTools struct{}
+
+var Tools *UtilTools
+
+func InitializeTools() {
+	Tools = &UtilTools{}
+}
+
 // ReadYAMLFile 读取 YAML 文件并将其解析为目标结构体
-func ReadYAMLFile(filePath string, target interface{}) error {
+func (t *UtilTools) ReadYAMLFile(filePath string, target interface{}) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -41,7 +49,7 @@ func ReadYAMLFile(filePath string, target interface{}) error {
 }
 
 // WriteYAMLFile 将目标结构体序列化为 YAML 并写入到文件
-func WriteYAMLFile(filePath string, data interface{}) error {
+func (t *UtilTools) WriteYAMLFile(filePath string, data interface{}) error {
 	yamlData, err := yaml.Marshal(data)
 	if err != nil {
 		return err
@@ -55,7 +63,7 @@ func WriteYAMLFile(filePath string, data interface{}) error {
 	return nil
 }
 
-func GenerateRandomString(length int) string {
+func (t *UtilTools) GenerateRandomString(length int) string {
 	// 定义字符集
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	// 构建随机字符串
@@ -66,7 +74,7 @@ func GenerateRandomString(length int) string {
 	return string(result)
 }
 
-func GetSystemUsage() (int, float64) {
+func (t *UtilTools) GetSystemUsage() (int, float64) {
 	// 获取CPU使用率
 	percent, err := cpu.Percent(3*time.Second, false)
 	if err != nil {
@@ -86,12 +94,12 @@ func GetSystemUsage() (int, float64) {
 	return cpuNum, memInfo.UsedPercent
 }
 
-func WriteContentFile(filPath string, fileContent string) error {
+func (t *UtilTools) WriteContentFile(filPath string, fileContent string) error {
 	// 将字符串写入文件
-	return WriteByteContentFile(filPath, []byte(fileContent))
+	return t.WriteByteContentFile(filPath, []byte(fileContent))
 }
 
-func WriteByteContentFile(filPath string, fileContent []byte) error {
+func (t *UtilTools) WriteByteContentFile(filPath string, fileContent []byte) error {
 	// 将字符串写入文件
 	if err := ioutil.WriteFile(filPath, fileContent, 0666); err != nil {
 		fmt.Printf("Failed to create filPath: %s - %s", filPath, err)
@@ -101,7 +109,7 @@ func WriteByteContentFile(filPath string, fileContent []byte) error {
 }
 
 // MarshalYAMLToString 将目标结构体序列化为 YAML 字符串
-func MarshalYAMLToString(data interface{}) (string, error) {
+func (t *UtilTools) MarshalYAMLToString(data interface{}) (string, error) {
 	yamlData, err := yaml.Marshal(data)
 	if err != nil {
 		return "", err
@@ -109,7 +117,7 @@ func MarshalYAMLToString(data interface{}) (string, error) {
 	return string(yamlData), nil
 }
 
-func StructToJSON(data interface{}) (string, error) {
+func (t *UtilTools) StructToJSON(data interface{}) (string, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return "", err
@@ -118,6 +126,6 @@ func StructToJSON(data interface{}) (string, error) {
 }
 
 // JSONToStruct 将 JSON 字符串反序列化为结构体
-func JSONToStruct(jsonStr []byte, result interface{}) error {
+func (t *UtilTools) JSONToStruct(jsonStr []byte, result interface{}) error {
 	return json.Unmarshal(jsonStr, result)
 }

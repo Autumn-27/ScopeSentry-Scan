@@ -21,7 +21,7 @@ func LoadConfig() error {
 	if _, err := os.Stat(ConfigPath); err == nil {
 		FirstRun = false
 		// 配置文件存在，从文件读取
-		if err := utils.ReadYAMLFile(ConfigPath, &AppConfig); err != nil {
+		if err := utils.Tools.ReadYAMLFile(ConfigPath, &AppConfig); err != nil {
 			return err
 		}
 	} else {
@@ -64,7 +64,7 @@ func getEnv(key, defaultValue string) string {
 }
 
 func createConfigFile(configFile string, config Config) error {
-	if err := utils.WriteYAMLFile(configFile, config); err != nil {
+	if err := utils.Tools.WriteYAMLFile(configFile, config); err != nil {
 		return err
 	}
 	log.Printf("Configuration file created: %s", configFile)

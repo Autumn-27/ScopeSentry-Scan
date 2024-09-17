@@ -27,14 +27,14 @@ func Register() {
 		hostname, err := os.Hostname()
 		if err != nil {
 			fmt.Println("Error:", err)
-			hostname = utils.GenerateRandomString(6)
+			hostname = utils.Tools.GenerateRandomString(6)
 		}
-		nodeName = hostname + "-" + utils.GenerateRandomString(6)
+		nodeName = hostname + "-" + utils.Tools.GenerateRandomString(6)
 	}
 	key := "node:" + nodeName
 	if nodeName != config.AppConfig.NodeName {
 		config.AppConfig.NodeName = nodeName
-		err := utils.WriteYAMLFile(config.ConfigPath, config.AppConfig)
+		err := utils.Tools.WriteYAMLFile(config.ConfigPath, config.AppConfig)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("Register node error: %v", err))
 			return
@@ -54,7 +54,7 @@ func Register() {
 				"memNum":        0,
 				"state":         1, //1运行中 2暂停 3未连接
 				"version":       config.VERSION,
-				"modulesConfig": utils.MarshalYAMLToString(config.ModulesConfig),
+				"modulesConfig": utils.Tools.MarshalYAMLToString(config.ModulesConfig),
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {
@@ -65,7 +65,7 @@ func Register() {
 			firstRegister = false
 		} else {
 			key = "node:" + config.AppConfig.NodeName
-			cpuNum, memNum := utils.GetSystemUsage()
+			cpuNum, memNum := utils.Tools.GetSystemUsage()
 			run, fin := handle.TaskHandle.GetRunFin()
 			nodeInfo := map[string]interface{}{
 				"updateTime": config.GetTimeNow(),
