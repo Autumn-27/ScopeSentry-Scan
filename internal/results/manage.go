@@ -37,6 +37,9 @@ func Initialize() {
 		}
 		//go processQueue(module, ResultQueues[module])
 	}
+
+	//初始化去重模块
+	InitializeDuplicate()
 }
 
 func processQueue(module string, mq *ResultQueue) {

@@ -24,7 +24,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/projectdiscovery/wappalyzergo v0.0.116 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.23.0
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
@@ -35,7 +35,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hbakhtiyor/strsim v0.0.0-20190107154042-4d2bbb273edf // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/miekg/dns v1.1.57 // indirect
+	github.com/miekg/dns v1.1.57
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/projectdiscovery/cdncheck v1.0.9 // indirect
 	github.com/projectdiscovery/clistats v0.0.20 // indirect
@@ -55,12 +55,15 @@ require (
 require github.com/spaolacci/murmur3 v1.1.0 // indirect
 
 require (
+	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/cloudflare/cfssl v1.6.4
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/praetorian-inc/fingerprintx v1.1.9
+	github.com/projectdiscovery/dnsx v1.1.6
 	github.com/projectdiscovery/nuclei/v3 v3.2.4
+	github.com/projectdiscovery/retryabledns v1.0.58
 	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000
 	github.com/projectdiscovery/tlsx v1.1.6
 	github.com/redis/go-redis/v9 v9.5.1
@@ -279,7 +282,6 @@ require (
 	github.com/projectdiscovery/asnmap v1.1.0 // indirect
 	github.com/projectdiscovery/blackrock v0.0.1 // indirect
 	github.com/projectdiscovery/chaos-client v0.5.1 // indirect
-	github.com/projectdiscovery/dnsx v1.1.6 // indirect
 	github.com/projectdiscovery/dsl v0.0.51 // indirect
 	github.com/projectdiscovery/fastdialer v0.0.66 // indirect
 	github.com/projectdiscovery/fasttemplate v0.0.2 // indirect
@@ -294,7 +296,6 @@ require (
 	github.com/projectdiscovery/networkpolicy v0.0.8 // indirect
 	github.com/projectdiscovery/ratelimit v0.0.35 // indirect
 	github.com/projectdiscovery/rdap v0.9.1-0.20221108103045-9865884d1917 // indirect
-	github.com/projectdiscovery/retryabledns v1.0.58 // indirect
 	github.com/projectdiscovery/sarif v0.0.1 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
 	github.com/projectdiscovery/uncover v1.0.7 // indirect

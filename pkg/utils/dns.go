@@ -9,9 +9,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
 	"github.com/projectdiscovery/retryabledns"
@@ -45,7 +43,7 @@ func InitializeDnsTools() {
 	}
 	dnsClient, err := dnsx.New(DefaultOptions)
 	if err != nil {
-		logger.SlogError(fmt.Sprintf("DNS initialize error: %v", err))
+		fmt.Printf(fmt.Sprintf("DNS initialize error: %v", err))
 		return
 	}
 	DNS = &DnsTools{
@@ -73,20 +71,15 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 		recordType = "CNAME"
 	case len(dnsData.MX) > 0:
 		recordType = "MX"
-	case len(dnsData.PTR) > 0:
-		recordType = "PTR"
 	case len(dnsData.NS) > 0:
 		recordType = "NS"
 	case len(dnsData.TXT) > 0:
 		recordType = "TXT"
-	case len(dnsData.SRV) > 0:
-		recordType = "SRV"
-	case len(dnsData.CAA) > 0:
-		recordType = "CAA"
-	case len(dnsData.SOA) > 0:
-		recordType = "SOA"
 	default:
 		recordType = "UNKNOWN"
+	}
+	if recordType == "UNKNOWN" {
+		return types.SubdomainResult{}
 	}
 	var value []string
 	value = append(value, dnsData.CNAME...)
@@ -105,6 +98,5 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 		Type:  recordType,
 		Value: value,
 		IP:    ip,
-		Time:  config.GetTimeNow(),
 	}
 }

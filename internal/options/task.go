@@ -8,18 +8,20 @@
 package options
 
 type TaskOptions struct {
-	ID                string
-	TaskName          string
-	Target            string
-	TargetParser      []string
-	SubdomainScan     []string
-	SubdomainSecurity []string
-	AssetMapping      []string
-	AssetHandle       []string
-	PortScan          []string
-	URLScan           []string
-	URLSecurity       []string
-	WebCrawler        []string
-	VulnerabilityScan []string
-	Parameters        map[string]map[string]interface{}
+	ID                  string
+	TaskName            string
+	Target              string
+	TargetParser        []string
+	SubdomainScan       []string
+	SubdomainSecurity   []string
+	AssetMapping        []string
+	AssetHandle         []string
+	PortScan            []string
+	URLScan             []string
+	URLSecurity         []string
+	WebCrawler          []string
+	VulnerabilityScan   []string
+	Parameters          map[string]map[string]interface{}
+	IsRestart           bool
+	IgnoreOldSubdomains bool
 }

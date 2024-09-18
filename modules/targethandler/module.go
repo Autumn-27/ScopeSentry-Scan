@@ -86,6 +86,8 @@ func (r *Runner) ModuleRun() error {
 					args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
 					if argsFlag {
 						plg.SetParameter(args)
+					} else {
+						plg.SetParameter("")
 					}
 					plg.SetResult(resultChan)
 					pluginFunc := func(data interface{}) func() {

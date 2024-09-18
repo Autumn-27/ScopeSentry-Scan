@@ -8,6 +8,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
@@ -57,7 +59,12 @@ func main() {
 	pool.Initialize()
 	// 初始化个模块的协程池
 	pool.PoolManage.InitializeModulesPools(config.ModulesConfig)
-
+	// 初始化内存缓存
+	err = bigcache.Initialize()
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("bigcache Initialize error: %v", err))
+		return
+	}
 	// 初始化本地持久化缓存
 	pebbledbSetting := pebbledb.Settings{
 		DBPath:       filepath.Join(config.AbsolutePath, "data", "pebbledb"),

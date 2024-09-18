@@ -33,7 +33,7 @@ func main() {
 	//}
 
 	// Query
-	rawResp, err := dnsClient.QueryOne("scope-sentry.top")
+	rawResp, err := dnsClient.QueryOne("dwassentrydwasdweqewqe.dwas")
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		return

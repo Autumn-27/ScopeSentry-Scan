@@ -93,7 +93,7 @@ func (p *Plugin) GetParameter() string {
 //  3. 带协议的 URL（带端口号）
 //     输入: "http://example.com:8080"
 //     输出: "example.com"
-//     输出: "example.com:8080"
+//     输出: "example.com:8080" //暂时不处理
 //
 //  4. 带通配符的域名
 //     输入: "*.example.com"
@@ -134,27 +134,28 @@ func (p *Plugin) Execute(input interface{}) error {
 			// 分割主机名和端口号
 			hostParts := strings.Split(host, ":")
 			ipOrDomain := hostParts[0]
-			port := hostParts[1]
-
-			// 判断主机部分是否为 IP 地址
-			if net.ParseIP(ipOrDomain) != nil {
-				// 处理 IP 地址 + 端口号
-				p.Result <- ipOrDomain
-				p.Result <- ipOrDomain + ":" + port
-			} else {
-				// 处理域名 + 端口号
-				p.Result <- ipOrDomain
-				p.Result <- host
-			}
+			//port := hostParts[1]
+			p.Result <- ipOrDomain
+			//// 判断主机部分是否为 IP 地址
+			//if net.ParseIP(ipOrDomain) != nil {
+			//	// 处理 IP 地址 + 端口号
+			//	p.Result <- ipOrDomain
+			//	//p.Result <- ipOrDomain + ":" + port
+			//} else {
+			//	// 处理域名 + 端口号
+			//	p.Result <- ipOrDomain
+			//	//p.Result <- host
+			//}
 		} else {
 			// 检查主机部分是否是 IP 地址
-			if net.ParseIP(host) != nil {
-				// 处理纯 IP 地址
-				p.Result <- host
-			} else {
-				// 处理域名
-				p.Result <- host
-			}
+			//if net.ParseIP(host) != nil {
+			//	// 处理纯 IP 地址
+			//	p.Result <- host
+			//} else {
+			//	// 处理域名
+			//	p.Result <- host
+			//}
+			p.Result <- host
 		}
 		return nil
 	}

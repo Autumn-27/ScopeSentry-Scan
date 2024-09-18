@@ -11,7 +11,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 )
 
-func SubdoaminResultHandler(result []types.SubdomainResult, taskId string) bool {
+func SubdoaminResultHandler(result *types.SubdomainResult) bool {
 
 	//util.GetAssetOwner(result)
 	//NotificationMsg := "SubdomainScan Result"
