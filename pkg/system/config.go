@@ -145,6 +145,7 @@ func Test() {
 	InitDb()
 	InitFilterUrlRe()
 	LogInit(AppConfig.System.Debug)
+	CheckKsubdomain()
 }
 
 func InitFilterUrlRe() {

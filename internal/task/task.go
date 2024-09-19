@@ -28,7 +28,7 @@ func GetTask() {
 		os.Exit(0)
 	}
 	// 打印所有以 "task:" 开头的键值对
-	for _, value := range keys {
+	for key, value := range keys {
 		var wg sync.WaitGroup
 		logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
 		var runnerOption options.TaskOptions
@@ -60,6 +60,13 @@ func GetTask() {
 			// 使用局部变量创建闭包
 			taskFunc := func(op options.TaskOptions) func() {
 				return func() {
+					defer func(PebbleStore *pebbledb.PebbleDB, targetKey []byte) {
+						fmt.Printf("gggggg")
+						err := PebbleStore.Delete(targetKey)
+						if err != nil {
+							logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete error: %v", err))
+						}
+					}(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
 					defer wg.Done()
 					runner.Run(op)
 				}
@@ -69,9 +76,15 @@ func GetTask() {
 			err := pool.PoolManage.SubmitTask("task", taskFunc)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+				// 如果提交任务失败，手动减少计数
+				wg.Done()
 			}
 		}
-		wg.Done()
+		wg.Wait()
+		err = pebbledb.PebbleStore.Delete([]byte("task:" + key))
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", key, err))
+		}
 		// 记得判断是否需要增加一个等待 所有目标执行完毕再任务结束
 		fmt.Printf("任务结束: %v\n", runnerOption.ID)
 	}

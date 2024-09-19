@@ -9,17 +9,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/subdomainMode"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/subfinderMode"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"time"
 )
 
 func main() {
-	system.SetUp()
+	system.Test()
 	//subdomainMode.SubDomainRunner("test")
 	start := time.Now()
-	result := subdomainMode.Verify2([]string{"oauth.idp.blogin.att.com"})
-	fmt.Printf("%v", result)
+	//result := subdomainMode.Verify2([]string{"oauth.idp.blogin.att.com"})
+	//fmt.Printf("%v", result)
+	subfinderMode.SubfinderScan("baidu.com")
 	// 记录程序结束时间
 	end := time.Now()
 

@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
+	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/retryabledns"
 	"math"
 )
@@ -36,14 +37,14 @@ var DefaultResolvers = []string{
 func InitializeDnsTools() {
 	var DefaultOptions = dnsx.Options{
 		BaseResolvers:     DefaultResolvers,
-		MaxRetries:        5,
+		MaxRetries:        3,
 		QuestionTypes:     []uint16{miekgdns.TypeA},
 		TraceMaxRecursion: math.MaxUint16,
 		Hostsfile:         true,
 	}
 	dnsClient, err := dnsx.New(DefaultOptions)
 	if err != nil {
-		fmt.Printf(fmt.Sprintf("DNS initialize error: %v", err))
+		gologger.Error().Msg(fmt.Sprintf("DNS initialize error: %v", err))
 		return
 	}
 	DNS = &DnsTools{
@@ -54,7 +55,7 @@ func InitializeDnsTools() {
 func (d *DnsTools) QueryOne(hostname string) *retryabledns.DNSData {
 	rawResp, err := d.Clinet.QueryOne(hostname)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		gologger.Error().Msg(fmt.Sprintf("Dns QueryOne error: %v", err))
 		return &retryabledns.DNSData{}
 	}
 	return rawResp
@@ -99,4 +100,33 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 		Value: value,
 		IP:    ip,
 	}
+}
+
+func (d *DnsTools) KsubdomainVerify(target []string) []types.SubdomainResult {
+	//randomString := Tools.GenerateRandomString(6)
+	//if len(target) == 0 {
+	//	return []types.SubdomainResult{}
+	//}
+	//filename := util.CalculateMD5(target[0] + randomString)
+	//targetPath := filepath.Join(system.KsubdomainPath, "target", filename)
+	//resultPath := filepath.Join(system.KsubdomainPath, "result", filename)
+	//defer Tools.DeleteFile(targetPath)
+	//defer Tools.DeleteFile(resultPath)
+	//
+	//SubdomainWriteTarget(targetPath, target)
+	//args := []string{"v", "-f", targetPath, "-o", resultPath}
+	//cmd := exec.Command(system.KsubdomainExecPath, args...)
+	//system.SlogInfoLocal(fmt.Sprintf("%v", cmd))
+	//output, err := cmd.CombinedOutput()
+	//if err != nil {
+	//	system.SlogError(fmt.Sprintf("ksubdomain verify 执行命令时出错：%s %s %v\n", err, output, cmd))
+	//	return []types.SubdomainResult{}
+	//}
+	//result := GetSubdomainResult(resultPath)
+	//if len(result) == 0 {
+	//	system.SlogInfo(fmt.Sprintf("verify target[0] %v get dns result 0", target[0]))
+	//	return []types.SubdomainResult{}
+	//}
+	//return result
+	return nil
 }

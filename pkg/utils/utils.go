@@ -11,11 +11,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/projectdiscovery/gologger"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"math/rand"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -167,6 +171,14 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 	return result, nil
 }
 
+func (t *UtilTools) DeleteFile(filePath string) {
+	// 调用Remove函数删除文件
+	err := os.Remove(filePath)
+	if err != nil {
+		gologger.Error().Msg(fmt.Sprintf("Failed to DeleteFile: %s - %s", filePath, err))
+	}
+}
+
 func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, module string, plugin string) (string, bool) {
 	// 查找 module 是否存在
 	if plugins, modOk := Parameters[module]; modOk {
@@ -177,4 +189,115 @@ func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, m
 	}
 	// 没有找到对应的参数，返回 false
 	return "", false
+}
+
+func (t *UtilTools) GetRootDomain(input string) (string, error) {
+	input = strings.TrimLeft(input, "http://")
+	input = strings.TrimLeft(input, "https://")
+	input = strings.TrimLeft(input, "//")
+	input = strings.TrimLeft(input, "/")
+	ip := net.ParseIP(input)
+	if ip != nil {
+		return input, nil
+	}
+	input = "https://" + input
+
+	// 尝试解析为 URL
+	u, err := url.Parse(input)
+	if err == nil && u.Hostname() != "" {
+		hostParts := strings.Split(u.Hostname(), ".")
+		if len(hostParts) < 2 {
+			return "", fmt.Errorf("域名格式不正确")
+		}
+		// 检查是否为复合域名
+		if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
+			return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+		}
+
+		// 如果域名以 www 开头，特殊处理
+		if hostParts[0] == "www" {
+			return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+		}
+
+		return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+	}
+	return input, fmt.Errorf("输入既不是有效的 URL，也不是有效的 IP 地址")
+}
+
+var compoundDomains = map[string]bool{
+	"ac.uk":  true,
+	"co.uk":  true,
+	"gov.uk": true,
+	"ltd.uk": true,
+	"me.uk":  true,
+	"net.au": true,
+	"org.au": true,
+	"com.au": true,
+	"edu.au": true,
+	"gov.au": true,
+	"asn.au": true,
+	"id.au":  true,
+	"com.cn": true,
+	"net.cn": true,
+	"org.cn": true,
+	"gov.cn": true,
+	"edu.cn": true,
+	"mil.cn": true,
+	"ac.cn":  true,
+	"ah.cn":  true,
+	"bj.cn":  true,
+	"cq.cn":  true,
+	"fj.cn":  true,
+	"gd.cn":  true,
+	"gs.cn":  true,
+	"gx.cn":  true,
+	"gz.cn":  true,
+	"ha.cn":  true,
+	"hb.cn":  true,
+	"he.cn":  true,
+	"hi.cn":  true,
+	"hl.cn":  true,
+	"hn.cn":  true,
+	"jl.cn":  true,
+	"js.cn":  true,
+	"jx.cn":  true,
+	"ln.cn":  true,
+	"nm.cn":  true,
+	"nx.cn":  true,
+	"qh.cn":  true,
+	"sc.cn":  true,
+	"sd.cn":  true,
+	"sh.cn":  true,
+	"sn.cn":  true,
+	"sx.cn":  true,
+	"tj.cn":  true,
+	"xj.cn":  true,
+	"xz.cn":  true,
+	"yn.cn":  true,
+	"zj.cn":  true,
+}
+
+func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, fmt.Errorf("http.Get failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("request failed with status: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, fmt.Errorf("ioutil.ReadAll failed: %w", err)
+	}
+
+	// 将文件内容写入本地文件
+	err = ioutil.WriteFile(filePath, body, 0777)
+	if err != nil {
+		return false, fmt.Errorf("ioutil.WriteFile failed: %w", err)
+	}
+
+	return true, nil
 }

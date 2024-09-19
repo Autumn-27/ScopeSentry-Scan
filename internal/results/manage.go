@@ -8,7 +8,6 @@
 package results
 
 import (
-	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -18,7 +17,7 @@ const (
 )
 
 type ResultQueue struct {
-	queue chan []interface{}
+	Queue chan interface{}
 }
 
 var ResultQueues = make(map[string]*ResultQueue)
@@ -33,13 +32,15 @@ func Initialize() {
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
 		ResultQueues[module] = &ResultQueue{
-			queue: make(chan []interface{}, batchSize),
+			Queue: make(chan interface{}, batchSize),
 		}
-		//go processQueue(module, ResultQueues[module])
+		go processQueue(module, ResultQueues[module])
 	}
 
-	//初始化去重模块
+	// 初始化去重模块
 	InitializeDuplicate()
+	// 初始化结果处理模块
+	InitializeHandler()
 }
 
 func processQueue(module string, mq *ResultQueue) {
@@ -50,22 +51,26 @@ func processQueue(module string, mq *ResultQueue) {
 
 	for {
 		select {
-		case batch := <-mq.queue:
-			buffer = append(buffer, batch...)
+		case batch := <-mq.Queue:
+			buffer = append(buffer, batch)
 			if len(buffer) >= batchSize {
-				//flushBuffer(module, mq.collection, &buffer)
+				flushBuffer(module, &buffer)
 			}
 		case <-ticker.C:
 			if len(buffer) > 0 {
-				//flushBuffer(module, mq.collection, &buffer)
+				flushBuffer(module, &buffer)
 			}
 		}
 	}
 }
 
-func flushBuffer(module string, collection *mongo.Collection, buffer *[]interface{}) {
+func flushBuffer(module string, buffer *[]interface{}) {
 	if len(*buffer) == 0 {
 		return
+	}
+	switch module {
+	case "SubdomainScan":
+		SubdoaminResultHandler(buffer)
 	}
 
 	*buffer = nil

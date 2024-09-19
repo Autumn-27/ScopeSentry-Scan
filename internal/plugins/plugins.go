@@ -8,6 +8,7 @@
 package plugins
 
 import (
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"sync"
 )
@@ -50,9 +51,10 @@ func (pm *PluginManager) GetPlugin(module, name string) (Plugin, bool) {
 // InitializePlugins 初始化插件
 func (pm *PluginManager) InitializePlugins() error {
 	// TargetParser
-	plugin := targetparser.NewPlugin()
-	pm.RegisterPlugin("TargetParser", plugin.Name, plugin)
-
+	targetparserPlugin := targetparser.NewPlugin()
+	pm.RegisterPlugin("TargetHandler", targetparserPlugin.Name, targetparserPlugin)
+	subfinderPlugin := subfinder.NewPlugin()
+	pm.RegisterPlugin(subfinderPlugin.Module, subfinderPlugin.Name, subfinderPlugin)
 	//
 	return nil
 }

@@ -113,7 +113,6 @@ func DeleteFile(filePath string) {
 	if err != nil {
 		fmt.Printf("Failed to DeleteFile: %s - %s", filePath, err)
 	}
-
 }
 func GetSystemUsage() (int, float64) {
 	// 获取CPU使用率

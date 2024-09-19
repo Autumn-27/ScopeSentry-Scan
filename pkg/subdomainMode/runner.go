@@ -60,9 +60,10 @@ func Verify(target []string) []types.SubdomainResult {
 	SubdomainWriteTarget(targetPath, target)
 	args := []string{"v", "-f", targetPath, "-o", resultPath}
 	cmd := exec.Command(system.KsubdomainExecPath, args...)
+	system.SlogInfoLocal(fmt.Sprintf("%v", cmd))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		system.SlogError(fmt.Sprintf("ksubdomain verify 执行命令时出错：%s %s\n", err, output))
+		system.SlogError(fmt.Sprintf("ksubdomain verify 执行命令时出错：%s %s %v\n", err, output, cmd))
 		return []types.SubdomainResult{}
 	}
 	result := GetSubdomainResult(resultPath)

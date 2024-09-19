@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
@@ -55,6 +56,9 @@ func main() {
 	// 初始化tools
 	utils.InitializeTools()
 	utils.InitializeDnsTools()
+	utils.InitializeRequests()
+	// 初始化通知模块
+	notification.InitializeNotification()
 	// 初始化协程池
 	pool.Initialize()
 	// 初始化个模块的协程池
@@ -129,14 +133,6 @@ func main() {
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
 	pebbledb.PebbleStore.Put([]byte("1:baidu.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:google.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes1t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes2t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes3t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes4t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes5t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes6t.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:tes7t.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

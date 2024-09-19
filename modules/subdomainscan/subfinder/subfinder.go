@@ -113,10 +113,10 @@ func (p *Plugin) Execute(input interface{}) error {
 			if result.Host != "" {
 				result.Time = config.GetTimeNow()
 				verificationCount += 1
-				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v verification successful", p.GetName(), s))
+				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result domain: %v subdomain: %v source: %v verification successful", p.GetName(), s.Domain, s.Host, s.Source))
 				p.Result <- result
 			} else {
-				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v verification failed", p.GetName(), s))
+				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result domain: %v subdomain: %v source: %v verification failed", p.GetName(), s.Domain, s.Host, s.Source))
 			}
 		},
 		Domain: []string{target},

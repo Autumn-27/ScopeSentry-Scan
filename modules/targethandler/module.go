@@ -72,6 +72,7 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				nextModuleWg.Wait()
 				// 通道已关闭，结束处理
 				close(resultChan)
 				handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))

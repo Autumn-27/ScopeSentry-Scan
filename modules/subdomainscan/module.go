@@ -39,9 +39,9 @@ func (r *Runner) ModuleRun() error {
 	var plgWg sync.WaitGroup
 	var nextModuleWg sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{})
+	resultChan := make(chan interface{}, 100)
 	// 创建下一个模块的输入
-	nextInput := make(chan interface{})
+	nextInput := make(chan interface{}, 100)
 	r.NextModule.SetInput(nextInput)
 	nextModuleWg.Add(1)
 	go func() {
@@ -63,11 +63,12 @@ func (r *Runner) ModuleRun() error {
 						flag = results.Duplicate.SubdomainInMongoDb(subdomainResult)
 						if flag {
 							//没有在mongodb中查询到该子域名，存入数据库中并且开始扫描
-
+							go results.Handler.Subdomain(subdomainResult)
 							nextInput <- result
 						}
 					} else {
 						// 存入数据库中，并且开始扫描
+						go results.Handler.Subdomain(subdomainResult)
 						nextInput <- result
 					}
 				}
@@ -82,6 +83,8 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				nextModuleWg.Wait()
+				fmt.Printf("nextModuleWg 关闭")
 				// 通道已关闭，结束处理
 				if firstData {
 					handle.TaskHandle.ProgressEnd("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))

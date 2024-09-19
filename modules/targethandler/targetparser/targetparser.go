@@ -27,7 +27,8 @@ type Plugin struct {
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name: "TargetParser",
+		Name:   "TargetParser",
+		Module: "TargetHandler",
 	}
 }
 

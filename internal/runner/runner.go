@@ -35,5 +35,5 @@ func Run(op options.TaskOptions) {
 	close(ch)
 	time.Sleep(10 * time.Second)
 	wg.Wait()
-	logger.SlogInfoLocal(fmt.Sprintf("ModuleRun completed: %v %v\n", op.ID, op.Target))
+	logger.SlogInfoLocal(fmt.Sprintf("ModuleRun completed: %v %v", op.ID, op.Target))
 }
