@@ -24,4 +24,5 @@ type TaskOptions struct {
 	Parameters          map[string]map[string]interface{}
 	IsRestart           bool
 	IgnoreOldSubdomains bool
+	InputChan           map[string]chan interface{}
 }

@@ -9,12 +9,15 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/retryabledns"
 	"math"
+	"path/filepath"
+	"runtime"
 )
 
 type DnsTools struct {
@@ -102,31 +105,34 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 	}
 }
 
-func (d *DnsTools) KsubdomainVerify(target []string) []types.SubdomainResult {
-	//randomString := Tools.GenerateRandomString(6)
-	//if len(target) == 0 {
-	//	return []types.SubdomainResult{}
-	//}
-	//filename := util.CalculateMD5(target[0] + randomString)
-	//targetPath := filepath.Join(system.KsubdomainPath, "target", filename)
-	//resultPath := filepath.Join(system.KsubdomainPath, "result", filename)
-	//defer Tools.DeleteFile(targetPath)
-	//defer Tools.DeleteFile(resultPath)
-	//
-	//SubdomainWriteTarget(targetPath, target)
-	//args := []string{"v", "-f", targetPath, "-o", resultPath}
-	//cmd := exec.Command(system.KsubdomainExecPath, args...)
-	//system.SlogInfoLocal(fmt.Sprintf("%v", cmd))
-	//output, err := cmd.CombinedOutput()
-	//if err != nil {
-	//	system.SlogError(fmt.Sprintf("ksubdomain verify 执行命令时出错：%s %s %v\n", err, output, cmd))
-	//	return []types.SubdomainResult{}
-	//}
-	//result := GetSubdomainResult(resultPath)
-	//if len(result) == 0 {
-	//	system.SlogInfo(fmt.Sprintf("verify target[0] %v get dns result 0", target[0]))
-	//	return []types.SubdomainResult{}
-	//}
-	//return result
-	return nil
+// KsubdomainVerify 利用Ksubdomain对域名进行验证
+func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
+	randomString := Tools.GenerateRandomString(6)
+	if len(target) == 0 {
+		result <- fmt.Sprintf("KsubdomainVerify target number is 0")
+		close(result)
+		return
+	}
+	filename := Tools.CalculateMD5(target[0] + randomString)
+	targetPath := filepath.Join(config.ExtDir, "ksubdomain", "target", filename)
+	defer Tools.DeleteFile(targetPath)
+	err := Tools.WriteLinesToFile(targetPath, &target)
+	if err != nil {
+		result <- fmt.Sprintf("%v", err)
+		close(result)
+		return
+	}
+	osType := runtime.GOOS
+	var path string
+	switch osType {
+	case "windows":
+		path = "ksubdomain.exe"
+	case "linux":
+		path = "ksubdomain"
+	default:
+		path = "ksubdomain"
+	}
+	args := []string{"v", "-f", targetPath}
+	cmd := filepath.Join(config.ExtDir, "ksubdomain", path)
+	Tools.ExecuteCommand(cmd, args, result)
 }

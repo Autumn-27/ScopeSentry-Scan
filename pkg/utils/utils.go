@@ -8,6 +8,9 @@
 package utils
 
 import (
+	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -21,6 +24,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -69,6 +74,7 @@ func (t *UtilTools) WriteYAMLFile(filePath string, data interface{}) error {
 	return nil
 }
 
+// GenerateRandomString 生产指定长度的随机字符串
 func (t *UtilTools) GenerateRandomString(length int) string {
 	// 定义字符集
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -80,6 +86,7 @@ func (t *UtilTools) GenerateRandomString(length int) string {
 	return string(result)
 }
 
+// GetSystemUsage 获取系统使用率
 func (t *UtilTools) GetSystemUsage() (int, float64) {
 	// 获取CPU使用率
 	percent, err := cpu.Percent(3*time.Second, false)
@@ -100,11 +107,13 @@ func (t *UtilTools) GetSystemUsage() (int, float64) {
 	return cpuNum, memInfo.UsedPercent
 }
 
+// WriteContentFile 将字符串写入指定文件
 func (t *UtilTools) WriteContentFile(filPath string, fileContent string) error {
 	// 将字符串写入文件
 	return t.WriteByteContentFile(filPath, []byte(fileContent))
 }
 
+// WriteByteContentFile 将byte写入指定文件
 func (t *UtilTools) WriteByteContentFile(filPath string, fileContent []byte) error {
 	// 将字符串写入文件
 	if err := ioutil.WriteFile(filPath, fileContent, 0666); err != nil {
@@ -123,6 +132,7 @@ func (t *UtilTools) MarshalYAMLToString(data interface{}) (string, error) {
 	return string(yamlData), nil
 }
 
+// StructToJSON 将结构体序列化为json
 func (t *UtilTools) StructToJSON(data interface{}) (string, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -136,6 +146,14 @@ func (t *UtilTools) JSONToStruct(jsonStr []byte, result interface{}) error {
 	return json.Unmarshal(jsonStr, result)
 }
 
+// ParseArgs 从字符串解析为参数
+// 参数：
+// - args: 输入的参数字符串，需要解析的参数，例如 "--name John --age 30"。
+// - keys: 需要解析的键名列表，表示哪些键值对会被解析，比如传入 "name" 和 "age"。
+//
+// 返回值：
+// - map[string]string: 返回一个包含键值对的 map，键是 keys 中指定的参数，值是解析出来的字符串。
+// - error: 如果解析过程中遇到错误，则返回一个 error。
 func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, error) {
 	// 将参数字符串分割为切片
 	argsSlice := strings.Fields(args)
@@ -171,6 +189,7 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 	return result, nil
 }
 
+// DeleteFile 删除指定文件
 func (t *UtilTools) DeleteFile(filePath string) {
 	// 调用Remove函数删除文件
 	err := os.Remove(filePath)
@@ -179,6 +198,7 @@ func (t *UtilTools) DeleteFile(filePath string) {
 	}
 }
 
+// GetParameter 获取指定模块指定插件的参数
 func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, module string, plugin string) (string, bool) {
 	// 查找 module 是否存在
 	if plugins, modOk := Parameters[module]; modOk {
@@ -191,6 +211,7 @@ func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, m
 	return "", false
 }
 
+// GetRootDomain 获取域名的根域名
 func (t *UtilTools) GetRootDomain(input string) (string, error) {
 	input = strings.TrimLeft(input, "http://")
 	input = strings.TrimLeft(input, "https://")
@@ -277,6 +298,7 @@ var compoundDomains = map[string]bool{
 	"zj.cn":  true,
 }
 
+// HttpGetDownloadFile 通过http下载文件到指定路径
 func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -293,6 +315,13 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 		return false, fmt.Errorf("ioutil.ReadAll failed: %w", err)
 	}
 
+	// 获取文件所在的目录路径
+	dir := filepath.Dir(filePath)
+	// 创建文件所在的目录（如果目录不存在）
+	err = os.MkdirAll(dir, 0777) // MkdirAll 会递归创建目录
+	if err != nil {
+		return false, fmt.Errorf("os.MkdirAll failed: %w", err)
+	}
 	// 将文件内容写入本地文件
 	err = ioutil.WriteFile(filePath, body, 0777)
 	if err != nil {
@@ -300,4 +329,96 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// ExecuteCommand 执行指定命令，命令的输出每一行会发送到result的通道中。
+func (t *UtilTools) ExecuteCommand(cmdName string, args []string, result chan<- string) {
+	// 创建命令
+	cmd := exec.Command(cmdName, args...)
+
+	// 获取命令输出管道（标准输出）
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		result <- fmt.Sprintf("Error getting stdout pipe: %v", err)
+		close(result)
+		return
+	}
+
+	// 启动命令
+	if err := cmd.Start(); err != nil {
+		result <- fmt.Sprintf("Error starting command: %v", err)
+		close(result)
+		return
+	}
+
+	// 使用 bufio 读取命令的标准输出
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		// 将每行输出发送到 result 通道
+		result <- scanner.Text()
+	}
+
+	// 等待命令执行完毕
+	if err := cmd.Wait(); err != nil {
+		result <- fmt.Sprintf("Error waiting for command: %v", err)
+	}
+
+	// 关闭 result 通道，表示数据发送完毕
+	close(result)
+}
+
+// CalculateMD5 计算字符串的md5值
+func (t *UtilTools) CalculateMD5(input string) string {
+	// Convert the input string to bytes
+	data := []byte(input)
+
+	// Calculate the MD5 hash
+	hash := md5.Sum(data)
+
+	// Convert the hash to a hex string
+	hashString := hex.EncodeToString(hash[:])
+
+	return hashString
+}
+
+// WriteLinesToFile 将字符串数组的每一行写入指定文件
+func (t *UtilTools) WriteLinesToFile(filePath string, lines *[]string) error {
+
+	// 获取文件所在的目录路径
+	dir := filepath.Dir(filePath)
+	// 创建文件所在的目录（如果目录不存在）
+	err := os.MkdirAll(dir, 0777) // MkdirAll 会递归创建目录
+	if err != nil {
+		return fmt.Errorf("os.MkdirAll failed: %w", err)
+	}
+
+	// 打开文件，如果文件不存在则创建
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("无法打开文件: %v", err)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+
+	// 创建一个缓冲写入器
+	writer := bufio.NewWriter(file)
+
+	// 将数组中的每一行写入文件
+	for _, line := range *lines {
+		_, err := writer.WriteString(line + "\n")
+		if err != nil {
+			return fmt.Errorf("写入文件时出错: %v", err)
+		}
+	}
+
+	// 刷新缓冲区，确保所有数据写入文件
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("刷新缓冲区时出错: %v", err)
+	}
+
+	return nil
 }

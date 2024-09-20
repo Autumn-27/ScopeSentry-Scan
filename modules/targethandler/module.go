@@ -48,8 +48,6 @@ func (r *Runner) ModuleRun() error {
 	// 创建一个共享的 result 通道
 	resultChan := make(chan interface{})
 	// 创建下一个模块的输入
-	nextInput := make(chan interface{})
-	r.NextModule.SetInput(nextInput)
 	nextModuleWg.Add(1)
 	go func() {
 		defer nextModuleWg.Done()
@@ -63,19 +61,18 @@ func (r *Runner) ModuleRun() error {
 		for result := range resultChan {
 			// 处理每个插件的结果
 			logger.SlogInfoLocal(fmt.Sprintf("%v modlue result: %v", r.GetName(), result))
-			nextInput <- result
+			*r.Option.InputChan["SubdomainScan"] <- result
 		}
-		close(nextInput)
 	}()
 
 	for {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				nextModuleWg.Wait()
 				// 通道已关闭，结束处理
 				close(resultChan)
-				handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				return nil
 			}
 			// 处理输入数据
