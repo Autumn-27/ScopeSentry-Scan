@@ -11,7 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -47,8 +47,8 @@ var RedisClient *Client
 
 func Initialize() {
 	client := redis.NewClient(&redis.Options{
-		Addr:           config.AppConfig.Redis.IP + ":" + config.AppConfig.Redis.Port,
-		Password:       config.AppConfig.Redis.Password,
+		Addr:           global.AppConfig.Redis.IP + ":" + global.AppConfig.Redis.Port,
+		Password:       global.AppConfig.Redis.Password,
 		DB:             0,
 		ReadTimeout:    -2,
 		MaxActiveConns: 50,

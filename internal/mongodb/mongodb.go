@@ -12,7 +12,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -56,8 +56,8 @@ var MongodbClient *Client
 //}
 
 func Initialize() {
-	encodedPassword := url.QueryEscape(config.AppConfig.MongoDB.Password)
-	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", config.AppConfig.MongoDB.User, encodedPassword, config.AppConfig.MongoDB.IP, config.AppConfig.MongoDB.Port)
+	encodedPassword := url.QueryEscape(global.AppConfig.MongoDB.Password)
+	connectionURI := fmt.Sprintf("mongodb://%s:%s@%s:%s/?maxPoolSize=50", global.AppConfig.MongoDB.User, encodedPassword, global.AppConfig.MongoDB.IP, global.AppConfig.MongoDB.Port)
 	clientOptions := options.Client().ApplyURI(connectionURI)
 	var MaxPoolSizevalue uint64 = 50
 	clientOptions.MaxPoolSize = &MaxPoolSizevalue
@@ -74,7 +74,7 @@ func Initialize() {
 	if err != nil {
 		fmt.Printf("mongodb ping error: %v", err)
 	}
-	db := client.Database(config.AppConfig.MongoDB.Database)
+	db := client.Database(global.AppConfig.MongoDB.Database)
 
 	MongodbClient = &Client{client: client, database: db}
 }

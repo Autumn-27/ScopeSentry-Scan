@@ -9,7 +9,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
@@ -114,7 +114,7 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
 		return
 	}
 	filename := Tools.CalculateMD5(target[0] + randomString)
-	targetPath := filepath.Join(config.ExtDir, "ksubdomain", "target", filename)
+	targetPath := filepath.Join(global.ExtDir, "ksubdomain", "target", filename)
 	defer Tools.DeleteFile(targetPath)
 	err := Tools.WriteLinesToFile(targetPath, &target)
 	if err != nil {
@@ -133,6 +133,6 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
 		path = "ksubdomain"
 	}
 	args := []string{"v", "-f", targetPath}
-	cmd := filepath.Join(config.ExtDir, "ksubdomain", path)
+	cmd := filepath.Join(global.ExtDir, "ksubdomain", path)
 	Tools.ExecuteCommand(cmd, args, result)
 }

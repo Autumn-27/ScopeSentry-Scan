@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
@@ -32,7 +33,7 @@ import (
 func main() {
 	// 初始化系统信息
 	config.Initialize()
-	config.VERSION = "1.5"
+	global.VERSION = "1.5"
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -71,12 +72,12 @@ func main() {
 	}
 	// 初始化本地持久化缓存
 	pebbledbSetting := pebbledb.Settings{
-		DBPath:       filepath.Join(config.AbsolutePath, "data", "pebbledb"),
+		DBPath:       filepath.Join(global.AbsolutePath, "data", "pebbledb"),
 		CacheSize:    64 << 20,
 		MaxOpenFiles: 500,
 	}
 	pebbledbOption := pebbledb.GetPebbleOptions(&pebbledbSetting)
-	if !config.AppConfig.Debug {
+	if !global.AppConfig.Debug {
 		pebbledbOption.Logger = nil
 	}
 	pedb, err := pebbledb.NewPebbleDB(pebbledbOption, pebbledbSetting.DBPath)

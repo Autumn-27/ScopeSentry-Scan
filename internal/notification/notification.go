@@ -9,7 +9,7 @@ package notification
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"strings"
@@ -80,8 +80,8 @@ func processBatch(module string, mq *NotificationQueue) {
 // flushBuffer 模拟处理队列中的数据
 func flushBuffer(module string, buffer *string) {
 	// 处理消息
-	*buffer = "[" + config.AppConfig.NodeName + "]" + module + " results:\n" + *buffer
-	for _, api := range config.NotificationApi {
+	*buffer = "[" + global.AppConfig.NodeName + "]" + module + " results:\n" + *buffer
+	for _, api := range global.NotificationApi {
 		uri := strings.Replace(api.Url, "*msg*", *buffer, -1)
 		if api.Method == "GET" {
 			_, err := utils.Requests.HttpGet(uri)

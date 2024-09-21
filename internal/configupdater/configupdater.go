@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -40,7 +41,7 @@ func UpdateGlobalModulesConfig() {
 
 func UpdateNodeModulesConfig() {
 	logger.SlogInfoLocal("node config load begin")
-	redisNodeName := "node:" + config.AppConfig.NodeName
+	redisNodeName := "node:" + global.AppConfig.NodeName
 	// 从 Redis 中获取 nodeName 的值
 	modulesConfigString, err := redis.RedisClient.HGet(context.Background(), redisNodeName, "modulesConfig")
 	if err != nil {
@@ -63,7 +64,7 @@ func UpdateSubDomainDicConfig() {
 		return
 	}
 	for id, content := range results {
-		filePath := filepath.Join(config.DictPath, "subdomain", id)
+		filePath := filepath.Join(global.DictPath, "subdomain", id)
 		err := utils.Tools.WriteByteContentFile(filePath, content)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
@@ -81,7 +82,7 @@ func UpdateDirDicConfig() {
 		return
 	}
 	for id, content := range results {
-		filePath := filepath.Join(config.DictPath, "dir", id)
+		filePath := filepath.Join(global.DictPath, "dir", id)
 		err := utils.Tools.WriteByteContentFile(filePath, content)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("DirDic writing file error: %v - %v", id, err))
@@ -102,7 +103,7 @@ func UpdateSubfinderApiConfig() {
 		logger.SlogErrorLocal(fmt.Sprintf("UpdateSubfinderApiConfig load error: %v", err))
 		return
 	}
-	subfinderConfigPath := filepath.Join(config.ConfigDir, "subfinderConfig.yaml")
+	subfinderConfigPath := filepath.Join(global.ConfigDir, "subfinderConfig.yaml")
 	err = utils.Tools.WriteContentFile(subfinderConfigPath, result.Value)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("Subfinder writing file error: %v", err))
@@ -116,7 +117,7 @@ func UpdateRadConfig() {
 	var result struct {
 		Value string `bson:"value"`
 	}
-	radConfigPath := filepath.Join(config.ExtDir, "rad", "rad_config.yml")
+	radConfigPath := filepath.Join(global.ExtDir, "rad", "rad_config.yml")
 	err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "RadConfig"}, bson.M{"_id": 0, "value": 1}, &result)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("UpdateRadConfig load error: %v", err))
@@ -145,7 +146,7 @@ func UpdateSensitive() {
 		logger.SlogErrorLocal(fmt.Sprintf("Get Sensitive error: %v", err))
 		return
 	}
-	config.SensitiveRules = []types.SensitiveRule{}
+	global.SensitiveRules = []types.SensitiveRule{}
 	for _, rule := range tmpRule {
 		var r types.SensitiveRule
 		r.ID = rule.ID.Hex()
@@ -153,7 +154,7 @@ func UpdateSensitive() {
 		r.State = rule.State
 		r.Color = rule.Color
 		r.Name = rule.Name
-		config.SensitiveRules = append(config.SensitiveRules, r)
+		global.SensitiveRules = append(global.SensitiveRules, r)
 	}
 	logger.SlogInfoLocal("sens rule load end")
 	return
@@ -161,15 +162,15 @@ func UpdateSensitive() {
 
 func UpdateNodeName(name string) {
 	logger.SlogInfoLocal("UpdateNodeName begin")
-	oldName := config.AppConfig.NodeName
-	config.AppConfig.NodeName = name
+	oldName := global.AppConfig.NodeName
+	global.AppConfig.NodeName = name
 	key := "node:" + oldName
 	err := redis.RedisClient.HDel(context.Background(), key)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("update node name error: %v", err))
 		return
 	}
-	if err := utils.Tools.WriteYAMLFile(config.ConfigPath, config.AppConfig); err != nil {
+	if err := utils.Tools.WriteYAMLFile(global.ConfigPath, global.AppConfig); err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("update node name write error: %v", err))
 		return
 	}
@@ -188,14 +189,14 @@ func UpdateProject() {
 	if err := mongodb.MongodbClient.FindAll("project", bson.M{}, bson.M{"_id": 1, "root_domains": 1}, &tmpProjects); err != nil {
 		return
 	}
-	config.Projects = []types.Project{}
+	global.Projects = []types.Project{}
 	for _, tmpProj := range tmpProjects {
 		// 创建一个 types.Project 类型的值
 		var proj types.Project
 		// 将 tmpProject 的值赋给 types.Project 的对应字段
 		proj.ID = tmpProj.ID.Hex()
 		proj.Target = tmpProj.RootDomains
-		config.Projects = append(config.Projects, proj)
+		global.Projects = append(global.Projects, proj)
 	}
 	logger.SlogInfoLocal("project load end")
 }
@@ -218,7 +219,7 @@ func UpdatePoc() {
 	if len(tmpPocR) != 0 {
 		for _, poc := range tmpPocR {
 			id := poc.ID.Hex()
-			err := utils.Tools.WriteContentFile(filepath.Join(config.PocDir, string(id)+".yaml"), poc.Content)
+			err := utils.Tools.WriteContentFile(filepath.Join(global.PocDir, string(id)+".yaml"), poc.Content)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("Failed to write poc %s: %s", poc.Hash, err))
 			}
@@ -240,24 +241,24 @@ func UpdateWebFinger() {
 		logger.SlogErrorLocal(fmt.Sprintf("WebFinger load error: %v", err))
 		return
 	}
-	config.WebFingers = []types.WebFinger{}
+	global.WebFingers = []types.WebFinger{}
 	for _, f := range tmpWebF {
 		var wf types.WebFinger
 		wf.ID = f.ID.Hex() // 将 ObjectId 转换为字符串
 		wf.Express = f.Express
 		wf.State = f.State
-		config.WebFingers = append(config.WebFingers, wf)
+		global.WebFingers = append(global.WebFingers, wf)
 	}
 	logger.SlogInfoLocal("WebFinger load end")
 }
 
 func UpdateNotification() {
 	logger.SlogInfoLocal("Notification load begin")
-	if err := mongodb.MongodbClient.FindAll("notification", bson.M{"state": true}, bson.M{"_id": 0, "method": 1, "url": 1, "contentType": 1, "data": 1, "state": 1}, &config.NotificationApi); err != nil {
+	if err := mongodb.MongodbClient.FindAll("notification", bson.M{"state": true}, bson.M{"_id": 0, "method": 1, "url": 1, "contentType": 1, "data": 1, "state": 1}, &global.NotificationApi); err != nil {
 		logger.SlogError(fmt.Sprintf("UpdateNotification error notification api: %s", err))
 		return
 	}
-	if err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "notification"}, bson.M{"_id": 0, "dirScanNotification": 1, "portScanNotification": 1, "sensitiveNotification": 1, "subdomainTakeoverNotification": 1, "pageMonNotification": 1, "subdomainNotification": 1, "vulNotification": 1}, &config.NotificationConfig); err != nil {
+	if err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "notification"}, bson.M{"_id": 0, "dirScanNotification": 1, "portScanNotification": 1, "sensitiveNotification": 1, "subdomainTakeoverNotification": 1, "pageMonNotification": 1, "subdomainNotification": 1, "vulNotification": 1}, &global.NotificationConfig); err != nil {
 		logger.SlogError(fmt.Sprintf("UpdateNotification error notification config: %s", err))
 		return
 	}
@@ -266,7 +267,7 @@ func UpdateNotification() {
 
 func Initialize() {
 	//UpdateGlobalModulesConfig()
-	if config.FirstRun {
+	if global.FirstRun {
 		UpdateSubDomainDicConfig()
 		UpdateDirDicConfig()
 		UpdateSubfinderApiConfig()

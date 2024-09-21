@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -22,7 +23,7 @@ import (
 )
 
 func Register() {
-	nodeName := config.AppConfig.NodeName
+	nodeName := global.AppConfig.NodeName
 	if nodeName == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
@@ -32,9 +33,9 @@ func Register() {
 		nodeName = hostname + "-" + utils.Tools.GenerateRandomString(6)
 	}
 	key := "node:" + nodeName
-	if nodeName != config.AppConfig.NodeName {
-		config.AppConfig.NodeName = nodeName
-		err := utils.Tools.WriteYAMLFile(config.ConfigPath, config.AppConfig)
+	if nodeName != global.AppConfig.NodeName {
+		global.AppConfig.NodeName = nodeName
+		err := utils.Tools.WriteYAMLFile(global.ConfigPath, global.AppConfig)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("Register node error: %v", err))
 			return
@@ -53,7 +54,7 @@ func Register() {
 				"TotleMem":      float64(memInfo.Total) / 1024 / 1024,
 				"memNum":        0,
 				"state":         1, //1运行中 2暂停 3未连接
-				"version":       config.VERSION,
+				"version":       global.VERSION,
 				"modulesConfig": utils.Tools.MarshalYAMLToString(config.ModulesConfig),
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
@@ -64,7 +65,7 @@ func Register() {
 			logger.SlogInfo(fmt.Sprintf("Register Success:%v - version %v", nodeName, system.VERSION))
 			firstRegister = false
 		} else {
-			key = "node:" + config.AppConfig.NodeName
+			key = "node:" + global.AppConfig.NodeName
 			cpuNum, memNum := utils.Tools.GetSystemUsage()
 			run, fin := handle.TaskHandle.GetRunFin()
 			nodeInfo := map[string]interface{}{
@@ -75,7 +76,7 @@ func Register() {
 				"running":    run,
 				"finished":   fin,
 				"state":      1,
-				"version":    config.VERSION,
+				"version":    global.VERSION,
 			}
 			redisPingErr := redis.RedisClient.Ping(context.Background())
 			if redisPingErr != nil {

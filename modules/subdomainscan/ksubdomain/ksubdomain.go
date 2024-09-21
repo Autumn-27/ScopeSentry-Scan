@@ -9,7 +9,7 @@ package ksubdomain
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
@@ -52,7 +52,7 @@ func (p *Plugin) GetModule() string {
 }
 
 func (p *Plugin) Install() bool {
-	ksubdomainPath := filepath.Join(config.ExtDir, "ksubdomain")
+	ksubdomainPath := filepath.Join(global.ExtDir, "ksubdomain")
 	if err := os.MkdirAll(ksubdomainPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create ksubdomain folder:", err))
 		return false
@@ -82,7 +82,7 @@ func (p *Plugin) Install() bool {
 		dir = "darwin"
 		path = "ksubdomain"
 	}
-	KsubdomainPath := filepath.Join(config.ExtDir, "ksubdomain")
+	KsubdomainPath := filepath.Join(global.ExtDir, "ksubdomain")
 	KsubdomainExecPath := filepath.Join(KsubdomainPath, path)
 	if _, err := os.Stat(KsubdomainExecPath); os.IsNotExist(err) {
 		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path), KsubdomainExecPath)

@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/projectdiscovery/subfinder/v2/pkg/resolve"
@@ -100,24 +100,16 @@ func (p *Plugin) Execute(input interface{}) error {
 
 	rawCount := 0
 	verificationCount := 0
+	rawSubdomain := []string{}
 	subfinderOpts := &runner.Options{
 		Threads:            threads,            // Thread controls the number of threads to use for active enumerations
 		Timeout:            timeout,            // Timeout is the seconds to wait for sources to respond
 		MaxEnumerationTime: maxEnumerationTime, // MaxEnumerationTime is the maximum amount of time in mins to wait for enumeration
-		ProviderConfig:     filepath.Join(config.ConfigDir, "subfinderConfig.yaml"),
+		ProviderConfig:     filepath.Join(global.ConfigDir, "subfinderConfig.yaml"),
 		// and other system related options
 		ResultCallback: func(s *resolve.HostEntry) {
 			rawCount += 1
-			dnsxResult := utils.DNS.QueryOne(s.Host)
-			result := utils.DNS.DNSdataToSubdomainResult(dnsxResult)
-			if result.Host != "" {
-				result.Time = config.GetTimeNow()
-				verificationCount += 1
-				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result domain: %v subdomain: %v source: %v verification successful", p.GetName(), s.Domain, s.Host, s.Source))
-				p.Result <- result
-			} else {
-				logger.SlogInfoLocal(fmt.Sprintf("%v plugin result domain: %v subdomain: %v source: %v verification failed", p.GetName(), s.Domain, s.Host, s.Source))
-			}
+			rawSubdomain = append(rawSubdomain, s.Host)
 		},
 		Domain: []string{target},
 		Output: &bytes.Buffer{},
@@ -134,6 +126,15 @@ func (p *Plugin) Execute(input interface{}) error {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
 		return err
 	}
+	subdomainVerificationResult := make(chan string, 100)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult)
+
+	// 读取结果
+	for result := range subdomainVerificationResult {
+		verificationCount += 1
+		p.Result <- result
+	}
+
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
 	return nil
 }

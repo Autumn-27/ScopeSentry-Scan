@@ -9,7 +9,7 @@ package results
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -26,7 +26,7 @@ func InitializeHandler() {
 }
 
 func (h *handler) GetAssetProject(host string) string {
-	for _, p := range config.Projects {
+	for _, p := range global.Projects {
 		for _, t := range p.Target {
 			if host == t {
 				return p.ID
@@ -45,7 +45,7 @@ func (h *handler) Subdomain(result *types.SubdomainResult) {
 	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
-	if config.NotificationConfig.SubdomainScan {
+	if global.NotificationConfig.SubdomainScan {
 		NotificationMsg := fmt.Sprintf("%v - %v\n", result.Host, result.IP)
 		notification.NotificationQueues["SubdomainScan"].Queue <- NotificationMsg
 	}

@@ -5,7 +5,7 @@
 // @time      : 2024/9/8 12:33
 // -------------------------------------------
 
-package config
+package global
 
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"

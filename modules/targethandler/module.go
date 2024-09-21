@@ -61,7 +61,7 @@ func (r *Runner) ModuleRun() error {
 		for result := range resultChan {
 			// 处理每个插件的结果
 			logger.SlogInfoLocal(fmt.Sprintf("%v modlue result: %v", r.GetName(), result))
-			*r.Option.InputChan["SubdomainScan"] <- result
+			r.Option.InputChan["SubdomainScan"] <- result
 		}
 	}()
 

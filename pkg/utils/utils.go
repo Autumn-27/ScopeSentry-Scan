@@ -14,7 +14,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/projectdiscovery/gologger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
@@ -91,7 +91,7 @@ func (t *UtilTools) GetSystemUsage() (int, float64) {
 	// 获取CPU使用率
 	percent, err := cpu.Percent(3*time.Second, false)
 	if err != nil {
-		fmt.Println("Failed to get CPU usage:", err)
+		logger.SlogErrorLocal(fmt.Sprintf("Failed to get CPU usage:", err))
 		return 0, 0
 	}
 	cpuNum := 0
@@ -102,6 +102,7 @@ func (t *UtilTools) GetSystemUsage() (int, float64) {
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Println("Failed to get memory usage:", err)
+		logger.SlogErrorLocal(fmt.Sprintf("Failed to get memory usage:", err))
 		return 0, 0
 	}
 	return cpuNum, memInfo.UsedPercent
@@ -117,7 +118,7 @@ func (t *UtilTools) WriteContentFile(filPath string, fileContent string) error {
 func (t *UtilTools) WriteByteContentFile(filPath string, fileContent []byte) error {
 	// 将字符串写入文件
 	if err := ioutil.WriteFile(filPath, fileContent, 0666); err != nil {
-		fmt.Printf("Failed to create filPath: %s - %s", filPath, err)
+		logger.SlogErrorLocal(fmt.Sprintf("Failed to create filPath: %s - %s", filPath, err))
 		return err
 	}
 	return nil
@@ -194,7 +195,7 @@ func (t *UtilTools) DeleteFile(filePath string) {
 	// 调用Remove函数删除文件
 	err := os.Remove(filePath)
 	if err != nil {
-		gologger.Error().Msg(fmt.Sprintf("Failed to DeleteFile: %s - %s", filePath, err))
+		logger.SlogErrorLocal(fmt.Sprintf("Failed to DeleteFile: %s - %s", filePath, err))
 	}
 }
 

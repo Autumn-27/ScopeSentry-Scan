@@ -11,7 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -42,7 +42,7 @@ func NewLogger() error {
 		StacktraceKey:  "stacktrace",
 	}
 	atom := zap.NewAtomicLevelAt(zap.InfoLevel)
-	if config.AppConfig.Debug {
+	if global.AppConfig.Debug {
 		atom = zap.NewAtomicLevelAt(zap.DebugLevel)
 		encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 		encoderConfig.CallerKey = "caller_line"
@@ -99,7 +99,7 @@ func SlogDebugLocal(msg string) {
 func SendLogToRedis(msg string) error {
 	ctx := context.Background()
 	logMsg := logMessage{
-		Name: config.AppConfig.NodeName,
+		Name: global.AppConfig.NodeName,
 		Log:  msg,
 	}
 	msgJSON, err := json.Marshal(logMsg)

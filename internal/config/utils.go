@@ -9,6 +9,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"os"
 	"time"
 )
@@ -38,7 +39,7 @@ var timeZoneOffsets = map[string]int{
 
 func GetTimeNow() string {
 	// 获取当前时间
-	timeZoneName := AppConfig.TimeZoneName
+	timeZoneName := global.AppConfig.TimeZoneName
 
 	var location *time.Location
 	var err error

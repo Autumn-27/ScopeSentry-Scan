@@ -5,7 +5,7 @@
 // @time      : 2024/9/8 12:32
 // -------------------------------------------
 
-package config
+package global
 
 // Config 结构体
 type Config struct {
