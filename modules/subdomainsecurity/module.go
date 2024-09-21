@@ -25,6 +25,7 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 	}
 }
 
+// ModuleRun 子域名安全检测，如：子域名接管
 func (r *Runner) ModuleRun() error {
 	return nil
 }

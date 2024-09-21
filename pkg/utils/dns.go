@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type DnsTools struct {
@@ -109,7 +110,7 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 }
 
 // KsubdomainVerify 利用Ksubdomain对域名进行验证
-func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
+func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout time.Duration) {
 	randomString := Tools.GenerateRandomString(6)
 	if len(target) == 0 {
 		result <- fmt.Sprintf("KsubdomainVerify target number is 0")
@@ -140,7 +141,7 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
 	}
 	args := []string{"v", "-f", targetPath, "-o", resultPath}
 	cmd := filepath.Join(global.ExtDir, "ksubdomain", path)
-	err = Tools.ExecuteCommand(cmd, args)
+	err = Tools.ExecuteCommandWithTimeout(cmd, args, timeout)
 	if err != nil {
 		result <- fmt.Sprintf("%v", err)
 		close(result)

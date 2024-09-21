@@ -16,6 +16,6 @@ type Plugin interface {
 	SetParameter(args string)
 	GetParameter() string
 	Execute(input interface{}) error
-	Install() bool
-	Check() bool
+	Install() error
+	Check() error
 }

@@ -65,12 +65,12 @@ func toASCII(domain string) (string, error) {
 	return idna.ToASCII(domain)
 }
 
-func (p *Plugin) Install() bool {
-	return true
+func (p *Plugin) Install() error {
+	return nil
 }
 
-func (p *Plugin) Check() bool {
-	return true
+func (p *Plugin) Check() error {
+	return nil
 }
 
 func (p *Plugin) SetParameter(args string) {

@@ -8,6 +8,7 @@
 package ksubdomain
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 type Plugin struct {
@@ -51,21 +53,21 @@ func (p *Plugin) GetModule() string {
 	return p.Module
 }
 
-func (p *Plugin) Install() bool {
+func (p *Plugin) Install() error {
 	ksubdomainPath := filepath.Join(global.ExtDir, "ksubdomain")
 	if err := os.MkdirAll(ksubdomainPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create ksubdomain folder:", err))
-		return false
+		return err
 	}
 	targetPath := filepath.Join(ksubdomainPath, "target")
 	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create targetPath folder:", err))
-		return false
+		return err
 	}
 	resultPath := filepath.Join(ksubdomainPath, "result")
 	if err := os.MkdirAll(resultPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create resultPath folder:", err))
-		return false
+		return err
 	}
 	osType := runtime.GOOS
 	// 判断操作系统类型
@@ -89,22 +91,38 @@ func (p *Plugin) Install() bool {
 		if err != nil {
 			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", dir, path), KsubdomainExecPath)
 			if err != nil {
-				return false
+				return err
 			}
 		}
 		if osType == "linux" {
 			err = os.Chmod(KsubdomainExecPath, 0755)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("Chmod ksubdomain Tool Fail: %s", err))
-				return false
+				return err
 			}
 		}
 	}
-	return true
+	return nil
 }
 
-func (p *Plugin) Check() bool {
-	return true
+func (p *Plugin) Check() error {
+	rawSubdomain := []string{"scope-sentry.top"}
+	subdomainVerificationResult := make(chan string, 1)
+	verificationCount := 0
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 5*time.Minute)
+	for result := range subdomainVerificationResult {
+		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
+		if subdomainResult.Host != "" {
+			verificationCount += 1
+		} else {
+			logger.SlogErrorLocal(result)
+		}
+	}
+	if verificationCount == 0 {
+		return fmt.Errorf("ksubdomain run error")
+	} else {
+		return nil
+	}
 }
 
 func (p *Plugin) SetParameter(args string) {
@@ -116,5 +134,11 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) error {
+	target, ok := input.(string)
+	if !ok {
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
+		return errors.New("input is not a string")
+	}
+	// 判断是否为泛解析，记录泛解析的ip，然后爆破之后
 	return nil
 }

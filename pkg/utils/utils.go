@@ -9,6 +9,7 @@ package utils
 
 import (
 	"bufio"
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -333,17 +334,25 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	return true, nil
 }
 
-func (t *UtilTools) ExecuteCommand(command string, args []string) error {
-	// 创建命令对象
-	cmd := exec.Command(command, args...)
+func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration) error {
+	// 创建一个带有超时的上下文
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel() // 确保在函数结束后取消上下文，防止资源泄漏
+
+	// 创建命令对象，使用带上下文的 exec.CommandContext
+	cmd := exec.CommandContext(ctx, command, args...)
 
 	// 执行命令，不获取输出
 	err := cmd.Run()
 	if err != nil {
+		// 如果是超时错误，返回具体错误信息
+		if ctx.Err() == context.DeadlineExceeded {
+			return ctx.Err()
+		}
 		return err
 	}
 
-	// 如果没有错误，则说明命令执行成功
+	// 如果没有错误，说明命令执行成功
 	return nil
 }
 

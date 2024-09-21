@@ -8,6 +8,7 @@
 package plugins
 
 import (
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"sync"
@@ -55,6 +56,20 @@ func (pm *PluginManager) InitializePlugins() error {
 	pm.RegisterPlugin("TargetHandler", targetparserPlugin.Name, targetparserPlugin)
 	subfinderPlugin := subfinder.NewPlugin()
 	pm.RegisterPlugin(subfinderPlugin.Module, subfinderPlugin.Name, subfinderPlugin)
-	//
+
+	// 执行插件的安装和check
+	for module, plugins := range pm.plugins {
+		for name, plugin := range plugins {
+			// 调用每个插件的 Install 函数
+			if err := plugin.Install(); err != nil {
+				return fmt.Errorf("failed to install plugin %s from module %s: %v", name, module, err)
+			}
+
+			// 调用每个插件的 Check 函数
+			if err := plugin.Check(); err != nil {
+				return fmt.Errorf("failed to check plugin %s from module %s: %v", name, module, err)
+			}
+		}
+	}
 	return nil
 }

@@ -19,6 +19,7 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type Plugin struct {
@@ -55,12 +56,12 @@ func (p *Plugin) GetModule() string {
 	return p.Module
 }
 
-func (p *Plugin) Install() bool {
-	return true
+func (p *Plugin) Install() error {
+	return nil
 }
 
-func (p *Plugin) Check() bool {
-	return true
+func (p *Plugin) Check() error {
+	return nil
 }
 
 func (p *Plugin) SetParameter(args string) {
@@ -127,7 +128,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		return err
 	}
 	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)
 
 	// 读取结果
 	for result := range subdomainVerificationResult {

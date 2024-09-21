@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net"
 	"sync"
 )
 
@@ -54,6 +55,8 @@ func (r *Runner) ModuleRun() error {
 			case result, ok := <-resultChan:
 				if !ok {
 					// 如果 resultChan 关闭了，退出循环
+					// 此模块运行完毕，关闭下个模块的输入
+					r.NextModule.CloseInput()
 					return
 				}
 
@@ -67,14 +70,19 @@ func (r *Runner) ModuleRun() error {
 							if flag {
 								// 没有在mongodb中查询到该子域名，存入数据库中并且开始扫描
 								go results.Handler.Subdomain(&subdomainResult)
-								// nextInput <- result
+								// 将子域名发送到下个模块
+								r.NextModule.GetInput() <- subdomainResult.Host
 							}
 						} else {
 							// 存入数据库中，并且开始扫描
 							go results.Handler.Subdomain(&subdomainResult)
-							// nextInput <- result
+							// 将子域名发送到下个模块
+							r.NextModule.GetInput() <- subdomainResult.Host
 						}
 					}
+				} else {
+					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}
@@ -90,7 +98,7 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+					handle.TaskHandle.ProgressEnd("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
 				}
 				close(resultChan)
 				fmt.Println("subdomainScan关闭: 插件运行完毕")
@@ -99,46 +107,60 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+				handle.TaskHandle.ProgressStart("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
 				firstData = true
 			}
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				// 调用插件
-				for _, pluginName := range r.Option.SubdomainScan {
-					//var plgWg sync.WaitGroup
-					var plgWg sync.WaitGroup
-					logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
-					if flag {
-						plgWg.Add(1)
-						args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
-						if argsFlag {
-							plg.SetParameter(args)
-						} else {
-							plg.SetParameter("")
-						}
-						plg.SetResult(resultChan)
-						pluginFunc := func(data interface{}) func() {
-							return func() {
-								defer plgWg.Done()
-								err := plg.Execute(data)
-								if err != nil {
+				target, _ := data.(string)
+				// 判断是否为ip，如果是ip则直接发送到下个模块
+				if net.ParseIP(target) != nil {
+					// 如果是纯 IP 地址
+					resultChan <- data
+				} else {
+					// 如果开启了子域名扫描
+					if len(r.Option.SubdomainScan) != 0 {
+						// 调用插件
+						for _, pluginName := range r.Option.SubdomainScan {
+							//var plgWg sync.WaitGroup
+							var plgWg sync.WaitGroup
+							logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+							if flag {
+								plgWg.Add(1)
+								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+								if argsFlag {
+									plg.SetParameter(args)
+								} else {
+									plg.SetParameter("")
 								}
+								plg.SetResult(resultChan)
+								pluginFunc := func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										err := plg.Execute(data)
+										if err != nil {
+										}
+									}
+								}(data)
+								err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
+								if err != nil {
+									plgWg.Done()
+									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+								}
+								plgWg.Wait()
+							} else {
+								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 							}
-						}(data)
-						err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
-						if err != nil {
-							plgWg.Done()
-							logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
-						plgWg.Wait()
 					} else {
-						logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+						// 没有开启子域名扫描，直接将输入发送到下个模块
+						resultChan <- data
 					}
-					logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 				}
+
 			}(data)
 
 		}
