@@ -7,6 +7,8 @@
 
 package options
 
+import "sync"
+
 type TaskOptions struct {
 	ID                  string
 	TaskName            string
@@ -25,4 +27,5 @@ type TaskOptions struct {
 	IsRestart           bool
 	IgnoreOldSubdomains bool
 	InputChan           map[string]chan interface{}
+	ModuleRunWg         *sync.WaitGroup
 }

@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
@@ -332,8 +333,22 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	return true, nil
 }
 
-// ExecuteCommand 执行指定命令，命令的输出每一行会发送到result的通道中。
-func (t *UtilTools) ExecuteCommand(cmdName string, args []string, result chan<- string) {
+func (t *UtilTools) ExecuteCommand(command string, args []string) error {
+	// 创建命令对象
+	cmd := exec.Command(command, args...)
+
+	// 执行命令，不获取输出
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	// 如果没有错误，则说明命令执行成功
+	return nil
+}
+
+// ExecuteCommandToChan 执行指定命令，命令的输出每一行会发送到result的通道中。
+func (t *UtilTools) ExecuteCommandToChan(cmdName string, args []string, result chan<- string) {
 	// 创建命令
 	cmd := exec.Command(cmdName, args...)
 
@@ -421,5 +436,93 @@ func (t *UtilTools) WriteLinesToFile(filePath string, lines *[]string) error {
 		return fmt.Errorf("刷新缓冲区时出错: %v", err)
 	}
 
+	return nil
+}
+
+var timeZoneOffsets = map[string]int{
+	"UTC":                 0,
+	"Asia/Shanghai":       8 * 60 * 60,
+	"Asia/Tokyo":          9 * 60 * 60,
+	"Asia/Kolkata":        5*60*60 + 30*60,
+	"Europe/London":       0,
+	"Europe/Berlin":       1 * 60 * 60,
+	"Europe/Paris":        1 * 60 * 60,
+	"America/New_York":    -5 * 60 * 60,
+	"America/Chicago":     -6 * 60 * 60,
+	"America/Denver":      -7 * 60 * 60,
+	"America/Los_Angeles": -8 * 60 * 60,
+	"Australia/Sydney":    10 * 60 * 60,
+	"Australia/Perth":     8 * 60 * 60,
+	"Asia/Singapore":      8 * 60 * 60,
+	"Asia/Hong_Kong":      8 * 60 * 60,
+	"Europe/Moscow":       3 * 60 * 60,
+	"America/Sao_Paulo":   -3 * 60 * 60,
+	"Africa/Johannesburg": 2 * 60 * 60,
+	"Asia/Dubai":          4 * 60 * 60,
+	"Pacific/Auckland":    12 * 60 * 60,
+}
+
+func (t *UtilTools) GetTimeNow() string {
+	// 获取当前时间
+	timeZoneName := global.AppConfig.TimeZoneName
+
+	var location *time.Location
+	var err error
+
+	// 查找时区名称对应的偏移量
+	offset, exists := timeZoneOffsets[timeZoneName]
+	if exists {
+		// 如果存在映射，使用固定时区
+		location = time.FixedZone(timeZoneName, offset)
+	} else {
+		// 如果映射不存在，尝试直接加载时区名称
+		location, err = time.LoadLocation(timeZoneName)
+		if err != nil {
+			// 如果加载失败，使用系统默认时区
+			fmt.Printf("Time zone not found: %s, using system default time zone\n", timeZoneName)
+			location = time.Local
+		}
+	}
+	currentTime := time.Now()
+	var easternTime = currentTime.In(location)
+	return easternTime.Format("2006-01-02 15:04:05")
+}
+
+// EnsureDir 判断目录是否存在，不存在则创建
+func (t *UtilTools) EnsureDir(dirPath string) error {
+	// 检查目录是否存在
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		// 如果目录不存在，则创建目录
+		err := os.MkdirAll(dirPath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("创建目录失败: %w", err)
+		}
+		return nil
+	} else {
+		return nil
+	}
+}
+
+// ReadFileLineByLine 函数逐行读取文件，并将每一行发送到通道中
+func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) error {
+	// 打开文件
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close() // 函数结束时关闭文件
+
+	// 使用 bufio.Scanner 逐行读取文件
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lineChan <- scanner.Text() // 将读取到的行发送到通道
+	}
+
+	// 检查读取过程中是否发生错误
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	close(lineChan) // 读取完毕后关闭通道
 	return nil
 }

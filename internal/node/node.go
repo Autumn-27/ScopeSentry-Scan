@@ -47,7 +47,7 @@ func Register() {
 		if firstRegister {
 			memInfo, _ := mem.VirtualMemory()
 			nodeInfo := map[string]interface{}{
-				"updateTime":    config.GetTimeNow(),
+				"updateTime":    utils.Tools.GetTimeNow(),
 				"running":       0,
 				"finished":      0,
 				"cpuNum":        0,
@@ -69,7 +69,7 @@ func Register() {
 			cpuNum, memNum := utils.Tools.GetSystemUsage()
 			run, fin := handle.TaskHandle.GetRunFin()
 			nodeInfo := map[string]interface{}{
-				"updateTime": config.GetTimeNow(),
+				"updateTime": utils.Tools.GetTimeNow(),
 				"cpuNum":     cpuNum,
 				"memNum":     memNum,
 				"maxTaskNum": config.ModulesConfig.MaxGoroutineCount,

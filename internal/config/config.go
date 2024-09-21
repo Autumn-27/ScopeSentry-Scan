@@ -85,7 +85,7 @@ func CreateDir() {
 	}
 
 	for _, dir := range dirs {
-		err := EnsureDir(dir)
+		err := utils.Tools.EnsureDir(dir)
 		if err != nil {
 			log.Fatalf("%s create error: %v", dir, err)
 		}

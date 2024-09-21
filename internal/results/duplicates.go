@@ -51,7 +51,7 @@ func (d *duplicate) SubdomainInTask(result *types.SubdomainResult) bool {
 			// 如果redis中已经存在子域名了，表示其他节点或该节点之前已经在扫描该子域名了，返回false跳过此域名
 			return false
 		} else {
-			_, err = system.RedisClient.SAdd(ctx, keyRedis, result.Host)
+			_, err = redis.RedisClient.SAdd(ctx, keyRedis, result.Host)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("SubdomainInTask Deduplication sadd error %v", err))
 			}

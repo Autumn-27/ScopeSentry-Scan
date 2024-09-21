@@ -18,13 +18,12 @@ import (
 
 func Run(op options.TaskOptions) {
 	var wg sync.WaitGroup
-	wg.Add(1)
+	op.ModuleRunWg = &wg
 	op.TargetParser = append(op.TargetParser, "TargetParser")
 	process := modules.CreateScanProcess(&op)
 	ch := make(chan interface{})
 	process.SetInput(ch)
 	go func() {
-		defer wg.Done()
 		err := process.ModuleRun()
 		if err != nil {
 			fmt.Println("Error:", err)

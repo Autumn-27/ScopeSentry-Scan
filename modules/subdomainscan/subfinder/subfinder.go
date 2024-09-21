@@ -131,10 +131,14 @@ func (p *Plugin) Execute(input interface{}) error {
 
 	// 读取结果
 	for result := range subdomainVerificationResult {
-		verificationCount += 1
-		p.Result <- result
+		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
+		if subdomainResult.Host != "" {
+			verificationCount += 1
+			p.Result <- subdomainResult
+		} else {
+			logger.SlogErrorLocal(result)
+		}
 	}
-
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
 	return nil
 }

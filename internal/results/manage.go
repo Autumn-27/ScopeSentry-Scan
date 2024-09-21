@@ -17,12 +17,13 @@ const (
 )
 
 type ResultQueue struct {
-	Queue chan interface{}
+	Queue   chan interface{}
+	CloseCh chan struct{}
 }
 
 var ResultQueues = make(map[string]*ResultQueue)
 
-func Initialize() {
+func InitializeResultQueue() {
 	// 模块列表
 	modules := []string{
 		"SubdomainScan", "SubdomainSecurity",
@@ -60,6 +61,12 @@ func processQueue(module string, mq *ResultQueue) {
 			if len(buffer) > 0 {
 				flushBuffer(module, &buffer)
 			}
+		case <-mq.CloseCh:
+			// 处理关闭信号
+			if len(buffer) > 0 {
+				flushBuffer(module, &buffer)
+			}
+			return
 		}
 	}
 }
@@ -74,4 +81,11 @@ func flushBuffer(module string, buffer *[]interface{}) {
 	}
 
 	*buffer = nil
+}
+
+func Close() {
+	for _, mq := range ResultQueues {
+		close(mq.Queue)   // 关闭队列
+		close(mq.CloseCh) // 发送关闭信号
+	}
 }

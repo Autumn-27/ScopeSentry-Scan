@@ -36,3 +36,11 @@ func (r *Runner) SetInput(ch chan interface{}) {
 func (r *Runner) GetName() string {
 	return "SubdomainSecurity"
 }
+
+func (r *Runner) GetInput() chan interface{} {
+	return r.Input
+}
+
+func (r *Runner) CloseInput() {
+	close(r.Input)
+}

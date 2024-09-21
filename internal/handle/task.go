@@ -10,9 +10,9 @@ package handle
 import (
 	"context"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
 )
 
@@ -61,7 +61,7 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_start"
 	ProgressInfo := map[string]interface{}{
-		ty: config.GetTimeNow(),
+		ty: utils.Tools.GetTimeNow(),
 	}
 	err := redis.RedisClient.HMSet(context.Background(), key, ProgressInfo)
 	if err != nil {
@@ -78,7 +78,7 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int)
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_end"
 	ProgressInfo := map[string]interface{}{
-		ty: config.GetTimeNow(),
+		ty: utils.Tools.GetTimeNow(),
 	}
 	err := redis.RedisClient.HMSet(context.Background(), key, ProgressInfo)
 	if err != nil {

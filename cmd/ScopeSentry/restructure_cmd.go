@@ -21,6 +21,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/task"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -88,6 +89,9 @@ func main() {
 	defer func(PebbleStore *pebbledb.PebbleDB) {
 		_ = PebbleStore.Close()
 	}(pebbledb.PebbleStore)
+
+	// 初始化结果处理队列，正常的时候将该初始化放入任务开始时，任务执行完毕关闭结果队列
+	results.InitializeResultQueue()
 
 	// 初始化全局插件管理器
 	plugins.GlobalPluginManager = plugins.NewPluginManager()

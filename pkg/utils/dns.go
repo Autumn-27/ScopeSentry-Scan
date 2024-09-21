@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
 	"github.com/projectdiscovery/gologger"
@@ -18,6 +20,7 @@ import (
 	"math"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type DnsTools struct {
@@ -115,7 +118,10 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
 	}
 	filename := Tools.CalculateMD5(target[0] + randomString)
 	targetPath := filepath.Join(global.ExtDir, "ksubdomain", "target", filename)
+	resultPath := filepath.Join(global.ExtDir, "ksubdomain", "result", filename)
 	defer Tools.DeleteFile(targetPath)
+	defer Tools.DeleteFile(resultPath)
+
 	err := Tools.WriteLinesToFile(targetPath, &target)
 	if err != nil {
 		result <- fmt.Sprintf("%v", err)
@@ -132,7 +138,43 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string) {
 	default:
 		path = "ksubdomain"
 	}
-	args := []string{"v", "-f", targetPath}
+	args := []string{"v", "-f", targetPath, "-o", resultPath}
 	cmd := filepath.Join(global.ExtDir, "ksubdomain", path)
-	Tools.ExecuteCommand(cmd, args, result)
+	err = Tools.ExecuteCommand(cmd, args)
+	if err != nil {
+		result <- fmt.Sprintf("%v", err)
+		close(result)
+		return
+	}
+	err = Tools.ReadFileLineByLine(resultPath, result)
+	if err != nil {
+		result <- fmt.Sprintf("%v", err)
+		close(result)
+		return
+	}
+}
+
+// KsubdomainResultToStruct 将ksubdomain执行的结果转为SubdomainResult结构
+func (d DnsTools) KsubdomainResultToStruct(input string) types.SubdomainResult {
+	if strings.Contains(input, "=>") {
+		Domains := strings.Split(input, "=>")
+		logger.SlogDebugLocal(fmt.Sprintf("Received DNS message in Ksubdoamin: %v", Domains))
+		_domain := types.SubdomainResult{}
+		_domain.Host = Domains[0]
+		_domain.Type = "A"
+		for i := 1; i < len(Domains); i++ {
+			containsSpace := strings.Contains(Domains[i], " ")
+			if containsSpace {
+				result := strings.SplitN(Domains[i], " ", 2)
+				_domain.Type = result[0]
+				_domain.Value = append(_domain.Value, result[1])
+			} else {
+				_domain.IP = append(_domain.IP, Domains[i])
+			}
+		}
+		time := system.GetTimeNow()
+		_domain.Time = time
+		return _domain
+	}
+	return types.SubdomainResult{}
 }
