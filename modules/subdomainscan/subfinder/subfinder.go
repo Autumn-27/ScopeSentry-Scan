@@ -94,6 +94,8 @@ func (p *Plugin) Execute(input interface{}) error {
 					timeout, _ = strconv.Atoi(value)
 				case "max-time":
 					maxEnumerationTime, _ = strconv.Atoi(value)
+				default:
+					continue
 				}
 			}
 		}
@@ -137,7 +139,7 @@ func (p *Plugin) Execute(input interface{}) error {
 			verificationCount += 1
 			p.Result <- subdomainResult
 		} else {
-			logger.SlogErrorLocal(result)
+			logger.SlogDebugLocal(result)
 		}
 	}
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))

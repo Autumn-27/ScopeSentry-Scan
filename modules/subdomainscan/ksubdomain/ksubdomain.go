@@ -12,10 +12,12 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -139,6 +141,105 @@ func (p *Plugin) Execute(input interface{}) error {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
 		return errors.New("input is not a string")
 	}
-	// 判断是否为泛解析，记录泛解析的ip，然后爆破之后
+	wildcardSubdomainResults := wildcardDNSRecords(target)
+	wildcardDNSRecordsLen := len(wildcardSubdomainResults)
+	parameter := p.GetParameter()
+	var subfile string
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "subfile")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				switch key {
+				case "subfile":
+					subfile = value
+				}
+			}
+		}
+	} else {
+		logger.SlogError(fmt.Sprintf("ksubdomain 运行失败: 没有提供子域名字典，请查看任务配置"))
+		return nil
+	}
+	subfile = filepath.Join(global.DictPath, "subdomain", subfile)
+	subDictChan := make(chan string, 10)
+	go func() {
+		err := utils.Tools.ReadFileLineByLine(subfile, subDictChan)
+		if err != nil {
+			logger.SlogInfoLocal(fmt.Sprintf("%v", err))
+		}
+	}()
+	rawSubdomain := []string{}
+	dotIndex := strings.Index(target, "*.")
+	// 读取子域名字典
+	for result := range subDictChan {
+		if dotIndex != -1 {
+			tmpDomain := strings.Replace(target, "*", result, -1)
+			rawSubdomain = append(rawSubdomain, tmpDomain)
+		} else {
+			rawSubdomain = append(rawSubdomain, result+"."+target)
+		}
+	}
+	// 拼接完子域名之后开始运行验证子域名
+	subdomainVerificationResult := make(chan string, 100)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)
+	verificationCount := 0
+	// 读取结果
+	for result := range subdomainVerificationResult {
+		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
+		if subdomainResult.Host != "" {
+			// wildcardDNSRecords记录的是生成的随机域名的解析结果，如果大于2，认为是存在泛解析，将此解析ip跳过
+			if wildcardDNSRecordsLen >= 2 {
+				// 如果subdomainResult.IP中的某个IP存在于泛解析记录中，跳过
+				if isIPInWildcard(subdomainResult.IP, wildcardSubdomainResults) {
+					// 发现存在泛解析记录中的IP，跳过该结果
+					logger.SlogInfoLocal(fmt.Sprintf("%v 发现泛解析域名, 子域名: %v  IP: %v", target, subdomainResult.Host, subdomainResult.IP))
+					continue
+				}
+			}
+			verificationCount += 1
+			p.Result <- subdomainResult
+		} else {
+			logger.SlogErrorLocal(result)
+		}
+	}
+	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, len(rawSubdomain), verificationCount))
+
 	return nil
+}
+
+func wildcardDNSRecords(domain string) []string {
+	targets := []string{}
+	for i := 0; i < 3; i++ {
+		dotIndex := strings.Index(domain, "*.")
+		subdomain := util.GenerateRandomString(6) + "." + domain
+		if dotIndex != -1 {
+			subdomain = strings.Replace(domain, "*", util.GenerateRandomString(6), -1)
+		}
+		targets = append(targets, subdomain)
+	}
+	subdomainVerificationResult := make(chan string, 1)
+	go utils.DNS.KsubdomainVerify(targets, subdomainVerificationResult, 1*time.Hour)
+	var results []string
+	// 读取结果
+	for result := range subdomainVerificationResult {
+		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
+		if subdomainResult.Host != "" {
+			logger.SlogInfoLocal(fmt.Sprintf("%v 发现泛解析IP：%v", domain, subdomainResult.IP))
+			results = append(results, subdomainResult.IP...)
+		}
+	}
+	return results
+}
+
+// 判断是否有IP在泛解析记录中
+func isIPInWildcard(ipList []string, wildcardDNSRecords []string) bool {
+	for _, ip := range ipList {
+		for _, wildcardIP := range wildcardDNSRecords {
+			// 如果某个ip在wildcardDNSRecords中，立即返回true
+			if ip == wildcardIP {
+				return true
+			}
+		}
+	}
+	return false
 }

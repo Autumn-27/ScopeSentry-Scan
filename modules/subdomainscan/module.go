@@ -71,18 +71,18 @@ func (r *Runner) ModuleRun() error {
 								// 没有在mongodb中查询到该子域名，存入数据库中并且开始扫描
 								go results.Handler.Subdomain(&subdomainResult)
 								// 将子域名发送到下个模块
-								r.NextModule.GetInput() <- subdomainResult.Host
+								//r.NextModule.GetInput() <- subdomainResult.Host
 							}
 						} else {
 							// 存入数据库中，并且开始扫描
 							go results.Handler.Subdomain(&subdomainResult)
 							// 将子域名发送到下个模块
-							r.NextModule.GetInput() <- subdomainResult.Host
+							//r.NextModule.GetInput() <- subdomainResult.Host
 						}
 					}
 				} else {
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
-					r.NextModule.GetInput() <- result
+					//r.NextModule.GetInput() <- result
 				}
 			}
 		}
@@ -134,6 +134,11 @@ func (r *Runner) ModuleRun() error {
 									plg.SetParameter(args)
 								} else {
 									plg.SetParameter("")
+								}
+								if r.Option.SubdomainFilename != "" {
+									// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
+									newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
+									plg.SetParameter(newParameter)
 								}
 								plg.SetResult(resultChan)
 								pluginFunc := func(data interface{}) func() {

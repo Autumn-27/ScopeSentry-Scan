@@ -35,6 +35,7 @@ func main() {
 	// 初始化系统信息
 	config.Initialize()
 	global.VERSION = "1.5"
+	global.AppConfig.Debug = false
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -104,7 +105,7 @@ func main() {
 	taskE := options.TaskOptions{
 		ID:                "1",
 		TaskName:          "test",
-		SubdomainScan:     []string{"subfinder"},
+		SubdomainScan:     []string{"ksubdomain"},
 		SubdomainSecurity: []string{"takeover"},
 		AssetMapping:      []string{"httpx"},
 		AssetHandle:       []string{""},
@@ -113,6 +114,7 @@ func main() {
 		URLSecurity:       []string{"test"},
 		WebCrawler:        []string{"test"},
 		VulnerabilityScan: []string{"nuclei"},
+		SubdomainFilename: "66dda6ee3687eb004e6b3bda",
 	}
 	jsonStr, err := utils.Tools.StructToJSON(taskE)
 	if err != nil {

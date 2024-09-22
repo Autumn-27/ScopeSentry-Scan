@@ -28,4 +28,5 @@ type TaskOptions struct {
 	IgnoreOldSubdomains bool
 	InputChan           map[string]chan interface{}
 	ModuleRunWg         *sync.WaitGroup
+	SubdomainFilename   string
 }

@@ -166,17 +166,30 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 
 	// 创建一个 map 用于存储 flag 的值
 	values := make(map[string]*string)
+
+	// 遍历 keys，为每个 key 添加一个 flag
 	for _, key := range keys {
-		// 初始化 map 并创建对应的 flag
 		value := ""
 		values[key] = &value
-		fs.String(key, "", "a placeholder") // 创建一个 flag 用于存储 key 的值
+		fs.StringVar(values[key], key, "", "a placeholder for "+key)
 	}
+
+	// 通过重定向标准输出，避免错误信息输出
+	originalStderr := os.Stderr
+	_, w, _ := os.Pipe()
+	os.Stderr = w
 
 	// 解析参数
 	err := fs.Parse(argsSlice)
+
+	// 恢复标准输出
+	w.Close()
+	os.Stderr = originalStderr
+
+	// 读取错误输出
 	if err != nil {
-		return nil, err
+		// 如果有错误，可以选择记录日志
+		// fmt.Println("Ignored extra arguments:", err)
 	}
 
 	// 获取 key 对应的值并填充到结果 map 中
@@ -510,6 +523,18 @@ func (t *UtilTools) EnsureDir(dirPath string) error {
 	} else {
 		return nil
 	}
+}
+
+// EnsureFilePathExists 检查给定的文件路径，如果文件夹不存在则创建
+func (t *UtilTools) EnsureFilePathExists(filePath string) error {
+	// 获取文件的目录路径
+	dir := filepath.Dir(filePath)
+
+	err := t.EnsureDir(dir)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ReadFileLineByLine 函数逐行读取文件，并将每一行发送到通道中

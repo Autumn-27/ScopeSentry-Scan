@@ -65,7 +65,12 @@ func UpdateSubDomainDicConfig() {
 	}
 	for id, content := range results {
 		filePath := filepath.Join(global.DictPath, "subdomain", id)
-		err := utils.Tools.WriteByteContentFile(filePath, content)
+		err = utils.Tools.EnsureFilePathExists(filePath)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic create file folder error: %v - %v", id, err))
+			return
+		}
+		err = utils.Tools.WriteByteContentFile(filePath, content)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
 		}
@@ -275,6 +280,8 @@ func Initialize() {
 		UpdatePoc()
 	} else {
 		//UpdateNodeModulesConfig()
+		// 暂时设置更新子域名字典 测试用
+		UpdateSubDomainDicConfig()
 	}
 	UpdateSensitive()
 	UpdateProject()
