@@ -71,18 +71,21 @@ func (r *Runner) ModuleRun() error {
 								// 没有在mongodb中查询到该子域名，存入数据库中并且开始扫描
 								go results.Handler.Subdomain(&subdomainResult)
 								// 将子域名发送到下个模块
-								//r.NextModule.GetInput() <- subdomainResult.Host
+								r.NextModule.GetInput() <- subdomainResult.Host
 							}
 						} else {
 							// 存入数据库中，并且开始扫描
 							go results.Handler.Subdomain(&subdomainResult)
 							// 将子域名发送到下个模块
-							//r.NextModule.GetInput() <- subdomainResult.Host
+							r.NextModule.GetInput() <- subdomainResult.Host
 						}
+					} else {
+						// 跳过当前任务中已扫描的子域名
+						continue
 					}
 				} else {
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
-					//r.NextModule.GetInput() <- result
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}

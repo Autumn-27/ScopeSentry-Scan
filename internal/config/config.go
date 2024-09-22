@@ -8,6 +8,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -105,5 +106,11 @@ func Initialize() {
 	err := LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
+	}
+
+	// 初始化子域名接管规则
+	err = json.Unmarshal(global.TakeoverFinger, &global.SubdomainTakerFingers)
+	if err != nil {
+		log.Fatalf("子域名接管规则初始化失败: %v", err)
 	}
 }

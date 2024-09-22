@@ -133,11 +133,6 @@ func (r *Runner) ModuleRun() error {
 								} else {
 									plg.SetParameter("")
 								}
-								if r.Option.SubdomainFilename != "" {
-									// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
-									newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
-									plg.SetParameter(newParameter)
-								}
 								plg.SetResult(resultChan)
 								pluginFunc := func(data interface{}) func() {
 									return func() {

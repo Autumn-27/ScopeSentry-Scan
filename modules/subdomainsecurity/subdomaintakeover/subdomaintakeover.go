@@ -7,7 +7,15 @@
 
 package subdomaintakeover
 
-import "github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+import (
+	"errors"
+	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"strings"
+)
 
 type Plugin struct {
 	Name      string
@@ -60,7 +68,35 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) error {
-
+	subdomain, ok := input.(types.SubdomainResult)
+	if !ok {
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
+		return errors.New("input is not a string")
+	}
+	if subdomain.Type == "CNAME" {
+		// 如果是CNAME类型的子域名，开始检查子域名接管
+		for _, t := range subdomain.Value {
+			for _, finger := range system.SubdomainTakerFingers {
+				for _, c := range finger.Cname {
+					if strings.Contains(t, c) {
+						//body := sendhttp(t)
+						//for _, resp := range finger.Response {
+						//	if strings.Contains(body, resp) {
+						//		resultTmp := types.SubTakeResult{}
+						//		resultTmp.Input = input
+						//		resultTmp.Value = t
+						//		resultTmp.Cname = c
+						//		resultTmp.Response = resp
+						//		SubTakerRes = append(SubTakerRes, resultTmp)
+						//	}
+						//}
+					}
+				}
+			}
+		}
+	}
+	// 无论是不是CNAME解析，都需要将host发送到
+	p.Result <- subdomain.Host
 	return nil
 }
 
