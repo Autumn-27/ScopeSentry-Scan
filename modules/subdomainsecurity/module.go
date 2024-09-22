@@ -18,7 +18,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"net"
 	"sync"
 )
 
@@ -92,6 +91,7 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
+		// 输入有三种可能，一种域名，一种ip，一种DNS信息
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
@@ -99,7 +99,7 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
 				}
 				close(resultChan)
 				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
@@ -108,19 +108,16 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
 				firstData = true
 			}
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				target, _ := data.(string)
-				// 判断是否为ip，如果是ip则直接发送到下个模块
-				if net.ParseIP(target) != nil {
-					// 如果是 IP 地址
-					resultChan <- data
-				} else {
-					// 如果开启了子域名扫描
+				_, ok := data.(string)
+				if !ok {
+					// 如果不是字符串，说明是子域名扫描的结果进来的
+					// 如果开启了子域名安全检查扫描
 					if len(r.Option.SubdomainScan) != 0 {
 						// 调用插件
 						for _, pluginName := range r.Option.SubdomainScan {
@@ -162,11 +159,13 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
 					} else {
-						// 没有开启子域名扫描，直接将输入发送到下个模块
+						// 没有开启子域名安全检查扫描，直接将输入发送到下个模块
 						resultChan <- data
 					}
+				} else {
+					// 如果是字符串，代表输入为ip或者域名，是原始输入或者没有进行子域名扫描，所以此模块依赖子域名扫描，需要先进行子域名扫描获取域名解析结果，才会运行子域名安全检查。
+					resultChan <- data
 				}
-
 			}(data)
 
 		}

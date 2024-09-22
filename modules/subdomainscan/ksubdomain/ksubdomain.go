@@ -180,6 +180,8 @@ func (p *Plugin) Execute(input interface{}) error {
 			rawSubdomain = append(rawSubdomain, result+"."+target)
 		}
 	}
+	// 将原始域名增加到子域名列表
+	rawSubdomain = append(rawSubdomain, target)
 	// 拼接完子域名之后开始运行验证子域名
 	subdomainVerificationResult := make(chan string, 100)
 	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)

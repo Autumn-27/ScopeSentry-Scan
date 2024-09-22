@@ -105,6 +105,8 @@ func (p *Plugin) Execute(input interface{}) error {
 	rawCount := 0
 	verificationCount := 0
 	rawSubdomain := []string{}
+	// 将原始域名增加到子域名列表
+	rawSubdomain = append(rawSubdomain, target)
 	subfinderOpts := &runner.Options{
 		Threads:            threads,            // Thread controls the number of threads to use for active enumerations
 		Timeout:            timeout,            // Timeout is the seconds to wait for sources to respond

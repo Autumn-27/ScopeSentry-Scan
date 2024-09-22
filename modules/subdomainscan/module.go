@@ -91,6 +91,7 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
+		// 输入有两种可能，一种域名、一种ip
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
