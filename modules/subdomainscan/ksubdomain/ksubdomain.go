@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -242,4 +243,11 @@ func isIPInWildcard(ipList []string, wildcardDNSRecords []string) bool {
 		}
 	}
 	return false
+}
+
+func (p *Plugin) Clone() interfaces.Plugin {
+	return &Plugin{
+		Name:   p.Name,
+		Module: p.Module,
+	}
 }

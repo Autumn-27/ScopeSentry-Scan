@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/projectdiscovery/subfinder/v2/pkg/resolve"
@@ -144,4 +145,11 @@ func (p *Plugin) Execute(input interface{}) error {
 	}
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
 	return nil
+}
+
+func (p *Plugin) Clone() interfaces.Plugin {
+	return &Plugin{
+		Name:   p.Name,
+		Module: p.Module,
+	}
 }

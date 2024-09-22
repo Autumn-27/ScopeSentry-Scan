@@ -101,7 +101,6 @@ func main() {
 		log.Fatalf("Failed to init plugins: %v", err)
 		return
 	}
-
 	taskE := options.TaskOptions{
 		ID:                "1",
 		TaskName:          "test",

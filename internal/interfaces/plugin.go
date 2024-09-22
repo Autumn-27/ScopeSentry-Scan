@@ -5,7 +5,7 @@
 // @time      : 2024/9/10 19:26
 // -------------------------------------------
 
-package plugins
+package interfaces
 
 type Plugin interface {
 	GetName() string
@@ -18,4 +18,5 @@ type Plugin interface {
 	Execute(input interface{}) error
 	Install() error
 	Check() error
+	Clone() Plugin
 }

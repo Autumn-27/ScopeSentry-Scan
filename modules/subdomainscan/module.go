@@ -94,20 +94,20 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
-				fmt.Println("subdomainScan关闭: input开始关闭")
+				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: input开始关闭", r.GetName()))
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
 				}
 				close(resultChan)
-				fmt.Println("subdomainScan关闭: 插件运行完毕")
+				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
 				resultWg.Wait()
-				fmt.Println("subdomainScan关闭: 结果处理完毕")
+				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart("SubdomainScan", r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
 				firstData = true
 			}
 			allPluginWg.Add(1)
@@ -116,7 +116,7 @@ func (r *Runner) ModuleRun() error {
 				target, _ := data.(string)
 				// 判断是否为ip，如果是ip则直接发送到下个模块
 				if net.ParseIP(target) != nil {
-					// 如果是纯 IP 地址
+					// 如果是IP 地址
 					resultChan <- data
 				} else {
 					// 如果开启了子域名扫描

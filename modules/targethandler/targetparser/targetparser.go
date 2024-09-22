@@ -10,6 +10,7 @@ package targetparser
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"golang.org/x/net/idna"
 	"net"
@@ -183,4 +184,11 @@ func (p *Plugin) Execute(input interface{}) error {
 	}
 
 	return nil
+}
+
+func (p *Plugin) Clone() interfaces.Plugin {
+	return &Plugin{
+		Name:   p.Name,
+		Module: p.Module,
+	}
 }
