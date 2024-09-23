@@ -102,7 +102,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		}
 	}
 
-	rawCount := 0
+	rawCount := 1
 	verificationCount := 0
 	rawSubdomain := []string{}
 	// 将原始域名增加到子域名列表

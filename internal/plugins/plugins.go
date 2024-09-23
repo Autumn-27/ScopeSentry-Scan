@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/ksubdomain"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity/subdomaintakeover"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"sync"
 )
@@ -56,12 +57,18 @@ func (pm *PluginManager) InitializePlugins() error {
 	// TargetParser
 	targetparserPlugin := targetparser.NewPlugin()
 	pm.RegisterPlugin("TargetHandler", targetparserPlugin.Name, targetparserPlugin)
+	// SubdomainScan模块
 	// subfinder
 	subfinderPlugin := subfinder.NewPlugin()
 	pm.RegisterPlugin(subfinderPlugin.Module, subfinderPlugin.Name, subfinderPlugin)
 	// kusbdomain
 	ksubdomainPlugin := ksubdomain.NewPlugin()
 	pm.RegisterPlugin(ksubdomainPlugin.Module, ksubdomainPlugin.Name, ksubdomainPlugin)
+
+	// SubdomainSecurity模块
+	subdomainTakeoverPlugin := subdomaintakeover.NewPlugin()
+	pm.RegisterPlugin(subdomainTakeoverPlugin.Module, subdomainTakeoverPlugin.Name, subdomainTakeoverPlugin)
+
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

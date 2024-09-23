@@ -27,7 +27,7 @@ func InitializeResultQueue() {
 	// 模块列表
 	modules := []string{
 		"SubdomainScan", "SubdomainSecurity",
-		"AssetMapping", "PortScan", "AssetResultHandl", "URLScan",
+		"AssetMapping", "AssetResultHandl", "URLScan",
 		"URLSecurity", "WebCrawler", "VulnerabilityScan",
 	}
 	// 初始化模块队列和 Goroutine
@@ -42,6 +42,8 @@ func InitializeResultQueue() {
 	InitializeDuplicate()
 	// 初始化结果处理模块
 	InitializeHandler()
+	// 初始化结果插入模块
+	InitializeResults()
 }
 
 func processQueue(module string, mq *ResultQueue) {
@@ -75,11 +77,24 @@ func flushBuffer(module string, buffer *[]interface{}) {
 	if len(*buffer) == 0 {
 		return
 	}
+	var name string
 	switch module {
 	case "SubdomainScan":
-		SubdoaminResultHandler(buffer)
+		name = "subdomain"
+	case "SubdomainSecurity":
+		name = "SubdoaminTakerResult"
+	case "AssetResultHandl":
+		name = "asset"
+	case "URLScan":
+		name = "UrlScan"
+	case "URLSecurity":
+		name = "SensitiveResult"
+	case "WebCrawler":
+		name = "crawler"
+	case "VulnerabilityScan":
+		name = "vulnerability"
 	}
-
+	Results.Insert(name, buffer)
 	*buffer = nil
 }
 

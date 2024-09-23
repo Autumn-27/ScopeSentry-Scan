@@ -91,8 +91,9 @@ func main() {
 		_ = PebbleStore.Close()
 	}(pebbledb.PebbleStore)
 
-	// 初始化结果处理队列，正常的时候将该初始化放入任务开始时，任务执行完毕关闭结果队列
+	// 初始化结果处理队列，(正常的时候将该初始化放入任务开始时，任务执行完毕关闭结果队列)
 	results.InitializeResultQueue()
+	defer results.Close()
 
 	// 初始化全局插件管理器
 	plugins.GlobalPluginManager = plugins.NewPluginManager()
@@ -104,8 +105,8 @@ func main() {
 	taskE := options.TaskOptions{
 		ID:                "1",
 		TaskName:          "test",
-		SubdomainScan:     []string{"ksubdomain"},
-		SubdomainSecurity: []string{"takeover"},
+		SubdomainScan:     []string{"subfinder", "ksubdomain"},
+		SubdomainSecurity: []string{"SubdomainTakeover"},
 		AssetMapping:      []string{"httpx"},
 		AssetHandle:       []string{""},
 		PortScan:          []string{"rustscan"},
@@ -138,7 +139,7 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:baidu.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:indrive.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

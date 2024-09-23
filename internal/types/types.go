@@ -116,12 +116,13 @@ type SubdomainTakerFinger struct {
 }
 
 type SubTakeResult struct {
-	Input    string
-	Value    string
-	Cname    string
-	Response string
-	Project  string
-	TaskId   string `bson:"taskId"`
+	Input      string
+	Value      string
+	Cname      string
+	Response   string
+	Project    string
+	TaskId     string `bson:"taskId"`
+	RootDomain string
 }
 
 type DirResult struct {

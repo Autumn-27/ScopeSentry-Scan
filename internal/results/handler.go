@@ -51,3 +51,19 @@ func (h *handler) Subdomain(result *types.SubdomainResult) {
 	}
 	ResultQueues["SubdomainScan"].Queue <- interfaceSlice
 }
+
+func (h *handler) SubdomainTakeover(result *types.SubTakeResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Input)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Input, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	if global.NotificationConfig.SubdomainTakeoverNotification {
+		NotificationMsg := fmt.Sprintf("Subdomain Takeover:\n%v - %v\n", result.Input, result.Cname)
+		notification.NotificationQueues["SubdomainSecurity"].Queue <- NotificationMsg
+	}
+	ResultQueues["SubdomainScan"].Queue <- interfaceSlice
+}

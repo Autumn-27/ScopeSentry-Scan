@@ -42,7 +42,6 @@ func (r *Runner) GetName() string {
 }
 
 func (r *Runner) ModuleRun() error {
-	handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
 	// 创建一个共享的 result 通道
@@ -61,7 +60,6 @@ func (r *Runner) ModuleRun() error {
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
-					fmt.Println("关闭tartget输入")
 					r.NextModule.CloseInput()
 					return
 				}
@@ -71,7 +69,8 @@ func (r *Runner) ModuleRun() error {
 			}
 		}
 	}()
-
+	var firstData bool
+	firstData = false
 	for {
 		select {
 		case data, ok := <-r.Input:
@@ -79,11 +78,17 @@ func (r *Runner) ModuleRun() error {
 				// 等待所有插件运行完毕
 				allPluginWg.Wait()
 				close(resultChan)
-				handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+				if firstData {
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+				}
 				r.Option.ModuleRunWg.Done()
 				// 等待结果处理完毕
 				resultWg.Wait()
 				return nil
+			}
+			if !firstData {
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+				firstData = true
 			}
 			allPluginWg.Add(1)
 			go func(data interface{}) {

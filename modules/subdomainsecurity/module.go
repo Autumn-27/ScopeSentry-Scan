@@ -59,30 +59,14 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
+				if subdomainTakeoverResult, ok := result.(types.SubTakeResult); ok {
+					// 子域名接管检测，无需发送到下个模块
+					subdomainTakeoverResult.TaskId = r.Option.ID
+					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
 
-				if subdomainResult, ok := result.(types.SubdomainResult); ok {
-					subdomainResult.TaskId = r.Option.ID
-					flag := results.Duplicate.SubdomainInTask(&subdomainResult)
-					if flag {
-						if r.Option.IgnoreOldSubdomains {
-							// 从mongodb中查询是否存在子域名进行去重
-							flag = results.Duplicate.SubdomainInMongoDb(&subdomainResult)
-							if flag {
-								// 没有在mongodb中查询到该子域名，存入数据库中并且开始扫描
-								go results.Handler.Subdomain(&subdomainResult)
-								// 将子域名发送到下个模块
-								//r.NextModule.GetInput() <- subdomainResult.Host
-							}
-						} else {
-							// 存入数据库中，并且开始扫描
-							go results.Handler.Subdomain(&subdomainResult)
-							// 将子域名发送到下个模块
-							//r.NextModule.GetInput() <- subdomainResult.Host
-						}
-					}
 				} else {
-					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
-					//r.NextModule.GetInput() <- result
+					// 如果发送来的不是types.SubTakeResult，则直接发送到下个模块
+					r.NextModule.GetInput() <- subdomainTakeoverResult
 				}
 			}
 		}
@@ -118,9 +102,9 @@ func (r *Runner) ModuleRun() error {
 				if !ok {
 					// 如果不是字符串，说明是子域名扫描的结果进来的
 					// 如果开启了子域名安全检查扫描
-					if len(r.Option.SubdomainScan) != 0 {
+					if len(r.Option.SubdomainSecurity) != 0 {
 						// 调用插件
-						for _, pluginName := range r.Option.SubdomainScan {
+						for _, pluginName := range r.Option.SubdomainSecurity {
 							//var plgWg sync.WaitGroup
 							var plgWg sync.WaitGroup
 							logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))

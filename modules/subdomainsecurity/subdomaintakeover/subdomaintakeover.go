@@ -10,10 +10,11 @@ package subdomaintakeover
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"strings"
 )
 
@@ -76,20 +77,24 @@ func (p *Plugin) Execute(input interface{}) error {
 	if subdomain.Type == "CNAME" {
 		// 如果是CNAME类型的子域名，开始检查子域名接管
 		for _, t := range subdomain.Value {
-			for _, finger := range system.SubdomainTakerFingers {
+			for _, finger := range global.SubdomainTakerFingers {
 				for _, c := range finger.Cname {
 					if strings.Contains(t, c) {
-						//body := sendhttp(t)
-						//for _, resp := range finger.Response {
-						//	if strings.Contains(body, resp) {
-						//		resultTmp := types.SubTakeResult{}
-						//		resultTmp.Input = input
-						//		resultTmp.Value = t
-						//		resultTmp.Cname = c
-						//		resultTmp.Response = resp
-						//		SubTakerRes = append(SubTakerRes, resultTmp)
-						//	}
-						//}
+						bodyByte, err := utils.Requests.HttpGetByte("https://" + t)
+						if err != nil {
+							return err
+						}
+						body := string(bodyByte)
+						for _, resp := range finger.Response {
+							if strings.Contains(body, resp) {
+								resultTmp := types.SubTakeResult{}
+								resultTmp.Input = subdomain.Host
+								resultTmp.Value = t
+								resultTmp.Cname = c
+								resultTmp.Response = resp
+								p.Result <- resultTmp
+							}
+						}
 					}
 				}
 			}
