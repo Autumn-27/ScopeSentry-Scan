@@ -136,11 +136,11 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
-func (p *Plugin) Execute(input interface{}) error {
+func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	target, ok := input.(string)
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return errors.New("input is not a string")
+		return nil, errors.New("input is not a string")
 	}
 	wildcardSubdomainResults := wildcardDNSRecords(target)
 	wildcardDNSRecordsLen := len(wildcardSubdomainResults)
@@ -159,7 +159,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		}
 	} else {
 		logger.SlogError(fmt.Sprintf("ksubdomain 运行失败: 没有提供子域名字典，请查看任务配置"))
-		return nil
+		return nil, nil
 	}
 	subfile = filepath.Join(global.DictPath, "subdomain", subfile)
 	subDictChan := make(chan string, 10)
@@ -207,7 +207,7 @@ func (p *Plugin) Execute(input interface{}) error {
 	}
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, len(rawSubdomain), verificationCount))
 
-	return nil
+	return nil, nil
 }
 
 func wildcardDNSRecords(domain string) []string {

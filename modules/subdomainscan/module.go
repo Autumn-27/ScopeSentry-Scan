@@ -62,7 +62,7 @@ func (r *Runner) ModuleRun() error {
 
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
 					subdomainResult.TaskId = r.Option.ID
-					flag := results.Duplicate.SubdomainInTask(&subdomainResult)
+					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &subdomainResult.Host)
 					if flag {
 						if r.Option.IgnoreOldSubdomains {
 							// 从mongodb中查询是否存在子域名进行去重
@@ -85,7 +85,12 @@ func (r *Runner) ModuleRun() error {
 					}
 				} else {
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
-					r.NextModule.GetInput() <- result
+					target, _ := result.(string)
+					// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
+					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &target)
+					if flag {
+						r.NextModule.GetInput() <- result
+					}
 				}
 			}
 		}
@@ -94,7 +99,7 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
-		// 输入有两种可能，一种域名、一种ip
+		// 输入有两种可能，一种域名，一种ip
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
@@ -125,6 +130,8 @@ func (r *Runner) ModuleRun() error {
 				} else {
 					// 如果开启了子域名扫描
 					if len(r.Option.SubdomainScan) != 0 {
+						// 跳过插件
+						skipPluginFlag := true
 						// 调用插件
 						for _, pluginName := range r.Option.SubdomainScan {
 							//var plgWg sync.WaitGroup
@@ -148,7 +155,7 @@ func (r *Runner) ModuleRun() error {
 								pluginFunc := func(data interface{}) func() {
 									return func() {
 										defer plgWg.Done()
-										err := plg.Execute(data)
+										_, err := plg.Execute(data)
 										if err != nil {
 										}
 									}
@@ -160,7 +167,13 @@ func (r *Runner) ModuleRun() error {
 								}
 								plgWg.Wait()
 							} else {
-								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+								// 插件没有找到跳过此插件
+								logger.SlogError(fmt.Sprintf("plugin %v not found, Skip this plugin", pluginName))
+								// 在多个插件都没有找到的情况下只发送一次
+								if skipPluginFlag {
+									resultChan <- data
+									skipPluginFlag = false
+								}
 							}
 							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}

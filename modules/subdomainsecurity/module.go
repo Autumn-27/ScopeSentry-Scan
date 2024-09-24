@@ -63,10 +63,10 @@ func (r *Runner) ModuleRun() error {
 					// 子域名接管检测，无需发送到下个模块
 					subdomainTakeoverResult.TaskId = r.Option.ID
 					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
-
+					logger.SlogInfoLocal(fmt.Sprintf("Find subdomain takeover: %v - %v", subdomainTakeoverResult.Input, subdomainTakeoverResult.Value))
 				} else {
 					// 如果发送来的不是types.SubTakeResult，则直接发送到下个模块
-					r.NextModule.GetInput() <- subdomainTakeoverResult
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}
@@ -103,11 +103,12 @@ func (r *Runner) ModuleRun() error {
 					// 如果不是字符串，说明是子域名扫描的结果进来的
 					// 如果开启了子域名安全检查扫描
 					if len(r.Option.SubdomainSecurity) != 0 {
+						skipPluginFlag := true
 						// 调用插件
 						for _, pluginName := range r.Option.SubdomainSecurity {
 							//var plgWg sync.WaitGroup
 							var plgWg sync.WaitGroup
-							logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
 							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 							if flag {
 								plgWg.Add(1)
@@ -121,7 +122,7 @@ func (r *Runner) ModuleRun() error {
 								pluginFunc := func(data interface{}) func() {
 									return func() {
 										defer plgWg.Done()
-										err := plg.Execute(data)
+										_, err := plg.Execute(data)
 										if err != nil {
 										}
 									}
@@ -133,9 +134,15 @@ func (r *Runner) ModuleRun() error {
 								}
 								plgWg.Wait()
 							} else {
+								// 插件没有找到跳过此插件
 								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+								// 在多个插件都没有找到的情况下只发送一次
+								if skipPluginFlag {
+									resultChan <- data
+									skipPluginFlag = false
+								}
 							}
-							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
 					} else {
 						// 没有开启子域名安全检查扫描，直接将输入发送到下个模块

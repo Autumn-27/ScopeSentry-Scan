@@ -114,17 +114,17 @@ func (p *Plugin) GetParameter() string {
 //  7. 无效输入, 直接返回
 //     输入: "例子公司"
 //     输出: "Invalid input: 例子公司"
-func (p *Plugin) Execute(input interface{}) error {
+func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	target, ok := input.(string)
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return errors.New("input is not a string")
+		return nil, errors.New("input is not a string")
 	}
 	// 检查是否是 IP 地址
 	if net.ParseIP(target) != nil {
 		// 如果是纯 IP 地址
 		p.Result <- target
-		return nil
+		return nil, nil
 	}
 
 	// 尝试解析 URL
@@ -159,13 +159,13 @@ func (p *Plugin) Execute(input interface{}) error {
 			//}
 			p.Result <- host
 		}
-		return nil
+		return nil, nil
 	}
 
 	// 处理 `*.domain.com` 或其他不包含协议的域名
 	if strings.HasPrefix(target, "*.") || strings.Contains(target, ".*.") {
 		p.Result <- target
-		return nil
+		return nil, nil
 	}
 
 	// 处理不包含协议的域名
@@ -183,7 +183,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		logger.SlogInfoLocal(fmt.Sprintf("%v error Invalid input:%v ", p.Name, input))
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (p *Plugin) Clone() interfaces.Plugin {

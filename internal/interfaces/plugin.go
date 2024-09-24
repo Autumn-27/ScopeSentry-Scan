@@ -15,7 +15,7 @@ type Plugin interface {
 	SetResult(ch chan interface{})
 	SetParameter(args string)
 	GetParameter() string
-	Execute(input interface{}) error
+	Execute(input interface{}) (interface{}, error)
 	Install() error
 	Check() error
 	Clone() Plugin

@@ -35,7 +35,7 @@ func main() {
 	// 初始化系统信息
 	config.Initialize()
 	global.VERSION = "1.5"
-	global.AppConfig.Debug = false
+	global.AppConfig.Debug = true
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -139,7 +139,7 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:indrive.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:wooga.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

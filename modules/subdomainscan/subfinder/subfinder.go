@@ -73,11 +73,11 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
-func (p *Plugin) Execute(input interface{}) error {
+func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	target, ok := input.(string)
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return errors.New("input is not a string")
+		return nil, errors.New("input is not a string")
 	}
 	parameter := p.GetParameter()
 	threads := 10
@@ -130,7 +130,7 @@ func (p *Plugin) Execute(input interface{}) error {
 	err = subfinder.RunEnumeration()
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
-		return err
+		return nil, err
 	}
 	subdomainVerificationResult := make(chan string, 100)
 	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)
@@ -146,7 +146,7 @@ func (p *Plugin) Execute(input interface{}) error {
 		}
 	}
 	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
-	return nil
+	return nil, nil
 }
 
 func (p *Plugin) Clone() interfaces.Plugin {

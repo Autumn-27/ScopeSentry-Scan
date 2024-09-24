@@ -235,3 +235,8 @@ type CrawlerTask struct {
 	Id     string
 	Wg     *sync.WaitGroup
 }
+
+type DomainSkip struct {
+	Domain string
+	Skip   bool
+}

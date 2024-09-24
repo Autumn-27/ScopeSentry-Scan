@@ -68,11 +68,11 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
-func (p *Plugin) Execute(input interface{}) error {
+func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	subdomain, ok := input.(types.SubdomainResult)
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
-		return errors.New("input is not a string")
+		return nil, errors.New("input is not a string")
 	}
 	if subdomain.Type == "CNAME" {
 		// 如果是CNAME类型的子域名，开始检查子域名接管
@@ -82,17 +82,19 @@ func (p *Plugin) Execute(input interface{}) error {
 					if strings.Contains(t, c) {
 						bodyByte, err := utils.Requests.HttpGetByte("https://" + t)
 						if err != nil {
-							return err
+							bodyByte, _ = utils.Requests.HttpGetByte("http://" + t)
 						}
 						body := string(bodyByte)
-						for _, resp := range finger.Response {
-							if strings.Contains(body, resp) {
-								resultTmp := types.SubTakeResult{}
-								resultTmp.Input = subdomain.Host
-								resultTmp.Value = t
-								resultTmp.Cname = c
-								resultTmp.Response = resp
-								p.Result <- resultTmp
+						if len(body) != 0 {
+							for _, resp := range finger.Response {
+								if strings.Contains(body, resp) {
+									resultTmp := types.SubTakeResult{}
+									resultTmp.Input = subdomain.Host
+									resultTmp.Value = t
+									resultTmp.Cname = c
+									resultTmp.Response = resp
+									p.Result <- resultTmp
+								}
 							}
 						}
 					}
@@ -102,7 +104,7 @@ func (p *Plugin) Execute(input interface{}) error {
 	}
 	// 无论是不是CNAME解析，都需要将host发送到
 	p.Result <- subdomain.Host
-	return nil
+	return nil, nil
 }
 
 func (p *Plugin) Clone() interfaces.Plugin {

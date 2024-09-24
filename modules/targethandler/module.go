@@ -110,7 +110,7 @@ func (r *Runner) ModuleRun() error {
 						pluginFunc := func(data interface{}) func() {
 							return func() {
 								defer plgWg.Done()
-								err := plg.Execute(data)
+								_, err := plg.Execute(data)
 								if err != nil {
 								}
 							}
