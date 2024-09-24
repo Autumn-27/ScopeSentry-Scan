@@ -239,4 +239,9 @@ type CrawlerTask struct {
 type DomainSkip struct {
 	Domain string
 	Skip   bool
+	IP     []string
+}
+type DomainResolve struct {
+	Domain string
+	IP     []string
 }

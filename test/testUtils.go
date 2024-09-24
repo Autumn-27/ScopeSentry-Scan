@@ -13,11 +13,7 @@ import (
 )
 
 func main() {
-	utils.InitializeRequests()
-	getByte, err := utils.Requests.HttpGetByte("http://feedback.wooga.com.herokudns.com")
-	if err != nil {
-		return
-	}
-	s := string(getByte)
-	fmt.Println(s)
+	utils.InitializeTools()
+	a, _ := utils.Tools.CdnCheck("google.com")
+	fmt.Println(a)
 }

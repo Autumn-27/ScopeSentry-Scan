@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/projectdiscovery/cdncheck"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
@@ -32,12 +33,17 @@ import (
 	"time"
 )
 
-type UtilTools struct{}
+type UtilTools struct {
+	CdnCheckClient *cdncheck.Client
+}
 
 var Tools *UtilTools
 
 func InitializeTools() {
-	Tools = &UtilTools{}
+	client := cdncheck.New()
+	Tools = &UtilTools{
+		CdnCheckClient: client,
+	}
 }
 
 // ReadYAMLFile 读取 YAML 文件并将其解析为目标结构体
@@ -559,4 +565,17 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 
 	close(lineChan) // 读取完毕后关闭通道
 	return nil
+}
+
+func (t *UtilTools) CdnCheck(host string) (bool, string) {
+	ip := net.ParseIP(host)
+	matched, val, err := t.CdnCheckClient.CheckCDN(ip)
+	if err != nil {
+		return false, ""
+	}
+	if matched {
+		return true, val
+	} else {
+		return false, ""
+	}
 }

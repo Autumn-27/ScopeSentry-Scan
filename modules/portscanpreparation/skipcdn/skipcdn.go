@@ -8,7 +8,12 @@
 package skipcdn
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 )
 
 type Plugin struct {
@@ -62,6 +67,22 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
+	domainSkip, ok := input.(*types.DomainSkip)
+	if !ok {
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
+		return nil, errors.New("input is not a string")
+	}
+	if domainSkip.Skip {
+		return nil, nil
+	}
+	// 修改逻辑，当ip为多个时判断为cdn，如果是一个ip，再利用cdncheck检测
+	for _, ip := range domainSkip.IP {
+		flag, _ := utils.Tools.CdnCheck(ip)
+		domainSkip.Skip = flag
+		if flag {
+			return nil, nil
+		}
+	}
 	return nil, nil
 }
 

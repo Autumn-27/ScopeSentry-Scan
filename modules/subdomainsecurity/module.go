@@ -65,7 +65,7 @@ func (r *Runner) ModuleRun() error {
 					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
 					logger.SlogInfoLocal(fmt.Sprintf("Find subdomain takeover: %v - %v", subdomainTakeoverResult.Input, subdomainTakeoverResult.Value))
 				} else {
-					// 如果发送来的不是types.SubTakeResult，则直接发送到下个模块
+					// 发送来的是无论是字符串还是DomainResolve直接发送到下个模块
 					r.NextModule.GetInput() <- result
 				}
 			}

@@ -85,11 +85,23 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				target, _ := data.(string)
-				domainSkip := types.DomainSkip{
-					Domain: target,
-					Skip:   false,
+				domainResolveResult, ok := data.(types.DomainResolve)
+				var domainSkip types.DomainSkip
+				if ok {
+					domainSkip = types.DomainSkip{
+						Domain: domainResolveResult.Domain,
+						Skip:   false,
+						IP:     domainResolveResult.IP,
+					}
+				} else {
+					domain, _ := data.(string)
+					domainSkip = types.DomainSkip{
+						Domain: domain,
+						Skip:   false,
+						IP:     []string{},
+					}
 				}
+
 				if len(r.Option.SubdomainSecurity) != 0 {
 					// 调用插件
 					for _, pluginName := range r.Option.SubdomainSecurity {
