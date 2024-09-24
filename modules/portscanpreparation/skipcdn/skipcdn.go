@@ -75,13 +75,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if domainSkip.Skip {
 		return nil, nil
 	}
-	// 修改逻辑，当ip为多个时判断为cdn，如果是一个ip，再利用cdncheck检测
-	for _, ip := range domainSkip.IP {
-		flag, _ := utils.Tools.CdnCheck(ip)
-		domainSkip.Skip = flag
-		if flag {
-			return nil, nil
-		}
+	// 当ip为多个时判断为cdn，如果是一个ip，再利用cdncheck检测
+	if len(domainSkip.IP) > 1 {
+		domainSkip.Skip = true
+		return nil, nil
+	}
+	flag, _ := utils.Tools.CdnCheck(domainSkip.IP[0])
+	domainSkip.Skip = flag
+	if flag {
+		return nil, nil
 	}
 	return nil, nil
 }
