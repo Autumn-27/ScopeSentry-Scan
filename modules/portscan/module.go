@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
@@ -126,6 +127,13 @@ func (r *Runner) ModuleRun() error {
 					}
 				} else {
 					// 如果没有开启端口扫描，则发送没有端口的
+					domainSkip, _ := data.(types.DomainSkip)
+					result := types.PortAlive{
+						Host: domainSkip.Domain,
+						IP:   "",
+						Port: "",
+					}
+					resultChan <- result
 				}
 			}(data)
 
