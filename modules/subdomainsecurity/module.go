@@ -51,6 +51,7 @@ func (r *Runner) ModuleRun() error {
 	go func() {
 		defer resultWg.Done()
 		for {
+			// 结果只有两种可能，一种是types.SubTakeResult 子域名接管结果，一种是types.DomainResolve域名解析结果
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
@@ -60,12 +61,12 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				if subdomainTakeoverResult, ok := result.(types.SubTakeResult); ok {
-					// 子域名接管检测，无需发送到下个模块
+					// 子域名接管检测结果，无需发送到下个模块
 					subdomainTakeoverResult.TaskId = r.Option.ID
 					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
 					logger.SlogInfoLocal(fmt.Sprintf("Find subdomain takeover: %v - %v", subdomainTakeoverResult.Input, subdomainTakeoverResult.Value))
 				} else {
-					// 发送来的是无论是字符串还是DomainResolve直接发送到下个模块
+					// DomainResolve直接发送到下个模块
 					r.NextModule.GetInput() <- result
 				}
 			}
@@ -75,7 +76,7 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
-		// 输入有三种可能，一种域名，一种ip，一种DNS信息
+		// 输入为DNS信息
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
@@ -98,59 +99,60 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				_, ok := data.(string)
-				if !ok {
-					// 如果不是字符串，说明是子域名扫描的结果进来的
-					// 如果开启了子域名安全检查扫描
-					if len(r.Option.SubdomainSecurity) != 0 {
-						skipPluginFlag := true
-						// 调用插件
-						for _, pluginName := range r.Option.SubdomainSecurity {
-							//var plgWg sync.WaitGroup
-							var plgWg sync.WaitGroup
-							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
-							if flag {
-								plgWg.Add(1)
-								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
-								if argsFlag {
-									plg.SetParameter(args)
-								} else {
-									plg.SetParameter("")
-								}
-								plg.SetResult(resultChan)
-								pluginFunc := func(data interface{}) func() {
-									return func() {
-										defer plgWg.Done()
-										_, err := plg.Execute(data)
-										if err != nil {
-										}
-									}
-								}(data)
-								err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
-								if err != nil {
-									plgWg.Done()
-									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
-								}
-								plgWg.Wait()
+				// 如果开启了子域名安全检查扫描
+				if len(r.Option.SubdomainSecurity) != 0 {
+					skipPluginFlag := true
+					// 调用插件
+					for _, pluginName := range r.Option.SubdomainSecurity {
+						//var plgWg sync.WaitGroup
+						var plgWg sync.WaitGroup
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+						if flag {
+							plgWg.Add(1)
+							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+							if argsFlag {
+								plg.SetParameter(args)
 							} else {
-								// 插件没有找到跳过此插件
-								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
-								// 在多个插件都没有找到的情况下只发送一次
-								if skipPluginFlag {
-									resultChan <- data
-									skipPluginFlag = false
-								}
+								plg.SetParameter("")
 							}
-							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+							plg.SetResult(resultChan)
+							pluginFunc := func(data interface{}) func() {
+								return func() {
+									defer plgWg.Done()
+									_, err := plg.Execute(data)
+									if err != nil {
+									}
+								}
+							}(data)
+							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
+							if err != nil {
+								plgWg.Done()
+								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+							}
+							plgWg.Wait()
+						} else {
+							// 插件没有找到跳过此插件
+							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+							// 在多个插件都没有找到的情况下只发送一次
+							if skipPluginFlag {
+								resultChan <- data
+								skipPluginFlag = false
+							}
 						}
-					} else {
-						// 没有开启子域名安全检查扫描，直接将输入发送到下个模块
-						resultChan <- data
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
 				} else {
-					// 如果是字符串，代表输入为ip或者域名，是原始输入或者没有进行子域名扫描，所以此模块依赖子域名扫描，需要先进行子域名扫描获取域名解析结果，才会运行子域名安全检查。
-					resultChan <- data
+					// 没有开启子域名安全检查扫描，将数据转换一下发送到结果
+					subdomain, ok := data.(types.SubdomainResult)
+					if ok {
+						tmp := types.DomainResolve{
+							Domain: subdomain.Host,
+							IP:     subdomain.IP,
+						}
+						resultChan <- tmp
+					}
+
 				}
 			}(data)
 

@@ -10,6 +10,7 @@ package plugins
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation/skipcdn"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/ksubdomain"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity/subdomaintakeover"
@@ -47,7 +48,11 @@ func (pm *PluginManager) GetPlugin(module, name string) (interfaces.Plugin, bool
 
 	if modPlugins, ok := pm.plugins[module]; ok {
 		plugin, ok := modPlugins[name]
-		return plugin.Clone(), ok // 返回新实例
+		if ok {
+			return plugin.Clone(), ok // 返回新实例
+		} else {
+			return nil, false
+		}
 	}
 	return nil, false
 }
@@ -68,6 +73,9 @@ func (pm *PluginManager) InitializePlugins() error {
 	// SubdomainSecurity模块
 	subdomainTakeoverPlugin := subdomaintakeover.NewPlugin()
 	pm.RegisterPlugin(subdomainTakeoverPlugin.Module, subdomainTakeoverPlugin.Name, subdomainTakeoverPlugin)
+	// 端口扫描预处理
+	skipcdnPlugin := skipcdn.NewPlugin()
+	pm.RegisterPlugin(skipcdnPlugin.Module, skipcdnPlugin.Name, skipcdnPlugin)
 
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {

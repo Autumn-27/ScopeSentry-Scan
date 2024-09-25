@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	utils.InitializeTools()
-	a, _ := utils.Tools.CdnCheck("google.com")
+	utils.InitializeDnsTools()
+	a := utils.DNS.QueryOne("dwas.dwadwasdwa")
 	fmt.Println(a)
 }

@@ -65,7 +65,7 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
-		// 输入只有域名或ip
+		//
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
@@ -85,26 +85,18 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				domainResolveResult, ok := data.(types.DomainResolve)
+				//发送来的数据 只能是types.DomainResolve
+				domainResolveResult, _ := data.(types.DomainResolve)
 				var domainSkip types.DomainSkip
-				if ok {
-					domainSkip = types.DomainSkip{
-						Domain: domainResolveResult.Domain,
-						Skip:   false,
-						IP:     domainResolveResult.IP,
-					}
-				} else {
-					domain, _ := data.(string)
-					domainSkip = types.DomainSkip{
-						Domain: domain,
-						Skip:   false,
-						IP:     []string{},
-					}
+				domainSkip = types.DomainSkip{
+					Domain: domainResolveResult.Domain,
+					Skip:   false,
+					IP:     domainResolveResult.IP,
 				}
 
-				if len(r.Option.SubdomainSecurity) != 0 {
+				if len(r.Option.PortScanPreparation) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.SubdomainSecurity {
+					for _, pluginName := range r.Option.PortScanPreparation {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
@@ -137,7 +129,7 @@ func (r *Runner) ModuleRun() error {
 						}
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
-					// 插件运行结束，此模块比较特殊，每个插件都是对
+					// 插件运行结束，此模块比较特殊，每个插件都是对domainSkip进行处理
 					resultChan <- domainSkip
 				} else {
 					// 没有开启跳过端口扫描检测，直接将输入发送到下个模块domainSkip进行更改，最后的结果发送到result

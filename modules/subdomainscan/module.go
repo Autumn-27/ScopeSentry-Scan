@@ -18,7 +18,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"net"
 	"sync"
 )
 
@@ -59,7 +58,6 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
 					subdomainResult.TaskId = r.Option.ID
 					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &subdomainResult.Host)
@@ -89,7 +87,11 @@ func (r *Runner) ModuleRun() error {
 					// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
 					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &target)
 					if flag {
-						r.NextModule.GetInput() <- result
+						resultDns := utils.DNS.QueryOne(result.(string))
+						tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
+						if len(tmp.IP) != 0 {
+							r.NextModule.GetInput() <- tmp
+						}
 					}
 				}
 			}
@@ -122,65 +124,60 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				target, _ := data.(string)
-				// 判断是否为ip，如果是ip则直接发送到下个模块
-				if net.ParseIP(target) != nil {
-					// 如果是IP 地址
-					resultChan <- data
-				} else {
-					// 如果开启了子域名扫描
-					if len(r.Option.SubdomainScan) != 0 {
-						// 跳过插件
-						skipPluginFlag := true
-						// 调用插件
-						for _, pluginName := range r.Option.SubdomainScan {
-							//var plgWg sync.WaitGroup
-							var plgWg sync.WaitGroup
-							logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
-							if flag {
-								plgWg.Add(1)
-								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
-								if argsFlag {
-									plg.SetParameter(args)
-								} else {
-									plg.SetParameter("")
-								}
-								if r.Option.SubdomainFilename != "" {
-									// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
-									newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
-									plg.SetParameter(newParameter)
-								}
-								plg.SetResult(resultChan)
-								pluginFunc := func(data interface{}) func() {
-									return func() {
-										defer plgWg.Done()
-										_, err := plg.Execute(data)
-										if err != nil {
-										}
-									}
-								}(data)
-								err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
-								if err != nil {
-									plgWg.Done()
-									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
-								}
-								plgWg.Wait()
+				// 将原始数据发送给下一个模块，防止漏掉原始目标的测绘
+				resultChan <- data
+				// 如果开启了子域名扫描
+				if len(r.Option.SubdomainScan) != 0 {
+					// 跳过插件
+					skipPluginFlag := true
+					// 调用插件
+					for _, pluginName := range r.Option.SubdomainScan {
+						//var plgWg sync.WaitGroup
+						var plgWg sync.WaitGroup
+						logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+						if flag {
+							plgWg.Add(1)
+							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+							if argsFlag {
+								plg.SetParameter(args)
 							} else {
-								// 插件没有找到跳过此插件
-								logger.SlogError(fmt.Sprintf("plugin %v not found, Skip this plugin", pluginName))
-								// 在多个插件都没有找到的情况下只发送一次
-								if skipPluginFlag {
-									resultChan <- data
-									skipPluginFlag = false
-								}
+								plg.SetParameter("")
 							}
-							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+							if r.Option.SubdomainFilename != "" {
+								// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
+								newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
+								plg.SetParameter(newParameter)
+							}
+							plg.SetResult(resultChan)
+							pluginFunc := func(data interface{}) func() {
+								return func() {
+									defer plgWg.Done()
+									_, err := plg.Execute(data)
+									if err != nil {
+									}
+								}
+							}(data)
+							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
+							if err != nil {
+								plgWg.Done()
+								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+							}
+							plgWg.Wait()
+						} else {
+							// 插件没有找到跳过此插件
+							logger.SlogError(fmt.Sprintf("plugin %v not found, Skip this plugin", pluginName))
+							// 在多个插件都没有找到的情况下只发送一次
+							if skipPluginFlag {
+								resultChan <- data
+								skipPluginFlag = false
+							}
 						}
-					} else {
-						// 没有开启子域名扫描，直接将输入发送到下个模块
-						resultChan <- data
+						logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
+				} else {
+					// 没有开启子域名扫描，直接将输入发送到下个模块
+					resultChan <- data
 				}
 
 			}(data)

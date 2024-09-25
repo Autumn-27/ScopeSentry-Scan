@@ -45,7 +45,7 @@ func NewLogger() error {
 	if global.AppConfig.Debug {
 		atom = zap.NewAtomicLevelAt(zap.DebugLevel)
 		encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-		encoderConfig.CallerKey = "caller_line"
+		//encoderConfig.CallerKey = "caller_line"
 	}
 	c := zap.Config{
 		Level:         atom,

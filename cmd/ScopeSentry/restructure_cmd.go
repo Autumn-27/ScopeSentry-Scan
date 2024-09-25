@@ -103,18 +103,19 @@ func main() {
 		return
 	}
 	taskE := options.TaskOptions{
-		ID:                "1",
-		TaskName:          "test",
-		SubdomainScan:     []string{"subfinder", "ksubdomain"},
-		SubdomainSecurity: []string{"SubdomainTakeover"},
-		AssetMapping:      []string{"httpx"},
-		AssetHandle:       []string{""},
-		PortScan:          []string{"rustscan"},
-		URLScan:           []string{"test"},
-		URLSecurity:       []string{"test"},
-		WebCrawler:        []string{"test"},
-		VulnerabilityScan: []string{"nuclei"},
-		SubdomainFilename: "66dda6ee3687eb004e6b3bda",
+		ID:                  "1",
+		TaskName:            "test",
+		SubdomainScan:       []string{"subfinder", "ksubdomain"},
+		SubdomainSecurity:   []string{"SubdomainTakeover"},
+		PortScanPreparation: []string{"SkipCdn"},
+		AssetMapping:        []string{"httpx"},
+		AssetHandle:         []string{""},
+		PortScan:            []string{"rustscan"},
+		URLScan:             []string{"test"},
+		URLSecurity:         []string{"test"},
+		WebCrawler:          []string{"test"},
+		VulnerabilityScan:   []string{"nuclei"},
+		SubdomainFilename:   "66dda6ee3687eb004e6b3bda",
 	}
 	jsonStr, err := utils.Tools.StructToJSON(taskE)
 	if err != nil {

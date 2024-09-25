@@ -8,17 +8,18 @@ package main
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
 )
 
 func main() {
-	//domainList := []string{"https://baidu.com"}
-	//httpxResultsHandler := func(r types.AssetHttp) {
-	//	fmt.Println(r.StatusCode)
-	//}
-	//httpxMode.HttpxScan(domainList, httpxResultsHandler)
-	StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
-	fmt.Println(StatusCode, ContentLength, err)
+	domainList := []string{"baidu.com:443"}
+	httpxResultsHandler := func(r types.AssetHttp) {
+		fmt.Printf("%v\n", r)
+	}
+	httpxMode.HttpxScan(domainList, httpxResultsHandler)
+	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
+	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{
 	//	Methods:                   "GET",
 	//	JSONOutput:                false,
