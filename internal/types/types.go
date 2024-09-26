@@ -27,7 +27,7 @@ type SubdomainResult struct {
 type Asset struct {
 	Host      string          `json:"host,omitempty"`
 	IP        string          `json:"ip"`
-	Port      int             `json:"port"`
+	Port      string          `json:"port"`
 	Protocol  string          `json:"protocol"`
 	TLS       bool            `json:"tls"`
 	Transport string          `json:"transport"`

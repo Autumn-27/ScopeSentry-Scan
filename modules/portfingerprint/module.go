@@ -89,11 +89,11 @@ func (r *Runner) ModuleRun() error {
 				defer allPluginWg.Done()
 				//发送来的数据 只能是types.PortAlive
 				portAlive, _ := data.(types.PortAlive)
-				var domainSkip types.DomainSkip
-				domainSkip = types.DomainSkip{
-					Domain: domainResolveResult.Domain,
-					Skip:   false,
-					IP:     domainResolveResult.IP,
+				var asset types.Asset
+				asset = types.Asset{
+					Host: portAlive.Host,
+					IP:   portAlive.IP,
+					Port: portAlive.Port,
 				}
 				if len(r.Option.PortFingerprint) != 0 {
 					// 调用插件
