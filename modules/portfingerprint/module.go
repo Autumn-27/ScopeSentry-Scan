@@ -95,51 +95,57 @@ func (r *Runner) ModuleRun() error {
 					IP:   portAlive.IP,
 					Port: portAlive.Port,
 				}
-				if len(r.Option.PortFingerprint) != 0 {
-					// 调用插件
-					for _, pluginName := range r.Option.PortFingerprint {
-						//var plgWg sync.WaitGroup
-						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
-						if flag {
-							plgWg.Add(1)
-							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
-							if argsFlag {
-								plg.SetParameter(args)
-							} else {
-								plg.SetParameter("")
-							}
-							plg.SetResult(resultChan)
-							pluginFunc := func(data interface{}) func() {
-								return func() {
-									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
-									}
-								}
-							}(data)
-							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
-							if err != nil {
-								plgWg.Done()
-								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
-							}
-							plgWg.Wait()
-						} else {
-							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
-						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
-					}
+				// 这里如果端口为空，说明是直接发过来并没有进行端口扫描，直接发送到下个模块
+				if asset.Port == "" {
+					resultChan <- asset
 				} else {
-					// 如果没有开启端口扫描，则发送没有端口的
-					domainSkip, _ := data.(types.DomainSkip)
-					result := types.PortAlive{
-						Host: domainSkip.Domain,
-						IP:   "",
-						Port: "",
+					if len(r.Option.PortFingerprint) != 0 {
+						// 调用插件
+						for _, pluginName := range r.Option.PortFingerprint {
+							//var plgWg sync.WaitGroup
+							var plgWg sync.WaitGroup
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+							if flag {
+								plgWg.Add(1)
+								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+								if argsFlag {
+									plg.SetParameter(args)
+								} else {
+									plg.SetParameter("")
+								}
+								plg.SetResult(resultChan)
+								pluginFunc := func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
+									}
+								}(data)
+								err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
+								if err != nil {
+									plgWg.Done()
+									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+								}
+								plgWg.Wait()
+							} else {
+								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+							}
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+						}
+					} else {
+						// 如果没有开启端口扫描，则发送没有端口的
+						domainSkip, _ := data.(types.DomainSkip)
+						result := types.PortAlive{
+							Host: domainSkip.Domain,
+							IP:   "",
+							Port: "",
+						}
+						resultChan <- result
 					}
-					resultChan <- result
 				}
+
 			}(data)
 
 		}
