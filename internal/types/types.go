@@ -24,6 +24,17 @@ type SubdomainResult struct {
 	RootDomain string
 }
 
+type Asset struct {
+	Host      string          `json:"host,omitempty"`
+	IP        string          `json:"ip"`
+	Port      int             `json:"port"`
+	Protocol  string          `json:"protocol"`
+	TLS       bool            `json:"tls"`
+	Transport string          `json:"transport"`
+	Version   string          `json:"version,omitempty"`
+	Raw       json.RawMessage `json:"metadata"`
+}
+
 type AssetHttp struct {
 	Timestamp     string                 `json:"timestamp,omitempty" csv:"timestamp"`
 	TLSData       *clients.Response      `json:"tls,omitempty" csv:"tls"`

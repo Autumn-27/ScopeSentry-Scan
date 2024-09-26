@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/portfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan"
@@ -69,9 +70,16 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	assetMappingModule.SetInput(assetMappingInputChan)
 	op.InputChan["AssetMapping"] = assetMappingInputChan
 
+	// 端口指纹识别模块
+	op.ModuleRunWg.Add(1)
+	portFingerprintModule := portfingerprint.NewRunner(op, assetMappingModule)
+	portFingerprintInputChan := make(chan interface{}, 100)
+	portFingerprintModule.SetInput(portFingerprintInputChan)
+	op.InputChan["PortFingerprint"] = portFingerprintInputChan
+
 	// 端口扫描模块
 	op.ModuleRunWg.Add(1)
-	portScanModule := portscan.NewRunner(op, assetMappingModule)
+	portScanModule := portscan.NewRunner(op, portFingerprintModule)
 	portScanInputChan := make(chan interface{}, 100)
 	portScanModule.SetInput(portScanInputChan)
 	op.InputChan["PortScan"] = portScanInputChan

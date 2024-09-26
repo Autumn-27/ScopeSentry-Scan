@@ -1,11 +1,11 @@
-// subdomainsecurity-------------------------------------
+// portfingerprint-------------------------------------
 // @file      : module.go
 // @author    : Autumn
 // @contact   : rainy-autumn@outlook.com
-// @time      : 2024/9/10 21:06
+// @time      : 2024/9/26 21:09
 // -------------------------------------------
 
-package subdomainsecurity
+package portfingerprint
 
 import (
 	"fmt"
@@ -14,7 +14,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -34,7 +33,6 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 	}
 }
 
-// ModuleRun 子域名安全检测，如：子域名接管
 func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
@@ -51,7 +49,6 @@ func (r *Runner) ModuleRun() error {
 	go func() {
 		defer resultWg.Done()
 		for {
-			// 结果只有两种可能，一种是types.SubTakeResult 子域名接管结果，一种是types.DomainResolve域名解析结果
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
@@ -60,15 +57,8 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				if subdomainTakeoverResult, ok := result.(types.SubTakeResult); ok {
-					// 子域名接管检测结果，无需发送到下个模块
-					subdomainTakeoverResult.TaskId = r.Option.ID
-					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
-					logger.SlogInfoLocal(fmt.Sprintf("Find subdomain takeover: %v - %v", subdomainTakeoverResult.Input, subdomainTakeoverResult.Value))
-				} else {
-					// DomainResolve直接发送到下个模块
-					r.NextModule.GetInput() <- result
-				}
+				logger.SlogInfoLocal(fmt.Sprintf("%v", result))
+				r.NextModule.GetInput() <- result
 			}
 		}
 	}()
@@ -76,20 +66,17 @@ func (r *Runner) ModuleRun() error {
 	var firstData bool
 	firstData = false
 	for {
-		// 输入为DNS信息
+		//
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: input开始关闭", r.GetName()))
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
 					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
 				}
 				close(resultChan)
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
 				resultWg.Wait()
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
 				r.Option.ModuleRunWg.Done()
 				return nil
 			}
@@ -100,11 +87,17 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				// 如果开启了子域名安全检查扫描
-				if len(r.Option.SubdomainSecurity) != 0 {
-					skipPluginFlag := true
+				//发送来的数据 只能是types.PortAlive
+				portAlive, _ := data.(types.PortAlive)
+				var domainSkip types.DomainSkip
+				domainSkip = types.DomainSkip{
+					Domain: domainResolveResult.Domain,
+					Skip:   false,
+					IP:     domainResolveResult.IP,
+				}
+				if len(r.Option.PortFingerprint) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.SubdomainSecurity {
+					for _, pluginName := range r.Option.PortFingerprint {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
@@ -133,32 +126,25 @@ func (r *Runner) ModuleRun() error {
 							}
 							plgWg.Wait()
 						} else {
-							// 插件没有找到跳过此插件
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
-							// 在多个插件都没有找到的情况下只发送一次
-							if skipPluginFlag {
-								resultChan <- data
-								skipPluginFlag = false
-							}
 						}
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
 				} else {
-					// 没有开启子域名安全检查扫描，将数据转换一下发送到结果
-					subdomain, ok := data.(types.SubdomainResult)
-					if ok {
-						tmp := types.DomainResolve{
-							Domain: subdomain.Host,
-							IP:     subdomain.IP,
-						}
-						resultChan <- tmp
+					// 如果没有开启端口扫描，则发送没有端口的
+					domainSkip, _ := data.(types.DomainSkip)
+					result := types.PortAlive{
+						Host: domainSkip.Domain,
+						IP:   "",
+						Port: "",
 					}
-
+					resultChan <- result
 				}
 			}(data)
 
 		}
 	}
+	return nil
 }
 
 func (r *Runner) SetInput(ch chan interface{}) {
@@ -166,7 +152,7 @@ func (r *Runner) SetInput(ch chan interface{}) {
 }
 
 func (r *Runner) GetName() string {
-	return "SubdomainSecurity"
+	return "PortFingerprint"
 }
 
 func (r *Runner) GetInput() chan interface{} {

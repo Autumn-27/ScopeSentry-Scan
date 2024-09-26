@@ -10,6 +10,7 @@ package plugins
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan/rustscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation/skipcdn"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/ksubdomain"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
@@ -77,6 +78,9 @@ func (pm *PluginManager) InitializePlugins() error {
 	skipcdnPlugin := skipcdn.NewPlugin()
 	pm.RegisterPlugin(skipcdnPlugin.Module, skipcdnPlugin.Name, skipcdnPlugin)
 
+	// 端口扫描rustscan
+	rustscanPlugin := rustscan.NewPlugin()
+	pm.RegisterPlugin(rustscanPlugin.Module, rustscanPlugin.Name, rustscanPlugin)
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

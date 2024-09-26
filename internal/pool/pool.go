@@ -38,7 +38,7 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	var err error
 	modules := []string{
 		"task", "TargetHandler", "SubdomainScan", "SubdomainSecurity",
-		"AssetMapping", "PortScan", "AssetResultHandl", "URLScan",
+		"AssetMapping", "AssetHandle", "PortScan", "PortScanPreparation", "PortFingerprint", "URLScan",
 		"URLSecurity", "WebCrawler", "VulnerabilityScan",
 	}
 

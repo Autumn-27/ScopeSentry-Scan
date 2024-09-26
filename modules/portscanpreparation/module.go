@@ -76,6 +76,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				close(resultChan)
 				resultWg.Wait()
+				r.Option.ModuleRunWg.Done()
 				return nil
 			}
 			if !firstData {

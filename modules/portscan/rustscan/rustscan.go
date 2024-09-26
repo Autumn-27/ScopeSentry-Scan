@@ -29,12 +29,32 @@ type Plugin struct {
 	Parameter    string
 	Result       chan interface{}
 	RustFileName string
+	RustDir      string
+	OsType       string
 }
 
 func NewPlugin() *Plugin {
+	osType := runtime.GOOS
+	// 判断操作系统类型
+	var path string
+	var dir string
+	switch osType {
+	case "windows":
+		path = "rustscan.exe"
+		dir = "win"
+	case "linux":
+		path = "rustscan"
+		dir = "linux"
+	default:
+		dir = "darwin"
+		path = "rustscan"
+	}
 	return &Plugin{
-		Name:   "RustScan",
-		Module: "PortScan",
+		Name:         "RustScan",
+		Module:       "PortScan",
+		RustFileName: path,
+		RustDir:      dir,
+		OsType:       osType,
 	}
 }
 
@@ -74,33 +94,18 @@ func (p *Plugin) Install() error {
 		logger.SlogError(fmt.Sprintf("Failed to create resultPath folder:", err))
 		return err
 	}
-	osType := runtime.GOOS
-	// 判断操作系统类型
-	var path string
-	var dir string
-	switch osType {
-	case "windows":
-		path = "rustscan.exe"
-		dir = "win"
-	case "linux":
-		path = "rustscan"
-		dir = "linux"
-	default:
-		dir = "darwin"
-		path = "rustscan"
-	}
-	p.RustFileName = path
+
 	RustscanPath := filepath.Join(global.ExtDir, "rustscan")
-	RustscanExecPath := filepath.Join(RustscanPath, path)
+	RustscanExecPath := filepath.Join(RustscanPath, p.RustFileName)
 	if _, err := os.Stat(RustscanExecPath); os.IsNotExist(err) {
-		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path), RustscanExecPath)
+		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", p.RustDir, p.RustFileName), RustscanExecPath)
 		if err != nil {
-			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", dir, path), RustscanExecPath)
+			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", p.RustDir, p.RustFileName), RustscanExecPath)
 			if err != nil {
 				return err
 			}
 		}
-		if osType == "linux" {
+		if p.OsType == "linux" {
 			err = os.Chmod(RustscanExecPath, 0755)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("Chmod rustscan Tool Fail: %s", err))
@@ -130,7 +135,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, errors.New("input is not a string")
 	}
 	// 判断skipcdn
-
+	if domainSkip.Skip {
+		logger.SlogDebugLocal(fmt.Sprintf("%v %v skip cdn", domainSkip.Domain, domainSkip.IP))
+		return nil, nil
+	}
 	parameter := p.GetParameter()
 	PortBatchSize := "600"
 	PortTimeout := "3000"
@@ -141,17 +149,17 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if err != nil {
 		} else {
 			for key, value := range args {
-				switch key {
-				case "b":
-					PortBatchSize = value
-				case "t":
-					PortTimeout = value
-				case "port":
-					if value != "" {
+				if value != "" {
+					switch key {
+					case "b":
+						PortBatchSize = value
+					case "t":
+						PortTimeout = value
+					case "port":
 						PortRange = value
+					default:
+						continue
 					}
-				default:
-					continue
 				}
 			}
 		}
@@ -224,7 +232,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 
 func (p *Plugin) Clone() interfaces.Plugin {
 	return &Plugin{
-		Name:   p.Name,
-		Module: p.Module,
+		Name:         p.Name,
+		Module:       p.Module,
+		RustDir:      p.RustDir,
+		RustFileName: p.RustFileName,
 	}
 }

@@ -59,7 +59,9 @@ func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
 			return true
 		}
 	}
-	return true
+
+	// 本地缓存中存在，返回false
+	return false
 }
 
 func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {

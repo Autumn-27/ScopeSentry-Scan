@@ -35,7 +35,7 @@ func main() {
 	// 初始化系统信息
 	config.Initialize()
 	global.VERSION = "1.5"
-	global.AppConfig.Debug = true
+	global.AppConfig.Debug = false
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -108,9 +108,9 @@ func main() {
 		SubdomainScan:       []string{"subfinder", "ksubdomain"},
 		SubdomainSecurity:   []string{"SubdomainTakeover"},
 		PortScanPreparation: []string{"SkipCdn"},
+		PortScan:            []string{"RustScan"},
 		AssetMapping:        []string{"httpx"},
 		AssetHandle:         []string{""},
-		PortScan:            []string{"rustscan"},
 		URLScan:             []string{"test"},
 		URLSecurity:         []string{"test"},
 		WebCrawler:          []string{"test"},
@@ -140,7 +140,7 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:wooga.com"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:scope-sentry.top"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

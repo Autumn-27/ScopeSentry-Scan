@@ -20,6 +20,7 @@ type TaskOptions struct {
 	AssetHandle         []string                          // 资产处理模块
 	PortScanPreparation []string                          // 端口扫描预处理模块
 	PortScan            []string                          // 端口扫描模块
+	PortFingerprint     []string                          // 端口指纹识别模块
 	URLScan             []string                          // URL扫描模块
 	URLSecurity         []string                          // URL安全检测模块
 	WebCrawler          []string                          // 爬虫模块

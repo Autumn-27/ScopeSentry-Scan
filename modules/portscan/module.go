@@ -77,6 +77,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				close(resultChan)
 				resultWg.Wait()
+				r.Option.ModuleRunWg.Done()
 				return nil
 			}
 			if !firstData {
@@ -113,7 +114,7 @@ func (r *Runner) ModuleRun() error {
 									if err != nil {
 									}
 								}
-							}(&data)
+							}(data)
 							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
 							if err != nil {
 								plgWg.Done()

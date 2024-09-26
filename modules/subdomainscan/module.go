@@ -56,6 +56,7 @@ func (r *Runner) ModuleRun() error {
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
 					r.NextModule.CloseInput()
+					r.Option.ModuleRunWg.Done()
 					return
 				}
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
