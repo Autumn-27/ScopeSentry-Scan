@@ -109,6 +109,7 @@ func main() {
 		SubdomainSecurity:   []string{"SubdomainTakeover"},
 		PortScanPreparation: []string{"SkipCdn"},
 		PortScan:            []string{"RustScan"},
+		PortFingerprint:     []string{"fingerprintx"},
 		AssetMapping:        []string{"httpx"},
 		AssetHandle:         []string{""},
 		URLScan:             []string{"test"},
@@ -140,7 +141,7 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:scope-sentry.top"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

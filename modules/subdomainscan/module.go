@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net"
 	"sync"
 )
 
@@ -83,15 +84,25 @@ func (r *Runner) ModuleRun() error {
 						continue
 					}
 				} else {
-					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，没有开启此模块的扫描，直接发送到下个模块
+					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，或者是没有开启此模块的扫描，直接发送到下个模块
 					target, _ := result.(string)
 					// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
 					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &target)
 					if flag {
-						resultDns := utils.DNS.QueryOne(result.(string))
-						tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
-						if len(tmp.IP) != 0 {
+						if net.ParseIP(target) != nil {
+							tmp := types.SubdomainResult{
+								Host: target,
+								IP:   []string{target},
+							}
 							r.NextModule.GetInput() <- tmp
+						} else {
+							resultDns := utils.DNS.QueryOne(result.(string))
+							tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
+							if len(tmp.IP) != 0 || len(tmp.Value) != 0 {
+								tmp.TaskId = r.Option.ID
+								go results.Handler.Subdomain(&tmp)
+								r.NextModule.GetInput() <- tmp
+							}
 						}
 					}
 				}
@@ -127,6 +138,10 @@ func (r *Runner) ModuleRun() error {
 				defer allPluginWg.Done()
 				// 将原始数据发送给下一个模块，防止漏掉原始目标的测绘
 				resultChan <- data
+				t, _ := data.(string)
+				if net.ParseIP(t) != nil {
+					return
+				}
 				// 如果开启了子域名扫描
 				if len(r.Option.SubdomainScan) != 0 {
 					// 跳过插件
@@ -176,9 +191,6 @@ func (r *Runner) ModuleRun() error {
 						}
 						logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
-				} else {
-					// 没有开启子域名扫描，直接将输入发送到下个模块
-					resultChan <- data
 				}
 
 			}(data)

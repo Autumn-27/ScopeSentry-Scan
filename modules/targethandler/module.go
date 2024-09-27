@@ -64,7 +64,7 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				// 处理每个插件的结果
-				logger.SlogInfoLocal(fmt.Sprintf("%v module result: %v", r.GetName(), result))
+				logger.SlogInfoLocal(fmt.Sprintf("%v module target %v result: %v", r.GetName(), r.Option.Target, result))
 				r.NextModule.GetInput() <- result
 			}
 		}

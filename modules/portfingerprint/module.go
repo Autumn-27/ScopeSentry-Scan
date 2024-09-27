@@ -59,6 +59,7 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
+				logger.SlogInfoLocal(fmt.Sprintf(" finger %v", result))
 				r.NextModule.GetInput() <- result
 			}
 		}

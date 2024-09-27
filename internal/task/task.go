@@ -55,7 +55,7 @@ func GetTask() {
 			wg.Add(1)
 			// 创建 runnerOption 的副本
 			optionCopy := runnerOption
-			target := strings.Split(idTarget, ":")
+			target := strings.SplitN(idTarget, ":", 2)
 			optionCopy.Target = target[1]
 			// 使用局部变量创建闭包
 			taskFunc := func(op options.TaskOptions) func() {
