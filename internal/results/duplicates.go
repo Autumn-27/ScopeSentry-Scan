@@ -79,3 +79,17 @@ func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 	// 从mongodb中找到了该域名，进行去重，返回false，不进行该子域名的扫描
 	return false
 }
+
+func (d *duplicate) DuplicateLocalcache(key string) bool {
+	_, err := bigcache.BigCache.Get(key)
+	if err != nil {
+		// bigcache中不存在，设置缓存
+		err := bigcache.BigCache.Set(key, []byte{})
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("Set BigCache error: %v - %v", key, err))
+		}
+		return true
+	}
+	// 本地缓存中存在，则重复
+	return false
+}

@@ -9,8 +9,12 @@ package utils
 
 import (
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/valyala/fasthttp"
+	"net"
+	"syscall"
 	"time"
 )
 
@@ -108,4 +112,31 @@ func (r *request) HttpPost(uri string, requestBody []byte, ct string) error {
 		return err
 	}
 	return nil
+}
+
+var dialer = &net.Dialer{
+	Timeout: 2 * time.Second,
+}
+
+func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
+	addr := net.JoinHostPort(ip, fmt.Sprintf("%d", port))
+	conn, err := dialer.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]byte, 4096)
+	err = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err != nil {
+		return []byte{}, err
+	}
+	length, err := conn.Read(response)
+	if err != nil {
+		var netErr net.Error
+		if (errors.As(err, &netErr) && netErr.Timeout()) ||
+			errors.Is(err, syscall.ECONNREFUSED) { // timeout error or connection refused
+			return []byte{}, err
+		}
+		return response[:length], nil
+	}
+	return response[:length], nil
 }

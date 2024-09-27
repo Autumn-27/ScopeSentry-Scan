@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -58,7 +59,18 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				logger.SlogInfoLocal(fmt.Sprintf("%v", result))
-				r.NextModule.GetInput() <- result
+				if portaliveResult, ok := result.(types.PortAlive); ok {
+					port := portaliveResult.Port
+					if port == "" {
+						port = "null"
+					}
+					key := r.Option.ID + ":port:" + portaliveResult.Host + ":" + port
+					flag := results.Duplicate.DuplicateLocalcache(key)
+					if flag {
+						// 本地缓存中不存在
+						r.NextModule.GetInput() <- result
+					}
+				}
 			}
 		}
 	}()

@@ -8,6 +8,7 @@
 package portfingerprint
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
@@ -17,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strconv"
 	"sync"
 )
 
@@ -57,7 +59,6 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				logger.SlogInfoLocal(fmt.Sprintf("%v", result))
 				r.NextModule.GetInput() <- result
 			}
 		}
@@ -91,12 +92,15 @@ func (r *Runner) ModuleRun() error {
 				portAlive, _ := data.(types.PortAlive)
 				var asset types.Asset
 				asset = types.Asset{
-					Host: portAlive.Host,
-					IP:   portAlive.IP,
-					Port: portAlive.Port,
+					Host:     portAlive.Host,
+					IP:       portAlive.IP,
+					Port:     portAlive.Port,
+					Protocol: "",
 				}
 				// 这里如果端口为空，说明是直接发过来并没有进行端口扫描，直接发送到下个模块
 				if asset.Port == "" {
+					// 如果端口为空，则只测试http服务
+					asset.Type = "http"
 					resultChan <- asset
 				} else {
 					if len(r.Option.PortFingerprint) != 0 {
@@ -122,27 +126,51 @@ func (r *Runner) ModuleRun() error {
 										if err != nil {
 										}
 									}
-								}(data)
+								}(&asset)
 								err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
 								if err != nil {
 									plgWg.Done()
 									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 								}
 								plgWg.Wait()
+								if asset.Protocol != "" {
+									// 如果已经识别到端口的服务，则退出循环不执行之后的插件
+									break
+								}
 							} else {
 								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 							}
 							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
-					} else {
-						// 如果没有开启端口扫描，则发送没有端口的
-						domainSkip, _ := data.(types.DomainSkip)
-						result := types.PortAlive{
-							Host: domainSkip.Domain,
-							IP:   "",
-							Port: "",
+						// 如果没有检测到端口服务，则获取原始响应
+						if asset.Protocol == "" {
+							asset.Protocol = "unknown"
+							portUint64, err := strconv.ParseUint(asset.Port, 10, 16)
+							if err != nil {
+								fmt.Println("转换错误:", err)
+								logger.SlogError(fmt.Sprintf("端口转换错误: %v", err))
+							} else {
+								rev, err := utils.Requests.TcpRecv(asset.IP, uint16(portUint64))
+								if err == nil {
+									rawResponse := string(rev)
+									encodedResponse, err := json.Marshal(rawResponse)
+									if err != nil {
+										// 处理编码错误
+										logger.SlogError(fmt.Sprintf("JSON 编码错误:", err))
+									} else {
+										asset.Raw = json.RawMessage(fmt.Sprintf("{\"data\":%s}", encodedResponse))
+									}
+								}
+							}
+							resultChan <- asset
+						} else {
+							// 识别成功
+							resultChan <- asset
 						}
-						resultChan <- result
+					} else {
+						// 如果没有开启端口指纹识别扫描，则只进行http测绘
+						asset.Type = "http"
+						resultChan <- asset
 					}
 				}
 
