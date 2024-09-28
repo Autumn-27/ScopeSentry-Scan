@@ -8,7 +8,6 @@
 package webfingerprint
 
 import (
-	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -67,7 +66,6 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-	fmt.Printf("input的动态类型: %T\n", input)
 	httpResult, ok := input.(*types.AssetHttp)
 	if !ok {
 		// 说明不是http的资产，直接返回
@@ -82,9 +80,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		semaphore <- struct{}{} // 占用一个槽，限制并发数量
 		wg.Add(1)
 		go func(finger types.WebFinger) {
-			if finger.Name == "Nginx" {
-				fmt.Println("d")
-			}
 			defer func() {
 				<-semaphore // 释放一个槽，允许新的goroutine开始
 				wg.Done()

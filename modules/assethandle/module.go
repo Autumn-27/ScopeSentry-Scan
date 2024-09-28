@@ -153,7 +153,6 @@ func (r *Runner) ModuleRun() error {
 					resultChan <- assetHttp
 				}
 			}(data)
-
 		}
 	}
 }
