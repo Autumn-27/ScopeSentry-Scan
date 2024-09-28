@@ -9,6 +9,7 @@ package webfingerprint
 
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 )
 
 type Plugin struct {
@@ -62,6 +63,11 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
+	asset, ok := input.(*types.AssetHttp)
+	if !ok {
+		// 说明不是http的资产，直接返回
+		return nil, nil
+	}
 
 	return nil, nil
 }
