@@ -12,6 +12,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/gologger/levels"
+	"github.com/projectdiscovery/httpx/runner"
 	"github.com/valyala/fasthttp"
 	"net"
 	"syscall"
@@ -139,4 +143,49 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 		return response[:length], nil
 	}
 	return response[:length], nil
+}
+
+func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
+	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal) // increase the verbosity (optional)
+
+	options := runner.Options{
+		Methods:                   "GET",
+		JSONOutput:                true,
+		TLSProbe:                  true,
+		InputTargetHost:           []string{Host},
+		Favicon:                   true,
+		ExtractTitle:              true,
+		TechDetect:                true,
+		OutputWebSocket:           true,
+		OutputServerHeader:        true,
+		OutputIP:                  true,
+		OutputCName:               true,
+		ResponseHeadersInStdout:   true,
+		ResponseInStdout:          true,
+		Base64ResponseInStdout:    true,
+		Jarm:                      true,
+		OutputCDN:                 true,
+		Location:                  false,
+		HostMaxErrors:             -1,
+		MaxResponseBodySizeToRead: 100000,
+		//InputFile: "./targetDomains.txt", // path to file containing the target domains list
+		OnResult: func(r runner.Result) {
+			// handle error
+			if r.Err != nil {
+				logger.SlogDebugLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
+			} else {
+				ah := Tools.HttpxResultToAssetHttp(r)
+				//fmt.Printf("%s %s %d\n", r.Input, r.Host, r.StatusCode)
+				resultCallback(ah)
+			}
+		},
+	}
+
+	httpxRunner, err := runner.New(&options)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("%v get error: %v", Host, err))
+	}
+	defer httpxRunner.Close()
+
+	httpxRunner.RunEnumeration()
 }

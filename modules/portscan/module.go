@@ -58,7 +58,6 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				logger.SlogInfoLocal(fmt.Sprintf("%v", result))
 				if portaliveResult, ok := result.(types.PortAlive); ok {
 					port := portaliveResult.Port
 					if port == "" {

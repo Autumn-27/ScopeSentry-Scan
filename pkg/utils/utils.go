@@ -16,8 +16,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/projectdiscovery/cdncheck"
+	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
@@ -579,3 +582,36 @@ func (t *UtilTools) CdnCheck(host string) (bool, string) {
 		return false, ""
 	}
 }
+
+func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
+	var ah = types.AssetHttp{
+		Timestamp:    system.GetTimeNow(),
+		TLSData:      r.TLSData, // You may need to set an appropriate default value based on the actual type.
+		Hashes:       r.Hashes,
+		CDNName:      r.CDNName,
+		Port:         r.Port,
+		URL:          r.URL,
+		Title:        r.Title,
+		Type:         "http",
+		Error:        r.Error,
+		ResponseBody: r.ResponseBody,
+		Host:         r.Host,
+		FavIconMMH3:  r.FavIconMMH3,
+		FaviconPath:  r.FaviconPath,
+		RawHeaders:   r.RawHeaders,
+		Jarm:         r.Jarm,
+		Technologies: r.Technologies, // You may need to set an appropriate default value based on the actual type.
+		StatusCode:   r.StatusCode,   // You may need to set an appropriate default value.
+		Webcheck:     false,
+		IconContent:  r.IconContent,
+		WebServer:    r.WebServer,
+	}
+	return ah
+}
+
+//func (t *UtilTools) AssetResultToAssetOther(r types.Asset) types.AssetOther {
+//	var ao = types.AssetOther{
+//
+//	}
+//	return ao
+//}

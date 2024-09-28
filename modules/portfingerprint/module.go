@@ -59,7 +59,6 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				logger.SlogInfoLocal(fmt.Sprintf(" finger %v", result))
 				r.NextModule.GetInput() <- result
 			}
 		}
@@ -91,12 +90,12 @@ func (r *Runner) ModuleRun() error {
 				defer allPluginWg.Done()
 				//发送来的数据 只能是types.PortAlive
 				portAlive, _ := data.(types.PortAlive)
-				var asset types.Asset
-				asset = types.Asset{
-					Host:     portAlive.Host,
-					IP:       portAlive.IP,
-					Port:     portAlive.Port,
-					Protocol: "",
+				var asset types.AssetOther
+				asset = types.AssetOther{
+					Host:    portAlive.Host,
+					IP:      portAlive.IP,
+					Port:    portAlive.Port,
+					Service: "",
 				}
 				// 这里如果端口为空，说明是直接发过来并没有进行端口扫描，直接发送到下个模块
 				if asset.Port == "" {
@@ -134,7 +133,7 @@ func (r *Runner) ModuleRun() error {
 									logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 								}
 								plgWg.Wait()
-								if asset.Protocol != "" {
+								if asset.Service != "" {
 									// 如果已经识别到端口的服务，则退出循环不执行之后的插件
 									break
 								}
@@ -144,8 +143,9 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
 						// 如果没有检测到端口服务，则获取原始响应
-						if asset.Protocol == "" {
-							asset.Protocol = "unknown"
+						if asset.Service == "" {
+							asset.Type = "other"
+							asset.Service = "unknown"
 							portUint64, err := strconv.ParseUint(asset.Port, 10, 16)
 							if err != nil {
 								fmt.Println("转换错误:", err)

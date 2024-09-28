@@ -164,7 +164,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
-	args := []string{"-b", PortBatchSize, "-t", PortRange, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
+	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
 	rustScanExecPath := filepath.Join(filepath.Join(global.ExtDir, "rustscan"), p.RustFileName)
 	cmd := exec.Command(rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
