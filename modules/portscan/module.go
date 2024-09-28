@@ -63,8 +63,7 @@ func (r *Runner) ModuleRun() error {
 					if port == "" {
 						port = "null"
 					}
-					key := r.Option.ID + ":port:" + portaliveResult.Host + ":" + port
-					flag := results.Duplicate.DuplicateLocalcache(key)
+					flag := results.Duplicate.PortIntask(&r.Option.ID, &portaliveResult.Host, &port)
 					if flag {
 						// 本地缓存中不存在
 						r.NextModule.GetInput() <- result

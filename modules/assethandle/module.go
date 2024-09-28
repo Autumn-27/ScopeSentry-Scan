@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
@@ -85,6 +86,17 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
+				var ty string
+				var assetOther types.AssetOther
+				var assetHttp types.AssetHttp
+				switch a := data.(type) {
+				case types.AssetOther:
+					ty = "other"
+					assetOther = a
+				case types.AssetHttp:
+					ty = "htttp"
+					assetHttp = a
+				}
 				if len(r.Option.AssetHandle) != 0 {
 					// 调用插件
 					for _, pluginName := range r.Option.AssetHandle {
@@ -101,14 +113,27 @@ func (r *Runner) ModuleRun() error {
 								plg.SetParameter("")
 							}
 							plg.SetResult(resultChan)
-							pluginFunc := func(data interface{}) func() {
-								return func() {
-									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
+							var pluginFunc func()
+							if ty == "other" {
+								pluginFunc = func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
 									}
-								}
-							}(&data)
+								}(&assetOther)
+							} else {
+								pluginFunc = func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
+									}
+								}(&assetHttp)
+							}
+
 							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
 							if err != nil {
 								plgWg.Done()
@@ -122,7 +147,11 @@ func (r *Runner) ModuleRun() error {
 					}
 				}
 				// 如果没有开启此模块，或者开启此模块并且插件运行结束，将data发送到结果处理处
-				resultChan <- data
+				if ty == "other" {
+					resultChan <- assetOther
+				} else {
+					resultChan <- assetHttp
+				}
 			}(data)
 
 		}

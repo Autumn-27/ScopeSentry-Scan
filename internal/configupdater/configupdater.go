@@ -237,12 +237,13 @@ type tmpWebFinger struct {
 	ID      primitive.ObjectID `bson:"_id"`
 	Express []string           `bson:"express"`
 	State   bool               `bson:"state"`
+	Name    string             `bson:"name"`
 }
 
 func UpdateWebFinger() {
 	logger.SlogInfoLocal("WebFinger load begin")
 	var tmpWebF []tmpWebFinger
-	if err := mongodb.MongodbClient.FindAll("FingerprintRules", bson.M{}, bson.M{"_id": 1, "express": 1, "state": 1}, &tmpWebF); err != nil {
+	if err := mongodb.MongodbClient.FindAll("FingerprintRules", bson.M{}, bson.M{"_id": 1, "express": 1, "state": 1, "name": 1}, &tmpWebF); err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("WebFinger load error: %v", err))
 		return
 	}
@@ -252,6 +253,7 @@ func UpdateWebFinger() {
 		wf.ID = f.ID.Hex() // 将 ObjectId 转换为字符串
 		wf.Express = f.Express
 		wf.State = f.State
+		wf.Name = f.Name
 		global.WebFingers = append(global.WebFingers, wf)
 	}
 	logger.SlogInfoLocal("WebFinger load end")

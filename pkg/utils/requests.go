@@ -151,7 +151,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
 	options := runner.Options{
 		Methods:                   "GET",
 		JSONOutput:                true,
-		TLSProbe:                  true,
+		TLSProbe:                  false,
 		InputTargetHost:           []string{Host},
 		Favicon:                   true,
 		ExtractTitle:              true,

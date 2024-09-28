@@ -10,6 +10,7 @@ package plugins
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle/webfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping/httpx"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portfingerprint/fingerprintx"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan/rustscan"
@@ -91,6 +92,11 @@ func (pm *PluginManager) InitializePlugins() error {
 	// httpx
 	httpxModule := httpx.NewPlugin()
 	pm.RegisterPlugin(httpxModule.Module, httpxModule.Name, httpxModule)
+	
+	// WebFingerprint
+	webFingerprintmodule := webfingerprint.NewPlugin()
+	pm.RegisterPlugin(webFingerprintmodule.Module, webFingerprintmodule.Name, webFingerprintmodule)
+
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

@@ -8,8 +8,12 @@
 package webfingerprint
 
 import (
+	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"strings"
+	"sync"
 )
 
 type Plugin struct {
@@ -21,8 +25,8 @@ type Plugin struct {
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name:   "httpx",
-		Module: "AssetMapping",
+		Name:   "WebFingerprint",
+		Module: "AssetHandle",
 	}
 }
 
@@ -63,12 +67,150 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-	asset, ok := input.(*types.AssetHttp)
+	fmt.Printf("input的动态类型: %T\n", input)
+	httpResult, ok := input.(*types.AssetHttp)
 	if !ok {
 		// 说明不是http的资产，直接返回
 		return nil, nil
 	}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	maxWorkers := 10
+	semaphore := make(chan struct{}, maxWorkers)
 
+	for _, finger := range global.WebFingers {
+		semaphore <- struct{}{} // 占用一个槽，限制并发数量
+		wg.Add(1)
+		go func(finger types.WebFinger) {
+			if finger.Name == "Nginx" {
+				fmt.Println("d")
+			}
+			defer func() {
+				<-semaphore // 释放一个槽，允许新的goroutine开始
+				wg.Done()
+			}()
+			tmpExp := []bool{}
+			for _, exp := range finger.Express {
+				key := ""
+				value := ""
+				if exp != "||" && exp != "&&" {
+					r := strings.SplitN(exp, "=", 2)
+					if len(r) != 2 {
+						continue
+					}
+					key = r[0]
+					value = strings.Trim(r[1], `"`)
+				} else {
+					key = exp
+				}
+				switch key {
+				case "title", "title!":
+					if strings.Contains(httpResult.Title, value) {
+						if key == "title" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					} else {
+						if key == "title!" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					}
+				case "body", "body!":
+					if strings.Contains(httpResult.ResponseBody, value) {
+						if key == "body" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					} else {
+						if key == "body!" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					}
+				case "header", "header!":
+					if strings.Contains(httpResult.RawHeaders, value) {
+						if key == "header" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					} else {
+						if key == "header!" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					}
+				case "banner", "banner!":
+					if strings.Contains(httpResult.RawHeaders, value) {
+						if key == "banner" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					} else {
+						if key == "banner!" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					}
+				case "server", "server!":
+					if strings.Contains(strings.ToLower(httpResult.WebServer), strings.ToLower(value)) {
+						if key == "server" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					} else {
+						if key == "server!" {
+							tmpExp = append(tmpExp, true)
+						} else { // key == "title!"
+							tmpExp = append(tmpExp, false)
+						}
+					}
+				case "||":
+					secondLast, last, slice := popLastTwoBool(tmpExp)
+					r := last || secondLast
+					slice = append(slice, r)
+					tmpExp = slice
+				case "&&":
+					secondLast, last, slice := popLastTwoBool(tmpExp)
+					r := last && secondLast
+					slice = append(slice, r)
+					tmpExp = slice
+				default:
+					tmpExp = append(tmpExp, false)
+				}
+			}
+
+			if len(tmpExp) != 1 {
+				return
+			}
+
+			flag := tmpExp[0]
+			if flag {
+				mu.Lock()
+				alreadyExists := false
+				for _, tech := range httpResult.Technologies {
+					if strings.ToLower(tech) == strings.ToLower(finger.Name) {
+						alreadyExists = true
+						break
+					}
+				}
+				if !alreadyExists {
+					httpResult.WebFinger = append(httpResult.WebFinger, finger.Name)
+				}
+				mu.Unlock()
+			}
+		}(finger)
+	}
+	wg.Wait()
 	return nil, nil
 }
 
@@ -77,4 +219,20 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		Name:   p.Name,
 		Module: p.Module,
 	}
+}
+
+func popLastTwoBool(slice []bool) (bool, bool, []bool) {
+	if len(slice) < 2 {
+		return false, false, slice // 如果切片长度小于2，直接返回原切片
+	}
+
+	// 获取最后两个元素
+	lastIndex := len(slice) - 1
+	last := slice[lastIndex]
+	secondLast := slice[lastIndex-1]
+
+	// 使用切片操作去除最后两个元素
+	slice = slice[:lastIndex-1]
+
+	return secondLast, last, slice
 }

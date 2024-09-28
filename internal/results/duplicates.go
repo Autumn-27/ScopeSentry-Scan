@@ -32,13 +32,8 @@ func InitializeDuplicate() {
 // SubdomainInTask 本地缓存taskid:subdomain 是否存在，不存在则存入本地缓存，从redis查询是否重复，如果开启了子域名去重，则查询mongdob中是否存在子域名。
 func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
 	key := *taskId + ":subdomain:" + *host
-	_, err := bigcache.BigCache.Get(key)
-	if err != nil {
-		// bigcache中不存在，设置缓存
-		err := bigcache.BigCache.Set(key, []byte{})
-		if err != nil {
-			logger.SlogError(fmt.Sprintf("Set BigCache error: %v - %v", key, err))
-		}
+	flag := d.DuplicateLocalcache(key)
+	if flag {
 		keyRedis := "duplicates:domain:" + *taskId
 		ctx := context.Background()
 		exists, err := redis.RedisClient.SIsMember(ctx, keyRedis, *host)
@@ -59,7 +54,6 @@ func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
 			return true
 		}
 	}
-
 	// 本地缓存中存在，返回false
 	return false
 }
@@ -77,6 +71,34 @@ func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 		return true
 	}
 	// 从mongodb中找到了该域名，进行去重，返回false，不进行该子域名的扫描
+	return false
+}
+
+func (d *duplicate) PortIntask(taskId *string, host *string, port *string) bool {
+	key := *taskId + ":port:" + *host + ":" + *port
+	flag := d.DuplicateLocalcache(key)
+	if flag {
+		// 本地缓存中不存在，从redis中查找
+		keyRedis := "duplicates:port:" + *taskId
+		ctx := context.Background()
+		exists, err := redis.RedisClient.SIsMember(ctx, keyRedis, *host+"-"+*port)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("PortIntask Deduplication error %v", err))
+			// 如果查询redis出错 直接认为不存在重复的
+			return true
+		}
+		if exists {
+			// 如果redis中已经存在了，表示其他节点或该节点之前已经在扫描该端口了，返回false跳过此域名
+			return false
+		} else {
+			_, err = redis.RedisClient.SAdd(ctx, keyRedis, *host+"-"+*port)
+			if err != nil {
+				logger.SlogError(fmt.Sprintf("PortIntask Deduplication sadd error %v", err))
+			}
+			// 子域名在redis中不存在，表示该域名-端口还没有进行扫描，返回true开始扫描
+			return true
+		}
+	}
 	return false
 }
 

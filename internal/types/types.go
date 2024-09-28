@@ -186,6 +186,7 @@ type PageMonitResult struct {
 type WebFinger struct {
 	ID      string
 	Express []string
+	Name    string
 	State   bool
 }
 
