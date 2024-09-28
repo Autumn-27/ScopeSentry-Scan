@@ -162,7 +162,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
 		OutputCName:               true,
 		ResponseHeadersInStdout:   true,
 		ResponseInStdout:          true,
-		Base64ResponseInStdout:    true,
+		Base64ResponseInStdout:    false,
 		Jarm:                      true,
 		OutputCDN:                 true,
 		Location:                  false,

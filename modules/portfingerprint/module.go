@@ -179,7 +179,6 @@ func (r *Runner) ModuleRun() error {
 
 		}
 	}
-	return nil
 }
 
 func (r *Runner) SetInput(ch chan interface{}) {
