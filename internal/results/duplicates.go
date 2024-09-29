@@ -31,7 +31,7 @@ func InitializeDuplicate() {
 
 // SubdomainInTask 本地缓存taskid:subdomain 是否存在，不存在则存入本地缓存，从redis查询是否重复，如果开启了子域名去重，则查询mongdob中是否存在子域名。
 func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
-	key := *taskId + ":subdomain:" + *host
+	key := "duplicates:" + *taskId + ":subdomain:" + *host
 	flag := d.DuplicateLocalcache(key)
 	if flag {
 		keyRedis := "duplicates:domain:" + *taskId
@@ -75,7 +75,7 @@ func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 }
 
 func (d *duplicate) PortIntask(taskId *string, host *string, port *string) bool {
-	key := *taskId + ":port:" + *host + ":" + *port
+	key := "duplicates:" + *taskId + ":port:" + *host + ":" + *port
 	flag := d.DuplicateLocalcache(key)
 	if flag {
 		// 本地缓存中不存在，从redis中查找
