@@ -32,7 +32,7 @@ func InitializeDuplicate() {
 // SubdomainInTask 本地缓存taskid:subdomain 是否存在，不存在则存入本地缓存，从redis查询是否重复，如果开启了子域名去重，则查询mongdob中是否存在子域名。
 func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
 	key := "duplicates:" + *taskId + ":subdomain:" + *host
-	flag := d.DuplicateLocalcache(key)
+	flag := d.DuplicateLocalCache(key)
 	if flag {
 		keyRedis := "duplicates:domain:" + *taskId
 		ctx := context.Background()
@@ -76,33 +76,18 @@ func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 
 func (d *duplicate) PortIntask(taskId *string, host *string, port *string) bool {
 	key := "duplicates:" + *taskId + ":port:" + *host + ":" + *port
-	flag := d.DuplicateLocalcache(key)
+	flag := d.DuplicateLocalCache(key)
 	if flag {
 		// 本地缓存中不存在，从redis中查找
 		keyRedis := "duplicates:port:" + *taskId
-		ctx := context.Background()
-		exists, err := redis.RedisClient.SIsMember(ctx, keyRedis, *host+"-"+*port)
-		if err != nil {
-			logger.SlogError(fmt.Sprintf("PortIntask Deduplication error %v", err))
-			// 如果查询redis出错 直接认为不存在重复的
-			return true
-		}
-		if exists {
-			// 如果redis中已经存在了，表示其他节点或该节点之前已经在扫描该端口了，返回false跳过此域名
-			return false
-		} else {
-			_, err = redis.RedisClient.SAdd(ctx, keyRedis, *host+"-"+*port)
-			if err != nil {
-				logger.SlogError(fmt.Sprintf("PortIntask Deduplication sadd error %v", err))
-			}
-			// 子域名在redis中不存在，表示该域名-端口还没有进行扫描，返回true开始扫描
-			return true
-		}
+		valueRedis := *host + "-" + *port
+		flag = d.DuplicateRedisCache(keyRedis, valueRedis)
+		return flag
 	}
 	return false
 }
 
-func (d *duplicate) DuplicateLocalcache(key string) bool {
+func (d *duplicate) DuplicateLocalCache(key string) bool {
 	_, err := bigcache.BigCache.Get(key)
 	if err != nil {
 		// bigcache中不存在，设置缓存
@@ -114,4 +99,44 @@ func (d *duplicate) DuplicateLocalcache(key string) bool {
 	}
 	// 本地缓存中存在，则重复
 	return false
+}
+
+// DuplicateRedisCache 在key中查找是否存在value来进行去重
+func (d *duplicate) DuplicateRedisCache(key string, value string) bool {
+	ctx := context.Background()
+	exists, err := redis.RedisClient.SIsMember(ctx, key, value)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("PortIntask Deduplication error %v", err))
+		// 如果查询redis出错 直接认为不存在重复的
+		return true
+	}
+	if exists {
+		// 如果redis中已经存在了，表示其他节点或该节点之前已经在扫描该端口了，返回false跳过此域名
+		return false
+	} else {
+		_, err = redis.RedisClient.SAdd(ctx, key, value)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("PortIntask Deduplication sadd error %v", err))
+		}
+		// 子域名在redis中不存在，表示该域名-端口还没有进行扫描，返回true开始扫描
+		return true
+	}
+}
+
+func (d *duplicate) AssetInMongodb(host string, port string, id string) (bool, bson.M) {
+	var result bson.M
+	err := system.MongoClient.FindOne("asset", bson.M{"host": host, "port": port}, bson.M{"_id": 0}, &result)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			// 说明在mongodb中不存在
+			return false, nil
+		}
+		// 其他错误也认为在mongodb中不存在
+		logger.SlogErrorLocal(fmt.Sprintf("AssetInMongodb error :%s\n", err))
+		return false, nil
+	} else {
+		// 在mongodb中找到了这个资产记录
+		return true, result
+	}
+
 }

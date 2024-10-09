@@ -583,6 +583,23 @@ func (t *UtilTools) CdnCheck(host string) (bool, string) {
 	}
 }
 
+// GetDomain 提取URL中的域名
+func (t *UtilTools) GetDomain(rawUrl string) string {
+	// 解析 URL
+	parsedUrl, err := url.Parse(rawUrl)
+	if err != nil {
+		return rawUrl
+	}
+
+	// 提取域名
+	domain := parsedUrl.Host
+
+	// 去掉端口号（如果有）
+	domain = strings.Split(domain, ":")[0]
+
+	return domain
+}
+
 func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	var ah = types.AssetHttp{
 		Timestamp:    system.GetTimeNow(),
@@ -590,12 +607,13 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		Hashes:       r.Hashes,
 		CDNName:      r.CDNName,
 		Port:         r.Port,
-		URL:          r.URL,
+		URL:          strings.Replace(strings.Replace(r.URL, ":80", "", 1), ":443", "", 1), //去掉默认的80和443端口
 		Title:        r.Title,
 		Type:         "http",
 		Error:        r.Error,
 		ResponseBody: r.ResponseBody,
-		Host:         r.Host,
+		Host:         t.GetDomain(r.URL),
+		IP:           r.Host,
 		FavIconMMH3:  r.FavIconMMH3,
 		FaviconPath:  r.FaviconPath,
 		RawHeaders:   r.RawHeaders,
@@ -605,6 +623,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		Webcheck:     false,
 		IconContent:  r.IconContent,
 		WebServer:    r.WebServer,
+		Service:      r.Scheme,
 	}
 	return ah
 }

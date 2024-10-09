@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -57,7 +58,21 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				r.NextModule.GetInput() <- result
+				if assetResult, ok := result.(types.AssetOther); ok {
+					flag, asset := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port, r.Option.ID)
+					if flag {
+						// 数据库中存在该资产，对该资产信息进行diff
+						fmt.Println(asset)
+					} else {
+						// 数据库中不存在该资产，直接插入。
+					}
+				} else {
+					//assetHttpResult, okh := result.(types.AssetHttp)
+					//if okh {
+					//
+					//}
+				}
+
 			}
 		}
 	}()

@@ -36,6 +36,7 @@ type AssetHttp struct {
 	Error         string                 `json:"error,omitempty" csv:"error"`
 	ResponseBody  string                 `json:"body,omitempty" csv:"body"`
 	Host          string                 `json:"host,omitempty" csv:"host"`
+	IP            string                 `json:"ip"`
 	FavIconMMH3   string                 `json:"favicon,omitempty" csv:"favicon"`
 	FaviconPath   string                 `json:"favicon_path,omitempty" csv:"favicon_path"`
 	RawHeaders    string                 `json:"raw_header,omitempty" csv:"raw_header"`
