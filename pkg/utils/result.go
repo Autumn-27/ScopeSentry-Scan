@@ -8,9 +8,9 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"reflect"
 )
 
 type Result struct {
@@ -22,29 +22,55 @@ func InitializeResults() {
 	Results = &Result{}
 }
 
-func (r *Result) CompareAssetOther(a1, a2 types.AssetOther) map[string][]string {
-	differences := make(map[string][]string)
-
-	v1 := reflect.ValueOf(a1)
-	v2 := reflect.ValueOf(a2)
-
-	for i := 0; i < v1.NumField(); i++ {
-		fieldName := v1.Type().Field(i).Name
-
-		// 跳过 TaskId 字段
-		if fieldName == "TaskId" {
-			continue
-		}
-
-		val1 := v1.Field(i).Interface()
-		val2 := v2.Field(i).Interface()
-
-		if !reflect.DeepEqual(val1, val2) {
-			differences[fieldName] = []string{
-				fmt.Sprintf("a1: %v", val1),
-				fmt.Sprintf("a2: %v", val2),
-			}
-		}
+func (r *Result) CompareAssetOther(old, new types.AssetOther) types.ChangeLogAssetOther {
+	var Change types.ChangeLogAssetOther
+	if old.TLS != new.TLS {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "TLS",
+			Old:       fmt.Sprintf("%t", old.TLS),
+			New:       fmt.Sprintf("%t", new.TLS),
+		})
 	}
-	return differences
+	if old.IP != new.IP {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "IP",
+			Old:       old.IP,
+			New:       new.IP,
+		})
+	}
+	if old.Service != new.Service {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "Service",
+			Old:       old.Service,
+			New:       new.Service,
+		})
+	}
+
+	if old.Version != new.Version {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "Version",
+			Old:       old.Version,
+			New:       new.Version,
+		})
+	}
+	if old.Transport != new.Transport {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "Transport",
+			Old:       old.Transport,
+			New:       new.Transport,
+		})
+	}
+	if !bytes.Equal(old.Raw, new.Raw) {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "Raw",
+			Old:       string(old.Raw),
+			New:       string(new.Raw),
+		})
+	}
+	if len(Change.Change) != 0 {
+		Change.Timestamp = new.Timestamp
+		return Change
+	} else {
+		return types.ChangeLogAssetOther{}
+	}
 }

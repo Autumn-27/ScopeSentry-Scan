@@ -123,7 +123,7 @@ func (d *duplicate) DuplicateRedisCache(key string, value string) bool {
 	}
 }
 
-func (d *duplicate) AssetInMongodb(host string, port string, id string) (bool, bson.M) {
+func (d *duplicate) AssetInMongodb(host string, port string) (bool, bson.M) {
 	var result bson.M
 	err := system.MongoClient.FindOne("asset", bson.M{"host": host, "port": port}, bson.M{"_id": 0}, &result)
 	if err != nil {
@@ -138,5 +138,4 @@ func (d *duplicate) AssetInMongodb(host string, port string, id string) (bool, b
 		// 在mongodb中找到了这个资产记录
 		return true, result
 	}
-
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"sync"
 )
 
@@ -59,10 +60,13 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				if assetResult, ok := result.(types.AssetOther); ok {
-					flag, asset := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port, r.Option.ID)
+					flag, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
-						fmt.Println(asset)
+						var oldAsset types.AssetOther
+						data, _ := bson.Marshal(bsonData)
+						_ = bson.Unmarshal(data, &oldAsset)
+						utils.Results.CompareAssetOther(oldAsset, assetResult)
 					} else {
 						// 数据库中不存在该资产，直接插入。
 					}

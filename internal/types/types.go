@@ -79,6 +79,18 @@ type AssetOther struct {
 	TaskId    string `bson:"taskId"`
 }
 
+type ChangeLog struct {
+	FieldName string `json:"fieldName"`
+	Old       string `json:"old"`
+	New       string `json:"new"`
+}
+
+type ChangeLogAssetOther struct {
+	AssetId   string `json:"assetId"`
+	Timestamp string `json:"timestamp,omitempty" csv:"timestamp"`
+	Change    []ChangeLog
+}
+
 type UrlResult struct {
 	Input      string `json:"input"`
 	Source     string `json:"source"`
