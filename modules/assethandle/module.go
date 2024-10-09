@@ -66,7 +66,12 @@ func (r *Runner) ModuleRun() error {
 						var oldAsset types.AssetOther
 						data, _ := bson.Marshal(bsonData)
 						_ = bson.Unmarshal(data, &oldAsset)
-						utils.Results.CompareAssetOther(oldAsset, assetResult)
+						changeData := utils.Results.CompareAssetOther(oldAsset, assetResult)
+						if changeData.Timestamp != "" {
+							// 说明资产存在变化，将结果发送到changelog中
+
+						}
+						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
 					}

@@ -27,7 +27,7 @@ func InitializeResultQueue() {
 	// 模块列表
 	modules := []string{
 		"SubdomainScan", "SubdomainSecurity",
-		"AssetMapping", "AssetResultHandl", "URLScan",
+		"AssetChangeLog", "URLScan",
 		"URLSecurity", "WebCrawler", "VulnerabilityScan",
 	}
 	// 初始化模块队列和 Goroutine
@@ -83,8 +83,8 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		name = "subdomain"
 	case "SubdomainSecurity":
 		name = "SubdoaminTakerResult"
-	case "AssetResultHandl":
-		name = "asset"
+	case "AssetChangeLog":
+		name = "AssetChangeLog"
 	case "URLScan":
 		name = "UrlScan"
 	case "URLSecurity":
