@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -126,7 +127,7 @@ func (d *duplicate) DuplicateRedisCache(key string, value string) bool {
 
 func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson.M) {
 	var result bson.M
-	err := system.MongoClient.FindOne("asset", bson.M{"host": host, "port": port}, nil, &result)
+	err := mongodb.MongodbClient.FindOne("asset", bson.M{"host": host, "port": port}, nil, &result)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			// 说明在mongodb中不存在

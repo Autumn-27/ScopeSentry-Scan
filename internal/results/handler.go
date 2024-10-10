@@ -98,6 +98,7 @@ func (h *handler) AssetOtherInsert(result *types.AssetOther) {
 	if err != nil {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Host, err))
 	}
+	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)
@@ -114,6 +115,7 @@ func (h *handler) AssetHttpInsert(result *types.AssetHttp) {
 	if err != nil {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Host, err))
 	}
+	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)

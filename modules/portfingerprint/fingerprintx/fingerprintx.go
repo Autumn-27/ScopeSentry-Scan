@@ -108,6 +108,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		asset.Version = fingerResult.Version
 		asset.Raw = fingerResult.Raw
 		asset.Timestamp = utils.Tools.GetTimeNow()
+		asset.LastScanTime = asset.Timestamp
 		return nil, nil
 	}
 	return nil, nil

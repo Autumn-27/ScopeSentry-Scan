@@ -75,6 +75,7 @@ func (r *Runner) ModuleRun() error {
 							assetResult.LastScanTime = assetResult.Timestamp
 							assetResult.Timestamp = oldAsset.Timestamp
 							assetResult.Project = oldAsset.Project
+							assetResult.RootDomain = oldAsset.RootDomain
 							go results.Handler.AssetUpdate(id, assetResult)
 						}
 						// 资产没有变化，不进行操作
@@ -96,10 +97,11 @@ func (r *Runner) ModuleRun() error {
 								changeData.AssetId = id
 								go results.Handler.AssetChangeLog(&changeData)
 								// 对资产进行更新,设置最新的扫描时间
-								assetResult.LastScanTime = assetResult.Timestamp
-								assetResult.Timestamp = oldAssetHttp.Timestamp
-								assetResult.Project = oldAssetHttp.Project
-								go results.Handler.AssetUpdate(id, assetResult)
+								assetHttpResult.LastScanTime = assetHttpResult.Timestamp
+								assetHttpResult.Timestamp = oldAssetHttp.Timestamp
+								assetHttpResult.Project = oldAssetHttp.Project
+								assetHttpResult.RootDomain = oldAssetHttp.RootDomain
+								go results.Handler.AssetUpdate(id, assetHttpResult)
 							}
 							// 资产没有变化，不进行操作
 						} else {

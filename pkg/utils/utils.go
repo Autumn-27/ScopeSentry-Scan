@@ -600,6 +600,21 @@ func (t *UtilTools) GetDomain(rawUrl string) string {
 	return domain
 }
 
+func removeDefaultPort(rawURL string) string {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+
+	// 检查端口并移除
+	if (parsedURL.Scheme == "http" && parsedURL.Port() == "80") ||
+		(parsedURL.Scheme == "https" && parsedURL.Port() == "443") {
+		parsedURL.Host = parsedURL.Hostname() // 去掉端口
+	}
+
+	return parsedURL.String()
+}
+
 func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	var ah = types.AssetHttp{
 		Timestamp:    system.GetTimeNow(),
@@ -607,7 +622,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		Hashes:       r.Hashes,
 		CDNName:      r.CDNName,
 		Port:         r.Port,
-		URL:          strings.Replace(strings.Replace(r.URL, ":80", "", 1), ":443", "", 1), //去掉默认的80和443端口
+		URL:          removeDefaultPort(r.URL), //去掉默认的80和443端口
 		Title:        r.Title,
 		Type:         "http",
 		Error:        r.Error,
@@ -625,6 +640,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		WebServer:    r.WebServer,
 		Service:      r.Scheme,
 	}
+	ah.LastScanTime = ah.Timestamp
 	return ah
 }
 

@@ -226,7 +226,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if err := cmd.Wait(); err != nil {
 		logger.SlogDebugLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domainSkip.Domain, err))
 	}
-	fmt.Println(domainSkip, PortBatchSize, PortTimeout)
 	return nil, nil
 }
 

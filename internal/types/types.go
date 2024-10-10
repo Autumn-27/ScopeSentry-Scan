@@ -21,38 +21,40 @@ type SubdomainResult struct {
 	Time       string
 	Project    string
 	TaskId     string `bson:"taskId"`
-	RootDomain string
+	RootDomain string `bson:"rootDomain"`
 }
 
 type AssetHttp struct {
-	Timestamp     string                 `json:"timestamp,omitempty" csv:"timestamp"`
-	TLSData       *clients.Response      `json:"tls,omitempty" csv:"tls"`
-	Hashes        map[string]interface{} `json:"hash,omitempty" csv:"hash"`
-	CDNName       string                 `json:"cdn_name,omitempty" csv:"cdn_name"`
-	Port          string                 `json:"port,omitempty" csv:"port"`
-	URL           string                 `json:"url,omitempty" csv:"url"`
-	Title         string                 `json:"title,omitempty" csv:"title"`
-	Type          string                 `json:"Type,omitempty" csv:"Type"`
-	Error         string                 `json:"error,omitempty" csv:"error"`
-	ResponseBody  string                 `json:"body,omitempty" csv:"body"`
-	Host          string                 `json:"host,omitempty" csv:"host"`
-	IP            string                 `json:"ip"`
-	FavIconMMH3   string                 `json:"favicon,omitempty" csv:"favicon"`
-	FaviconPath   string                 `json:"favicon_path,omitempty" csv:"favicon_path"`
-	RawHeaders    string                 `json:"raw_header,omitempty" csv:"raw_header"`
-	Jarm          string                 `json:"jarm,omitempty" csv:"jarm"`
-	Technologies  []string               `json:"tech,omitempty" csv:"tech"`
-	StatusCode    int                    `json:"status_code,omitempty" csv:"status_code"`
-	ContentLength int                    `json:"content_length,omitempty" csv:"content_length"`
-	CDN           bool                   `json:"cdn,omitempty" csv:"cdn"`
-	Webcheck      bool                   `json:"webcheck,omitempty" csv:"webcheck"`
-	Project       string                 `json:"project,omitempty" csv:"project"`
-	WebFinger     []string               `json:"web_finger,omitempty" csv:"web_finger"`
-	IconContent   string                 `json:"iconContent"`
-	Domain        string                 `json:"domain"`
+	Timestamp     string                 `bson:"timestamp,omitempty" csv:"timestamp"`
+	LastScanTime  string                 `bson:"lastScanTime"`
+	TLSData       *clients.Response      `bson:"tls,omitempty" csv:"tls"`
+	Hashes        map[string]interface{} `bson:"hash,omitempty" csv:"hash"`
+	CDNName       string                 `bson:"cdn_name,omitempty" csv:"cdn_name"`
+	Port          string                 `bson:"port,omitempty" csv:"port"`
+	URL           string                 `bson:"url,omitempty" csv:"url"`
+	Title         string                 `bson:"title,omitempty" csv:"title"`
+	Type          string                 `bson:"Type,omitempty" csv:"Type"`
+	Error         string                 `bson:"error,omitempty" csv:"error"`
+	ResponseBody  string                 `bson:"body,omitempty" csv:"body"`
+	Host          string                 `bson:"host,omitempty" csv:"host"`
+	IP            string                 `bson:"ip"`
+	FavIconMMH3   string                 `bson:"favicon,omitempty" csv:"favicon"`
+	FaviconPath   string                 `bson:"favicon_path,omitempty" csv:"favicon_path"`
+	RawHeaders    string                 `bson:"raw_header,omitempty" csv:"raw_header"`
+	Jarm          string                 `bson:"jarm,omitempty" csv:"jarm"`
+	Technologies  []string               `bson:"tech,omitempty" csv:"tech"`
+	StatusCode    int                    `bson:"status_code,omitempty" csv:"status_code"`
+	ContentLength int                    `bson:"content_length,omitempty" csv:"content_length"`
+	CDN           bool                   `bson:"cdn,omitempty" csv:"cdn"`
+	Webcheck      bool                   `bson:"webcheck,omitempty" csv:"webcheck"`
+	Project       string                 `bson:"project,omitempty" csv:"project"`
+	WebFinger     []string               `bson:"web_finger,omitempty" csv:"web_finger"`
+	IconContent   string                 `bson:"iconContent"`
+	Domain        string                 `bson:"domain"`
 	TaskId        string                 `bson:"taskId"`
 	WebServer     string                 `bson:"webServer"`
-	Service       string
+	Service       string                 `bson:"service"`
+	RootDomain    string                 `bson:"rootDomain"`
 }
 
 type PortAlive struct {
@@ -78,6 +80,7 @@ type AssetOther struct {
 	Project      string          `bson:"project"`
 	Type         string
 	TaskId       string `bson:"taskId"`
+	RootDomain   string `bson:"rootDomain"`
 }
 
 type ChangeLog struct {
