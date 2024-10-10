@@ -60,7 +60,7 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				if assetResult, ok := result.(types.AssetOther); ok {
-					flag, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
+					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
 						var oldAsset types.AssetOther
@@ -69,17 +69,44 @@ func (r *Runner) ModuleRun() error {
 						changeData := utils.Results.CompareAssetOther(oldAsset, assetResult)
 						if changeData.Timestamp != "" {
 							// 说明资产存在变化，将结果发送到changelog中
-
+							changeData.AssetId = id
+							go results.Handler.AssetChangeLog(&changeData)
+							// 对资产进行更新,设置最新的扫描时间
+							assetResult.LastScanTime = assetResult.Timestamp
+							assetResult.Timestamp = oldAsset.Timestamp
+							assetResult.Project = oldAsset.Project
+							go results.Handler.AssetUpdate(id, assetResult)
 						}
 						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
+						go results.Handler.AssetOtherInsert(&assetResult)
 					}
 				} else {
-					//assetHttpResult, okh := result.(types.AssetHttp)
-					//if okh {
-					//
-					//}
+					assetHttpResult, okh := result.(types.AssetHttp)
+					if okh {
+						flag, id, bsonData := results.Duplicate.AssetInMongodb(assetHttpResult.Host, assetHttpResult.Port)
+						if flag {
+							var oldAssetHttp types.AssetHttp
+							data, _ := bson.Marshal(bsonData)
+							_ = bson.Unmarshal(data, &oldAssetHttp)
+							changeData := utils.Results.CompareAssetHttp(oldAssetHttp, assetHttpResult)
+							if changeData.Timestamp != "" {
+								// 说明资产存在变化，将结果发送到changelog中
+								changeData.AssetId = id
+								go results.Handler.AssetChangeLog(&changeData)
+								// 对资产进行更新,设置最新的扫描时间
+								assetResult.LastScanTime = assetResult.Timestamp
+								assetResult.Timestamp = oldAssetHttp.Timestamp
+								assetResult.Project = oldAssetHttp.Project
+								go results.Handler.AssetUpdate(id, assetResult)
+							}
+							// 资产没有变化，不进行操作
+						} else {
+							// 数据库中不存在该资产，直接插入。
+							go results.Handler.AssetHttpInsert(&assetHttpResult)
+						}
+					}
 				}
 
 			}

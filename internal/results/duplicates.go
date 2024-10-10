@@ -17,6 +17,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -123,19 +124,25 @@ func (d *duplicate) DuplicateRedisCache(key string, value string) bool {
 	}
 }
 
-func (d *duplicate) AssetInMongodb(host string, port string) (bool, bson.M) {
+func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson.M) {
 	var result bson.M
-	err := system.MongoClient.FindOne("asset", bson.M{"host": host, "port": port}, bson.M{"_id": 0}, &result)
+	err := system.MongoClient.FindOne("asset", bson.M{"host": host, "port": port}, nil, &result)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			// 说明在mongodb中不存在
-			return false, nil
+			return false, "", nil
 		}
 		// 其他错误也认为在mongodb中不存在
 		logger.SlogErrorLocal(fmt.Sprintf("AssetInMongodb error :%s\n", err))
-		return false, nil
+		return false, "", nil
 	} else {
+		// 获取并删除 _id 字段，转换为字符串
+		var id string
+		if objId, ok := result["_id"].(primitive.ObjectID); ok {
+			id = objId.Hex()      // 将 ObjectID 转为字符串
+			delete(result, "_id") // 从 result 中删除 _id 字段
+		}
 		// 在mongodb中找到了这个资产记录
-		return true, result
+		return true, id, result
 	}
 }

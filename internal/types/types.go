@@ -65,18 +65,19 @@ type Project struct {
 	Target []string `bson:"target"`
 }
 type AssetOther struct {
-	Timestamp string          `json:"timestamp,omitempty" csv:"timestamp"`
-	Host      string          `json:"host,omitempty"`
-	IP        string          `json:"ip"`
-	Port      string          `json:"port"`
-	Service   string          `json:"service"`
-	TLS       bool            `json:"tls"`
-	Transport string          `json:"transport"`
-	Version   string          `json:"version,omitempty"`
-	Raw       json.RawMessage `json:"metadata"`
-	Project   string          `json:"project"`
-	Type      string
-	TaskId    string `bson:"taskId"`
+	Timestamp    string          `bson:"timestamp,omitempty" csv:"timestamp"`
+	LastScanTime string          `bson:"lastScanTime"`
+	Host         string          `bson:"host,omitempty"`
+	IP           string          `bson:"ip"`
+	Port         string          `bson:"port"`
+	Service      string          `bson:"service"`
+	TLS          bool            `bson:"tls"`
+	Transport    string          `bson:"transport"`
+	Version      string          `bson:"version,omitempty"`
+	Raw          json.RawMessage `bson:"metadata"`
+	Project      string          `bson:"project"`
+	Type         string
+	TaskId       string `bson:"taskId"`
 }
 
 type ChangeLog struct {
@@ -85,7 +86,7 @@ type ChangeLog struct {
 	New       string `json:"new"`
 }
 
-type ChangeLogAssetOther struct {
+type AssetChangeLog struct {
 	AssetId   string `json:"assetId"`
 	Timestamp string `json:"timestamp,omitempty" csv:"timestamp"`
 	Change    []ChangeLog
@@ -220,8 +221,7 @@ type HttpResponse struct {
 }
 
 type NotificationConfig struct {
-	SubdomainScan bool `bson:"subdomainScan"`
-
+	SubdomainScan                 bool `bson:"subdomainScan"`
 	DirScanNotification           bool `bson:"dirScanNotification"`
 	PortScanNotification          bool `bson:"portScanNotification"`
 	SensitiveNotification         bool `bson:"sensitiveNotification"`

@@ -135,6 +135,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/caddyserver/certmagic v0.19.2 // indirect
+	github.com/cckuailong/simHtml v0.0.0-20200120101524-76ba3d3f7f65 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charmbracelet/glamour v0.6.0 // indirect
