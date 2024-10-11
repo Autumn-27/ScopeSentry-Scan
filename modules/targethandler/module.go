@@ -87,7 +87,7 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				close(resultChan)
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				}
 				r.Option.ModuleRunWg.Done()
 				// 等待结果处理完毕
@@ -95,7 +95,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				firstData = true
 			}
 			allPluginWg.Add(1)

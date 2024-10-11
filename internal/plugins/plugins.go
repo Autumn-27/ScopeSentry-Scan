@@ -77,6 +77,7 @@ func (pm *PluginManager) InitializePlugins() error {
 	// SubdomainSecurity模块
 	subdomainTakeoverPlugin := subdomaintakeover.NewPlugin()
 	pm.RegisterPlugin(subdomainTakeoverPlugin.Module, subdomainTakeoverPlugin.Name, subdomainTakeoverPlugin)
+
 	// 端口扫描预处理
 	skipcdnPlugin := skipcdn.NewPlugin()
 	pm.RegisterPlugin(skipcdnPlugin.Module, skipcdnPlugin.Name, skipcdnPlugin)
@@ -92,7 +93,7 @@ func (pm *PluginManager) InitializePlugins() error {
 	// httpx
 	httpxModule := httpx.NewPlugin()
 	pm.RegisterPlugin(httpxModule.Module, httpxModule.Name, httpxModule)
-	
+
 	// WebFingerprint
 	webFingerprintmodule := webfingerprint.NewPlugin()
 	pm.RegisterPlugin(webFingerprintmodule.Module, webFingerprintmodule.Name, webFingerprintmodule)

@@ -35,6 +35,13 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	vulnerabilityModule.SetInput(vulnerabilityInputChan)
 	op.InputChan["Vulnerability"] = vulnerabilityInputChan
 
+	// url安全模块
+	op.ModuleRunWg.Add(1)
+	urlSecurityModule := urlsecurity.NewRunner(op, vulnerabilityModule)
+	urlSecurityInputChan := make(chan interface{}, 100)
+	urlSecurityModule.SetInput(urlSecurityInputChan)
+	op.InputChan["UrlSecurity"] = urlSecurityInputChan
+
 	// 爬虫模块
 	op.ModuleRunWg.Add(1)
 	webCrawlerModule := webcrawler.NewRunner(op, vulnerabilityModule)
@@ -42,16 +49,9 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	webCrawlerModule.SetInput(WebCrawlerInputChan)
 	op.InputChan["WebCrawler"] = WebCrawlerInputChan
 
-	// url安全模块
-	op.ModuleRunWg.Add(1)
-	urlSecurityModule := urlsecurity.NewRunner(op, webCrawlerModule)
-	urlSecurityInputChan := make(chan interface{}, 100)
-	urlSecurityModule.SetInput(urlSecurityInputChan)
-	op.InputChan["UrlSecurity"] = urlSecurityInputChan
-
 	// url扫描模块
 	op.ModuleRunWg.Add(1)
-	urlScanModule := urlscan.NewRunner(op, urlSecurityModule)
+	urlScanModule := urlscan.NewRunner(op, webCrawlerModule)
 	urlScanInputChan := make(chan interface{}, 100)
 	urlScanModule.SetInput(urlScanInputChan)
 	op.InputChan["UrlScan"] = urlScanInputChan

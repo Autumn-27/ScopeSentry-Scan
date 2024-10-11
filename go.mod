@@ -37,7 +37,7 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/miekg/dns v1.1.57
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/projectdiscovery/cdncheck v1.0.9 // indirect
+	github.com/projectdiscovery/cdncheck v1.0.9
 	github.com/projectdiscovery/clistats v0.0.20 // indirect
 	github.com/projectdiscovery/fdmax v0.0.4 // indirect
 	github.com/projectdiscovery/goconfig v0.0.1 // indirect
@@ -56,12 +56,14 @@ require github.com/spaolacci/murmur3 v1.1.0 // indirect
 
 require (
 	github.com/allegro/bigcache/v3 v3.1.0
+	github.com/cckuailong/simHtml v0.0.0-20200120101524-76ba3d3f7f65
 	github.com/cloudflare/cfssl v1.6.4
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/praetorian-inc/fingerprintx v1.1.9
 	github.com/projectdiscovery/dnsx v1.1.6
+	github.com/projectdiscovery/katana v1.1.0
 	github.com/projectdiscovery/nuclei/v3 v3.2.4
 	github.com/projectdiscovery/retryabledns v1.0.58
 	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000
@@ -135,7 +137,6 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/caddyserver/certmagic v0.19.2 // indirect
-	github.com/cckuailong/simHtml v0.0.0-20200120101524-76ba3d3f7f65 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charmbracelet/glamour v0.6.0 // indirect
@@ -184,7 +185,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.1 // indirect
-	github.com/go-rod/rod v0.114.0 // indirect
+	github.com/go-rod/rod v0.114.1 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/goburrow/cache v0.1.4 // indirect
@@ -300,7 +301,7 @@ require (
 	github.com/projectdiscovery/sarif v0.0.1 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
 	github.com/projectdiscovery/uncover v1.0.7 // indirect
-	github.com/projectdiscovery/useragent v0.0.40 // indirect
+	github.com/projectdiscovery/useragent v0.0.41 // indirect
 	github.com/projectdiscovery/utils v0.0.88 // indirect
 	github.com/projectdiscovery/yamldoc-go v1.0.4 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

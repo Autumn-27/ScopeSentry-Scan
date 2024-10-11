@@ -72,7 +72,7 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation))
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -80,7 +80,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation))
 				firstData = true
 			}
 			allPluginWg.Add(1)

@@ -113,7 +113,7 @@ func main() {
 		PortFingerprint:     []string{"fingerprintx"},
 		AssetMapping:        []string{"httpx"},
 		AssetHandle:         []string{"WebFingerprint"},
-		URLScan:             []string{"test"},
+		URLScan:             []string{"katana"},
 		URLSecurity:         []string{"test"},
 		WebCrawler:          []string{"test"},
 		VulnerabilityScan:   []string{"nuclei"},

@@ -59,7 +59,9 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
+				r.NextModule.GetInput() <- result
 				if assetResult, ok := result.(types.AssetOther); ok {
+					assetResult.TaskId = r.Option.ID
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
@@ -81,11 +83,13 @@ func (r *Runner) ModuleRun() error {
 						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
+						assetResult.LastScanTime = assetResult.Timestamp
 						go results.Handler.AssetOtherInsert(&assetResult)
 					}
 				} else {
 					assetHttpResult, okh := result.(types.AssetHttp)
 					if okh {
+						assetHttpResult.TaskId = r.Option.ID
 						flag, id, bsonData := results.Duplicate.AssetInMongodb(assetHttpResult.Host, assetHttpResult.Port)
 						if flag {
 							var oldAssetHttp types.AssetHttp
@@ -125,7 +129,7 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle))
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -133,7 +137,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle))
 				firstData = true
 			}
 			allPluginWg.Add(1)

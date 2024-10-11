@@ -25,30 +25,30 @@ type SubdomainResult struct {
 }
 
 type AssetHttp struct {
-	Timestamp     string                 `bson:"timestamp,omitempty" csv:"timestamp"`
+	Timestamp     string                 `bson:"timestamp" csv:"timestamp"`
 	LastScanTime  string                 `bson:"lastScanTime"`
-	TLSData       *clients.Response      `bson:"tls,omitempty" csv:"tls"`
-	Hashes        map[string]interface{} `bson:"hash,omitempty" csv:"hash"`
-	CDNName       string                 `bson:"cdn_name,omitempty" csv:"cdn_name"`
-	Port          string                 `bson:"port,omitempty" csv:"port"`
-	URL           string                 `bson:"url,omitempty" csv:"url"`
-	Title         string                 `bson:"title,omitempty" csv:"title"`
-	Type          string                 `bson:"Type,omitempty" csv:"Type"`
-	Error         string                 `bson:"error,omitempty" csv:"error"`
-	ResponseBody  string                 `bson:"body,omitempty" csv:"body"`
-	Host          string                 `bson:"host,omitempty" csv:"host"`
+	TLSData       *clients.Response      `bson:"tls" csv:"tls"`
+	Hashes        map[string]interface{} `bson:"hash" csv:"hash"`
+	CDNName       string                 `bson:"cdn_name" csv:"cdn_name"`
+	Port          string                 `bson:"port" csv:"port"`
+	URL           string                 `bson:"url" csv:"url"`
+	Title         string                 `bson:"title" csv:"title"`
+	Type          string                 `bson:"Type" csv:"Type"`
+	Error         string                 `bson:"error" csv:"error"`
+	ResponseBody  string                 `bson:"body" csv:"body"`
+	Host          string                 `bson:"host" csv:"host"`
 	IP            string                 `bson:"ip"`
-	FavIconMMH3   string                 `bson:"favicon,omitempty" csv:"favicon"`
-	FaviconPath   string                 `bson:"favicon_path,omitempty" csv:"favicon_path"`
-	RawHeaders    string                 `bson:"raw_header,omitempty" csv:"raw_header"`
-	Jarm          string                 `bson:"jarm,omitempty" csv:"jarm"`
-	Technologies  []string               `bson:"tech,omitempty" csv:"tech"`
-	StatusCode    int                    `bson:"status_code,omitempty" csv:"status_code"`
-	ContentLength int                    `bson:"content_length,omitempty" csv:"content_length"`
-	CDN           bool                   `bson:"cdn,omitempty" csv:"cdn"`
-	Webcheck      bool                   `bson:"webcheck,omitempty" csv:"webcheck"`
-	Project       string                 `bson:"project,omitempty" csv:"project"`
-	WebFinger     []string               `bson:"web_finger,omitempty" csv:"web_finger"`
+	FavIconMMH3   string                 `bson:"favicon" csv:"favicon"`
+	FaviconPath   string                 `bson:"favicon_path" csv:"favicon_path"`
+	RawHeaders    string                 `bson:"raw_header" csv:"raw_header"`
+	Jarm          string                 `bson:"jarm" csv:"jarm"`
+	Technologies  []string               `bson:"tech" csv:"tech"`
+	StatusCode    int                    `bson:"status_code" csv:"status_code"`
+	ContentLength int                    `bson:"content_length" csv:"content_length"`
+	CDN           bool                   `bson:"cdn" csv:"cdn"`
+	Webcheck      bool                   `bson:"webcheck" csv:"webcheck"`
+	Project       string                 `bson:"project" csv:"project"`
+	WebFinger     []string               `bson:"web_finger" csv:"web_finger"`
 	IconContent   string                 `bson:"iconContent"`
 	Domain        string                 `bson:"domain"`
 	TaskId        string                 `bson:"taskId"`
@@ -58,24 +58,24 @@ type AssetHttp struct {
 }
 
 type PortAlive struct {
-	Host string `json:"Host,omitempty"`
-	IP   string `json:"Host,omitempty"`
-	Port string `json:"Port,omitempty"`
+	Host string `bson:"host"`
+	IP   string `bson:"ip"`
+	Port string `bson:"port"`
 }
 type Project struct {
 	ID     string   `bson:"id"`
 	Target []string `bson:"target"`
 }
 type AssetOther struct {
-	Timestamp    string          `bson:"timestamp,omitempty" csv:"timestamp"`
+	Timestamp    string          `bson:"timestamp" csv:"timestamp"`
 	LastScanTime string          `bson:"lastScanTime"`
-	Host         string          `bson:"host,omitempty"`
+	Host         string          `bson:"host"`
 	IP           string          `bson:"ip"`
 	Port         string          `bson:"port"`
 	Service      string          `bson:"service"`
 	TLS          bool            `bson:"tls"`
 	Transport    string          `bson:"transport"`
-	Version      string          `bson:"version,omitempty"`
+	Version      string          `bson:"version"`
 	Raw          json.RawMessage `bson:"metadata"`
 	Project      string          `bson:"project"`
 	Type         string
@@ -91,7 +91,7 @@ type ChangeLog struct {
 
 type AssetChangeLog struct {
 	AssetId   string `json:"assetId"`
-	Timestamp string `json:"timestamp,omitempty" csv:"timestamp"`
+	Timestamp string `json:"timestamp" csv:"timestamp"`
 	Change    []ChangeLog
 }
 
@@ -103,6 +103,7 @@ type UrlResult struct {
 	Status     int    `json:"status"`
 	Length     int    `json:"length"`
 	Time       string `json:"time"`
+	Body       string `bson:"body"`
 	Project    string
 	TaskId     string `bson:"taskId"`
 }

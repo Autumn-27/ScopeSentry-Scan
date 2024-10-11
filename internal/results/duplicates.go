@@ -36,25 +36,10 @@ func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
 	key := "duplicates:" + *taskId + ":subdomain:" + *host
 	flag := d.DuplicateLocalCache(key)
 	if flag {
-		keyRedis := "duplicates:domain:" + *taskId
-		ctx := context.Background()
-		exists, err := redis.RedisClient.SIsMember(ctx, keyRedis, *host)
-		if err != nil {
-			logger.SlogError(fmt.Sprintf("SubdomainInTask Deduplication error %v", err))
-			// 如果查询redis出错 直接认为不存在重复的
-			return true
-		}
-		if exists {
-			// 如果redis中已经存在子域名了，表示其他节点或该节点之前已经在扫描该子域名了，返回false跳过此域名
-			return false
-		} else {
-			_, err = redis.RedisClient.SAdd(ctx, keyRedis, *host)
-			if err != nil {
-				logger.SlogError(fmt.Sprintf("SubdomainInTask Deduplication sadd error %v", err))
-			}
-			// 子域名在redis中不存在，表示该子域名还没有进行扫描，返回true开始扫描
-			return true
-		}
+		keyRedis := "duplicates:" + *taskId + ":domain"
+		valueRedis := *host
+		flag = d.DuplicateRedisCache(keyRedis, valueRedis)
+		return flag
 	}
 	// 本地缓存中存在，返回false
 	return false
@@ -81,7 +66,7 @@ func (d *duplicate) PortIntask(taskId *string, host *string, port *string) bool 
 	flag := d.DuplicateLocalCache(key)
 	if flag {
 		// 本地缓存中不存在，从redis中查找
-		keyRedis := "duplicates:port:" + *taskId
+		keyRedis := "duplicates:" + *taskId + ":port"
 		valueRedis := *host + "-" + *port
 		flag = d.DuplicateRedisCache(keyRedis, valueRedis)
 		return flag
