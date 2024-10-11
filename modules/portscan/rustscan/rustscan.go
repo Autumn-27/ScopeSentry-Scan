@@ -27,6 +27,7 @@ type Plugin struct {
 	Name         string
 	Module       string
 	Parameter    string
+	Id           string
 	Result       chan interface{}
 	RustFileName string
 	RustDir      string
@@ -58,6 +59,13 @@ func NewPlugin() *Plugin {
 	}
 }
 
+func (p *Plugin) SetId(id string) {
+	p.Id = id
+}
+
+func (p *Plugin) GetId() string {
+	return p.Id
+}
 func (p *Plugin) SetResult(ch chan interface{}) {
 	p.Result = ch
 }
@@ -235,5 +243,6 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		Module:       p.Module,
 		RustDir:      p.RustDir,
 		RustFileName: p.RustFileName,
+		Id:           p.Id,
 	}
 }

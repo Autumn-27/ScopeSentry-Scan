@@ -26,6 +26,7 @@ type Plugin struct {
 	Name      string
 	Module    string
 	Parameter string
+	Id        string
 	Result    chan interface{}
 }
 
@@ -34,6 +35,14 @@ func NewPlugin() *Plugin {
 		Name:   "Katana",
 		Module: "URLScan",
 	}
+}
+
+func (p *Plugin) SetId(id string) {
+	p.Id = id
+}
+
+func (p *Plugin) GetId() string {
+	return p.Id
 }
 
 func (p *Plugin) SetResult(ch chan interface{}) {
@@ -152,5 +161,6 @@ func (p *Plugin) Clone() interfaces.Plugin {
 	return &Plugin{
 		Name:   p.Name,
 		Module: p.Module,
+		Id:     p.Id,
 	}
 }

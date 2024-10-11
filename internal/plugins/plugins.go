@@ -98,6 +98,8 @@ func (pm *PluginManager) InitializePlugins() error {
 	webFingerprintmodule := webfingerprint.NewPlugin()
 	pm.RegisterPlugin(webFingerprintmodule.Module, webFingerprintmodule.Name, webFingerprintmodule)
 
+	// katana
+
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

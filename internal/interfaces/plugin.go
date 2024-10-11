@@ -12,6 +12,8 @@ type Plugin interface {
 	SetName(name string)
 	GetModule() string
 	SetModule(name string)
+	GetId() string
+	SetId(id string)
 	SetResult(ch chan interface{})
 	SetParameter(args string)
 	GetParameter() string
