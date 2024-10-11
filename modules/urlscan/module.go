@@ -57,6 +57,8 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
+				// 这里的输入为urlresult或者是urllist
+				// 原始的types.AssetOther 、 types.AssetHttp 在读取input的时候已经发送到下个模块了
 				fmt.Printf("%v\n", result)
 			}
 		}
