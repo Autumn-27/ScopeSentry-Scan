@@ -118,6 +118,11 @@ func main() {
 		WebCrawler:          []string{"test"},
 		VulnerabilityScan:   []string{"nuclei"},
 		SubdomainFilename:   "66dda6ee3687eb004e6b3bda",
+		Parameters: map[string]map[string]string{
+			"SubdomainScan": {
+				"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
+			},
+		},
 	}
 	jsonStr, err := utils.Tools.StructToJSON(taskE)
 	if err != nil {

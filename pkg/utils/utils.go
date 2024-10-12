@@ -224,12 +224,12 @@ func (t *UtilTools) DeleteFile(filePath string) {
 }
 
 // GetParameter 获取指定模块指定插件的参数
-func (t *UtilTools) GetParameter(Parameters map[string]map[string]interface{}, module string, plugin string) (string, bool) {
+func (t *UtilTools) GetParameter(Parameters map[string]map[string]string, module string, plugin string) (string, bool) {
 	// 查找 module 是否存在
 	if plugins, modOk := Parameters[module]; modOk {
 		// 查找 plugin 是否存在
 		if param, plugOk := plugins[plugin]; plugOk {
-			return param.(string), true
+			return param, true
 		}
 	}
 	// 没有找到对应的参数，返回 false

@@ -61,7 +61,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				r.NextModule.GetInput() <- result
 				if assetResult, ok := result.(types.AssetOther); ok {
-					assetResult.TaskId = r.Option.ID
+					assetResult.TaskName = r.Option.TaskName
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
@@ -89,7 +89,7 @@ func (r *Runner) ModuleRun() error {
 				} else {
 					assetHttpResult, okh := result.(types.AssetHttp)
 					if okh {
-						assetHttpResult.TaskId = r.Option.ID
+						assetHttpResult.TaskName = r.Option.TaskName
 						flag, id, bsonData := results.Duplicate.AssetInMongodb(assetHttpResult.Host, assetHttpResult.Port)
 						if flag {
 							var oldAssetHttp types.AssetHttp

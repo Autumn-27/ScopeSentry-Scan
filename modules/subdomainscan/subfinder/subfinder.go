@@ -27,23 +27,31 @@ type Plugin struct {
 	Name      string
 	Module    string
 	Parameter string
-	Id        string
+	PluginId  string
 	Result    chan interface{}
+	Custom    interface{}
 }
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name:   "subfinder",
-		Module: "SubdomainScan",
+		Name:     "subfinder",
+		Module:   "SubdomainScan",
+		PluginId: "d60ba73c70aac430a0a54e796e7e19b8",
 	}
 }
-
-func (p *Plugin) SetId(id string) {
-	p.Id = id
+func (p *Plugin) SetCustom(cu interface{}) {
+	p.Custom = cu
 }
 
-func (p *Plugin) GetId() string {
-	return p.Id
+func (p *Plugin) GetCustom() interface{} {
+	return p.Custom
+}
+func (p *Plugin) SetPluginId(id string) {
+	p.PluginId = id
+}
+
+func (p *Plugin) GetPluginId() string {
+	return p.PluginId
 }
 
 func (p *Plugin) SetResult(ch chan interface{}) {
@@ -160,8 +168,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 
 func (p *Plugin) Clone() interfaces.Plugin {
 	return &Plugin{
-		Name:   p.Name,
-		Module: p.Module,
-		Id:     p.Id,
+		Name:     p.Name,
+		Module:   p.Module,
+		PluginId: p.PluginId,
+		Custom:   p.Custom,
 	}
 }

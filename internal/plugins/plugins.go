@@ -19,6 +19,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainscan/subfinder"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity/subdomaintakeover"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
 	"sync"
 )
 
@@ -99,7 +100,8 @@ func (pm *PluginManager) InitializePlugins() error {
 	pm.RegisterPlugin(webFingerprintmodule.Module, webFingerprintmodule.Name, webFingerprintmodule)
 
 	// katana
-
+	katanaModule := katana.NewPlugin()
+	pm.RegisterPlugin(katanaModule.Module, katanaModule.Name, katanaModule)
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

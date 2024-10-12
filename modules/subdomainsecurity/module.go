@@ -62,7 +62,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				if subdomainTakeoverResult, ok := result.(types.SubTakeResult); ok {
 					// 子域名接管检测结果，无需发送到下个模块
-					subdomainTakeoverResult.TaskId = r.Option.ID
+					subdomainTakeoverResult.TaskName = r.Option.TaskName
 					go results.Handler.SubdomainTakeover(&subdomainTakeoverResult)
 					logger.SlogInfoLocal(fmt.Sprintf("Find subdomain takeover: %v - %v", subdomainTakeoverResult.Input, subdomainTakeoverResult.Value))
 				} else {

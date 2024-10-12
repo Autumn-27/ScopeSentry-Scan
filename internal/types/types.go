@@ -20,7 +20,7 @@ type SubdomainResult struct {
 	IP         []string
 	Time       string
 	Project    string
-	TaskId     string `bson:"taskId"`
+	TaskName   string `bson:"taskName"`
 	RootDomain string `bson:"rootDomain"`
 }
 
@@ -51,7 +51,7 @@ type AssetHttp struct {
 	WebFinger     []string               `bson:"web_finger" csv:"web_finger"`
 	IconContent   string                 `bson:"iconContent"`
 	Domain        string                 `bson:"domain"`
-	TaskId        string                 `bson:"taskId"`
+	TaskName      string                 `bson:"taskName"`
 	WebServer     string                 `bson:"webServer"`
 	Service       string                 `bson:"service"`
 	RootDomain    string                 `bson:"rootDomain"`
@@ -79,7 +79,7 @@ type AssetOther struct {
 	Raw          json.RawMessage `bson:"metadata"`
 	Project      string          `bson:"project"`
 	Type         string
-	TaskId       string `bson:"taskId"`
+	TaskName     string `bson:"taskName"`
 	RootDomain   string `bson:"rootDomain"`
 }
 
@@ -105,7 +105,7 @@ type UrlResult struct {
 	Time       string `json:"time"`
 	Body       string `bson:"body"`
 	Project    string
-	TaskId     string `bson:"taskId"`
+	TaskName   string `bson:"taskName"`
 }
 
 type SecretResults struct {
@@ -116,11 +116,11 @@ type SecretResults struct {
 }
 
 type CrawlerResult struct {
-	Url     string
-	Method  string
-	Body    string
-	Project string
-	TaskId  string `bson:"taskId"`
+	Url      string
+	Method   string
+	Body     string
+	Project  string
+	TaskName string `bson:"taskName"`
 }
 
 type PortDict struct {
@@ -140,17 +140,17 @@ type SubTakeResult struct {
 	Cname      string
 	Response   string
 	Project    string
-	TaskId     string `bson:"taskId"`
+	TaskName   string `bson:"taskName"`
 	RootDomain string
 }
 
 type DirResult struct {
-	Url     string
-	Status  int
-	Msg     string
-	Project string
-	Length  int
-	TaskId  string `bson:"taskId"`
+	Url      string
+	Status   int
+	Msg      string
+	Project  string
+	Length   int
+	TaskName string `bson:"taskName"`
 }
 
 type SensitiveRule struct {
@@ -162,15 +162,15 @@ type SensitiveRule struct {
 }
 
 type SensitiveResult struct {
-	Url     string
-	SID     string
-	Match   []string
-	Project string
-	Body    string
-	Color   string
-	Time    string
-	Md5     string
-	TaskId  string `bson:"taskId"`
+	Url      string
+	SID      string
+	Match    []string
+	Project  string
+	Body     string
+	Color    string
+	Time     string
+	Md5      string
+	TaskName string `bson:"taskName"`
 }
 
 type VulnResult struct {
@@ -183,23 +183,23 @@ type VulnResult struct {
 	Time     string
 	Request  string
 	Response string
-	TaskId   string `bson:"taskId"`
+	TaskName string `bson:"taskName"`
 }
 type TmpPageMonitResult struct {
-	Url     string
-	Content string
-	TaskId  string `bson:"taskId"`
+	Url      string
+	Content  string
+	TaskName string `bson:"taskName"`
 }
 type PageMonitResult struct {
-	ID      primitive.ObjectID `bson:"_id"`
-	Url     string             `bson:"url"`
-	Content []string           `bson:"content"`
-	Hash    []string           `bson:"hash"`
-	Diff    []string           `bson:"diff"`
-	State   int                `bson:"state"`
-	Project string             `bson:"project"`
-	Time    string             `bson:"time"`
-	TaskId  string             `bson:"taskId"`
+	ID       primitive.ObjectID `bson:"_id"`
+	Url      string             `bson:"url"`
+	Content  []string           `bson:"content"`
+	Hash     []string           `bson:"hash"`
+	Diff     []string           `bson:"diff"`
+	State    int                `bson:"state"`
+	Project  string             `bson:"project"`
+	Time     string             `bson:"time"`
+	TaskName string             `bson:"taskName"`
 }
 type WebFinger struct {
 	ID      string

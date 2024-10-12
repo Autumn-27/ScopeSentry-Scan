@@ -26,23 +26,31 @@ type Plugin struct {
 	Name      string
 	Module    string
 	Parameter string
-	Id        string
+	PluginId  string
 	Result    chan interface{}
+	Custom    interface{}
 }
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name:   "ksubdomain",
-		Module: "SubdomainScan",
+		Name:     "ksubdomain",
+		Module:   "SubdomainScan",
+		PluginId: "e8f55f5e0e9f4af1ca40eb19048b8c82",
 	}
 }
-
-func (p *Plugin) SetId(id string) {
-	p.Id = id
+func (p *Plugin) SetCustom(cu interface{}) {
+	p.Custom = cu
 }
 
-func (p *Plugin) GetId() string {
-	return p.Id
+func (p *Plugin) GetCustom() interface{} {
+	return p.Custom
+}
+func (p *Plugin) SetPluginId(id string) {
+	p.PluginId = id
+}
+
+func (p *Plugin) GetPluginId() string {
+	return p.PluginId
 }
 
 func (p *Plugin) SetResult(ch chan interface{}) {
@@ -96,8 +104,7 @@ func (p *Plugin) Install() error {
 		dir = "darwin"
 		path = "ksubdomain"
 	}
-	KsubdomainPath := filepath.Join(global.ExtDir, "ksubdomain")
-	KsubdomainExecPath := filepath.Join(KsubdomainPath, path)
+	KsubdomainExecPath := filepath.Join(ksubdomainPath, path)
 	if _, err := os.Stat(KsubdomainExecPath); os.IsNotExist(err) {
 		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", dir, path), KsubdomainExecPath)
 		if err != nil {
@@ -258,8 +265,9 @@ func isIPInWildcard(ipList []string, wildcardDNSRecords []string) bool {
 
 func (p *Plugin) Clone() interfaces.Plugin {
 	return &Plugin{
-		Name:   p.Name,
-		Module: p.Module,
-		Id:     p.Id,
+		Name:     p.Name,
+		Module:   p.Module,
+		PluginId: p.PluginId,
+		Custom:   p.Custom,
 	}
 }

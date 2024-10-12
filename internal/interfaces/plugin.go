@@ -12,8 +12,10 @@ type Plugin interface {
 	SetName(name string)
 	GetModule() string
 	SetModule(name string)
-	GetId() string
-	SetId(id string)
+	GetPluginId() string
+	SetPluginId(id string)
+	SetCustom(cu interface{})
+	GetCustom() interface{}
 	SetResult(ch chan interface{})
 	SetParameter(args string)
 	GetParameter() string

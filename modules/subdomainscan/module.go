@@ -61,7 +61,7 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
-					subdomainResult.TaskId = r.Option.ID
+					subdomainResult.TaskName = r.Option.TaskName
 					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &subdomainResult.Host)
 					if flag {
 						if r.Option.IgnoreOldSubdomains {
@@ -99,7 +99,7 @@ func (r *Runner) ModuleRun() error {
 							resultDns := utils.DNS.QueryOne(result.(string))
 							tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
 							if len(tmp.IP) != 0 || len(tmp.Value) != 0 {
-								tmp.TaskId = r.Option.ID
+								tmp.TaskName = r.Option.TaskName
 								go results.Handler.Subdomain(&tmp)
 								r.NextModule.GetInput() <- tmp
 							}
@@ -160,11 +160,11 @@ func (r *Runner) ModuleRun() error {
 							} else {
 								plg.SetParameter("")
 							}
-							if r.Option.SubdomainFilename != "" {
-								// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
-								newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
-								plg.SetParameter(newParameter)
-							}
+							//if r.Option.SubdomainFilename != "" {
+							//	// 如果设置有子域名字典，设置parameter参数供插件调用，ksubdomain必须有域名字典
+							//	newParameter := plg.GetParameter() + " -subfile " + r.Option.SubdomainFilename
+							//	plg.SetParameter(newParameter)
+							//}
 							plg.SetResult(resultChan)
 							pluginFunc := func(data interface{}) func() {
 								return func() {
