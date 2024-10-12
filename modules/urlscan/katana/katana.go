@@ -8,14 +8,17 @@
 package katana
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 type Plugin struct {
@@ -36,14 +39,14 @@ func NewPlugin() *Plugin {
 	var dir string
 	switch osType {
 	case "windows":
-		path = "rustscan.exe"
+		path = "katana.exe"
 		dir = "win"
 	case "linux":
-		path = "rustscan"
+		path = "katana"
 		dir = "linux"
 	default:
 		dir = "darwin"
-		path = "rustscan"
+		path = "katana"
 	}
 	return &Plugin{
 		Name:           "katana",
@@ -90,34 +93,34 @@ func (p *Plugin) GetModule() string {
 }
 
 func (p *Plugin) Install() error {
-	rustscanPath := filepath.Join(global.ExtDir, "rustscan")
-	if err := os.MkdirAll(rustscanPath, os.ModePerm); err != nil {
-		logger.SlogError(fmt.Sprintf("Failed to create rustscan folder:", err))
+	katanaPath := filepath.Join(global.ExtDir, "katana")
+	if err := os.MkdirAll(katanaPath, os.ModePerm); err != nil {
+		logger.SlogError(fmt.Sprintf("Failed to create katana folder:", err))
 		return err
 	}
-	targetPath := filepath.Join(rustscanPath, "target")
+	targetPath := filepath.Join(katanaPath, "target")
 	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create targetPath folder:", err))
 		return err
 	}
-	resultPath := filepath.Join(rustscanPath, "result")
+	resultPath := filepath.Join(katanaPath, "result")
 	if err := os.MkdirAll(resultPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create resultPath folder:", err))
 		return err
 	}
-	RustscanExecPath := filepath.Join(rustscanPath, p.KatanaFileName)
-	if _, err := os.Stat(RustscanExecPath); os.IsNotExist(err) {
-		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", p.KatanaDir, p.KatanaFileName), RustscanExecPath)
+	KatanaExecPath := filepath.Join(katanaPath, p.KatanaFileName)
+	if _, err := os.Stat(KatanaExecPath); os.IsNotExist(err) {
+		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/refs/heads/1.5-restructure/tools", p.KatanaDir, p.KatanaFileName), KatanaExecPath)
 		if err != nil {
-			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", p.KatanaDir, p.KatanaFileName), RustscanExecPath)
+			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", p.KatanaDir, p.KatanaFileName), KatanaExecPath)
 			if err != nil {
 				return err
 			}
 		}
 		if p.OsType == "linux" {
-			err = os.Chmod(RustscanExecPath, 0755)
+			err = os.Chmod(KatanaExecPath, 0755)
 			if err != nil {
-				logger.SlogError(fmt.Sprintf("Chmod rustscan Tool Fail: %s", err))
+				logger.SlogError(fmt.Sprintf("Chmod katana Tool Fail: %s", err))
 				return err
 			}
 		}
@@ -138,7 +141,51 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
+	data, ok := input.(types.AssetHttp)
+	if !ok {
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
+		return nil, errors.New("input is not a string")
+	}
+	parameter := p.GetParameter()
+	threads := "10"
+	timeout := "5"
+	maxDepth := "5"
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				switch key {
+				case "t":
+					threads = value
+				case "timeout":
+					timeout = value
+				case "depth":
+					maxDepth = value
+				default:
+					continue
+				}
+			}
+		}
+	}
 
+	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
+	resultFile := filepath.Join(filepath.Join(p.KatanaDir, "result"), utils.Tools.GenerateRandomString(16))
+	defer utils.Tools.DeleteFile(resultFile)
+	args := []string{
+		"-u", data.URL,
+		"-depth", maxDepth,
+		"-fs", "rdn", "-js-crawl", "-jsonl",
+		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf,css",
+		"-kf", "all", "-timeout", timeout,
+		"-c", threads,
+		"-p", "10",
+		"-o", resultFile,
+	}
+	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, 1*time.Hour)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
+	}
 	return nil, nil
 }
 

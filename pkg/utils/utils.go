@@ -216,10 +216,17 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 
 // DeleteFile 删除指定文件
 func (t *UtilTools) DeleteFile(filePath string) {
-	// 调用Remove函数删除文件
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return
+	} else if err != nil {
+		return
+	}
+
+	// 文件存在，进行删除
 	err := os.Remove(filePath)
 	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("Failed to DeleteFile: %s - %s", filePath, err))
+		return
 	}
 }
 

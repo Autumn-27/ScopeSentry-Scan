@@ -63,7 +63,6 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/praetorian-inc/fingerprintx v1.1.9
 	github.com/projectdiscovery/dnsx v1.1.6
-	github.com/projectdiscovery/katana v1.1.0
 	github.com/projectdiscovery/nuclei/v3 v3.2.4
 	github.com/projectdiscovery/retryabledns v1.0.58
 	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000
@@ -90,7 +89,6 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.1.0 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.0.0 // indirect
-	github.com/BishopFox/jsluice v0.0.0-20240110145140-0ddfab153e06 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
@@ -250,7 +248,6 @@ require (
 	github.com/lor00x/goldap v0.0.0-20180618054307-a546dffdd1a3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/lukasbob/srcset v0.0.0-20190730101422-86b742e617f3 // indirect
 	github.com/mackerelio/go-osstat v0.2.4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -320,7 +317,6 @@ require (
 	github.com/seh-msft/burpxml v1.0.1 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
-	github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
