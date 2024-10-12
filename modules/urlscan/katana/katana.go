@@ -170,8 +170,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 
 	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
-	resultFile := filepath.Join(filepath.Join(p.KatanaDir, "result"), utils.Tools.GenerateRandomString(16))
-	defer utils.Tools.DeleteFile(resultFile)
+	resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
+	//defer utils.Tools.DeleteFile(resultFile)
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
@@ -182,6 +182,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-p", "10",
 		"-o", resultFile,
 	}
+	fmt.Printf("%v %v", cmd, args)
 	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, 1*time.Hour)
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
