@@ -252,11 +252,10 @@ func (t *UtilTools) GetParameter(Parameters map[string]map[string]string, module
 func (t *UtilTools) GetRootDomain(input string) (string, error) {
 	input = strings.TrimLeft(input, "http://")
 	input = strings.TrimLeft(input, "https://")
-	input = strings.TrimLeft(input, "//")
-	input = strings.TrimLeft(input, "/")
+	input = strings.Trim(input, "/")
 	ip := net.ParseIP(input)
 	if ip != nil {
-		return input, nil
+		return string(ip), nil
 	}
 	input = "https://" + input
 
@@ -560,13 +559,18 @@ func (t *UtilTools) EnsureFilePathExists(filePath string) error {
 
 // ReadFileLineByLine 函数逐行读取文件，并将每一行发送到通道中
 func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) error {
+	defer close(lineChan)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
 	// 打开文件
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close() // 函数结束时关闭文件
-	defer close(lineChan)
 	// 使用 bufio.Scanner 逐行读取文件
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -582,13 +586,20 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 
 // ReadFileLineReader 逐行读取文件，Reader不限制行大小
 func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string) error {
+
+	defer close(lineChan)
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
 	// 打开文件
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close() // 确保文件关闭
-	defer close(lineChan)
 	// 创建一个新的 reader
 	reader := bufio.NewReader(file)
 

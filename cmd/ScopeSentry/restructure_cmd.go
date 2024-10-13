@@ -115,7 +115,7 @@ func main() {
 		AssetHandle:         []string{"WebFingerprint"},
 		URLScan:             []string{"katana"},
 		URLSecurity:         []string{"test"},
-		WebCrawler:          []string{"test"},
+		WebCrawler:          []string{"rad"},
 		VulnerabilityScan:   []string{"nuclei"},
 		SubdomainFilename:   "66dda6ee3687eb004e6b3bda",
 		Parameters: map[string]map[string]string{

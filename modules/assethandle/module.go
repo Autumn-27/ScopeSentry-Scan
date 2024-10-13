@@ -20,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"sync"
+	"time"
 )
 
 type Runner struct {
@@ -121,6 +122,8 @@ func (r *Runner) ModuleRun() error {
 
 	var firstData bool
 	firstData = false
+	var start time.Time
+	var end time.Time
 	for {
 		//
 		select {
@@ -129,7 +132,9 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle))
+					end = time.Now()
+					duration := end.Sub(start)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -137,6 +142,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
+				start = time.Now()
 				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle))
 				firstData = true
 			}

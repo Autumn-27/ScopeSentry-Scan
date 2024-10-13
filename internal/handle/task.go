@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
+	"time"
 )
 
 type Handle struct {
@@ -70,11 +71,11 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 	}
 }
 
-func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int) {
+func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int, time time.Duration) {
 	if flag == 0 {
 		return
 	}
-	logger.SlogInfoLocal(fmt.Sprintf("%v module end scanning the target: %v", typ, target))
+	logger.SlogInfoLocal(fmt.Sprintf("%v module end scanning the target: %v running time: %v", typ, target, time))
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_end"
 	ProgressInfo := map[string]interface{}{

@@ -152,3 +152,15 @@ func (h *handler) URL(result *types.UrlResult) {
 	interfaceSlice = &resultCopy
 	ResultQueues["URLScan"].Queue <- interfaceSlice
 }
+
+func (h *handler) Crawler(result *types.CrawlerResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	ResultQueues["WebCrawler"].Queue <- interfaceSlice
+}

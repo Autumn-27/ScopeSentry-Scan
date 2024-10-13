@@ -20,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity/subdomaintakeover"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
 	"sync"
 )
 
@@ -102,6 +103,10 @@ func (pm *PluginManager) InitializePlugins() error {
 	// katana
 	katanaModule := katana.NewPlugin()
 	pm.RegisterPlugin(katanaModule.Module, katanaModule.Name, katanaModule)
+
+	// rad
+	radModule := rad.NewPlugin()
+	pm.RegisterPlugin(radModule.Module, radModule.Name, radModule)
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
+	"time"
 )
 
 type Runner struct {
@@ -79,6 +80,8 @@ func (r *Runner) ModuleRun() error {
 	}()
 	var firstData bool
 	firstData = false
+	var start time.Time
+	var end time.Time
 	for {
 		select {
 		case data, ok := <-r.Input:
@@ -87,7 +90,9 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				close(resultChan)
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+					end = time.Now()
+					duration := end.Sub(start)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle), duration)
 				}
 				r.Option.ModuleRunWg.Done()
 				// 等待结果处理完毕
@@ -95,6 +100,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			if !firstData {
+				start = time.Now()
 				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
 				firstData = true
 			}

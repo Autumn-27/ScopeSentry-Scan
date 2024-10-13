@@ -14,9 +14,12 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
+	"time"
 )
 
 type Runner struct {
@@ -56,13 +59,22 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				r.NextModule.GetInput() <- result
+				// 这里接收的是types.CrawlerResult
+				if crawlerResult, ok := result.(types.CrawlerResult); ok {
+					crawlerResult.TaskName = r.Option.TaskName
+					hash := utils.Tools.GenerateHash()
+					crawlerResult.ResultId = hash
+					go results.Handler.Crawler(&crawlerResult)
+					r.NextModule.GetInput() <- crawlerResult
+				}
 			}
 		}
 	}()
 
 	var firstData bool
 	firstData = false
+	var start time.Time
+	var end time.Time
 	for {
 
 		select {
@@ -71,7 +83,9 @@ func (r *Runner) ModuleRun() error {
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.WebCrawler))
+					end = time.Now()
+					duration := end.Sub(start)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -85,6 +99,7 @@ func (r *Runner) ModuleRun() error {
 				continue
 			}
 			if !firstData {
+				start = time.Now()
 				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.WebCrawler))
 				firstData = true
 			}

@@ -120,11 +120,13 @@ type SecretResults struct {
 }
 
 type CrawlerResult struct {
-	Url      string
-	Method   string
-	Body     string
-	Project  string
-	TaskName string `bson:"taskName"`
+	Url        string
+	Method     string
+	Body       string
+	Project    string
+	TaskName   string `bson:"taskName"`
+	ResultId   string
+	RootDomain string
 }
 
 type PortDict struct {
