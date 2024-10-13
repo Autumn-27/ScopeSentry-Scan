@@ -17,6 +17,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -133,6 +134,13 @@ func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson
 	}
 }
 
-func (d *duplicate) URL(key string) bool {
+func (d *duplicate) URL(url *string, taskId *string) bool {
+	urlMd5 := utils.Tools.CalculateMD5(*url)
+	key := "duplicates:" + *taskId + ":url:" + urlMd5
+	return d.DuplicateLocalCache(key)
+}
+
+func (d *duplicate) Crawler(value *string, taskId *string) bool {
+	key := "duplicates:" + *taskId + ":crawler:" + *value
 	return d.DuplicateLocalCache(key)
 }

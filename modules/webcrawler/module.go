@@ -56,7 +56,7 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				fmt.Println(result)
+				r.NextModule.GetInput() <- result
 			}
 		}
 	}()

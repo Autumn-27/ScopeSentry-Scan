@@ -8,14 +8,23 @@
 package rad
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Plugin struct {
@@ -29,6 +38,12 @@ type Plugin struct {
 	OsType      string
 	RadDir      string
 	TaskId      string
+}
+
+type Request struct {
+	Method  string `json:"Method"`
+	URL     string `json:"URL"`
+	B64Body string `json:"b64_body,omitempty"`
 }
 
 func NewPlugin() *Plugin {
@@ -155,7 +170,102 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
+	data, ok := input.([]string)
+	if !ok {
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
+		return nil, errors.New("input is not a string")
+	}
+	timeRandom := utils.Tools.GetTimeNow()
+	strRandom := util.GenerateRandomString(8)
+	targetFileName := util.CalculateMD5(timeRandom + strRandom)
+	targetPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "target", targetFileName)
+	resultPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "result", targetFileName)
+	radConfigPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "rad_config.yml")
+	executionTimeout := 60
+	parameter := p.GetParameter()
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "et")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				switch key {
+				case "et":
+					executionTimeout, _ = strconv.Atoi(value)
+				default:
+					continue
+				}
+			}
+		}
+	}
+	start := time.Now()
+	args := []string{"--url-file", targetPath, "--json", resultPath, "--config", radConfigPath}
+	err := utils.Tools.ExecuteCommandWithTimeout(filepath.Join(filepath.Join(global.ExtDir, "rad"), p.RadFileName), args, time.Duration(executionTimeout)*time.Minute)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
+	}
+	resultChan := make(chan string, 20)
 
+	go func() {
+		err = utils.Tools.ReadFileLineReader(resultPath, resultChan)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("%v", err))
+		}
+	}()
+	var resultNumber int
+	for result := range resultChan {
+		if result == "[" || result == "]" {
+			continue
+		}
+		result = strings.TrimRight(result, ",")
+		var req Request
+		err := json.Unmarshal([]byte(result), &req)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("解析 JSON 错误: %s", err))
+			continue
+		}
+		body := ""
+		if req.B64Body != "" {
+			decodedBytes, err := base64.StdEncoding.DecodeString(req.B64Body)
+			if err != nil {
+				fmt.Println(err)
+			}
+			body = string(decodedBytes)
+		}
+		key := ""
+		if req.Method == "GET" {
+			key = req.URL
+		} else {
+			if body != "" {
+				bodyKeyV := strings.Split(body, "&")
+				for _, part := range bodyKeyV {
+					bodyKey := strings.Split(part, "=")
+					if len(bodyKey) > 1 {
+						key += bodyKey[0]
+					}
+				}
+			}
+		}
+		if key == "" {
+			key = req.URL
+		}
+		if key != "" {
+			taskId := p.GetTaskId()
+			dFlag := results.Duplicate.Crawler(&key, &taskId)
+			if !dFlag {
+				continue
+			}
+		}
+		resultNumber += 1
+		crawlerResult := types.CrawlerResult{
+			Url:    req.URL,
+			Method: req.Method,
+			Body:   body,
+		}
+		p.Result <- crawlerResult
+	}
+	end := time.Now()
+	duration := end.Sub(start)
+	p.Log(fmt.Sprintf("target file %v target number %v get result %v time %vs", targetFileName, len(data), resultNumber, duration))
 	return nil, nil
 }
 

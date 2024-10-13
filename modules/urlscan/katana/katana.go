@@ -216,7 +216,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	go func() {
 		err = utils.Tools.ReadFileLineReader(resultFile, resultChan)
 		if err != nil {
-			logger.SlogInfoLocal(fmt.Sprintf("%v", err))
+			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
 		}
 	}()
 	var katanaResult types.KatanaResult

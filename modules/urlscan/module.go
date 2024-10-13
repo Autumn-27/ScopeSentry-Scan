@@ -61,8 +61,7 @@ func (r *Runner) ModuleRun() error {
 				// 这里的输入为types.UrlResult，将types.UrlResult处理一下存入数据库并发送到下个模块
 				// 原始的types.AssetOther 、 types.AssetHttp 在读取input的时候已经发送到下个模块了
 				if urlResult, ok := result.(types.UrlResult); ok {
-					urlMd5 := utils.Tools.CalculateMD5(urlResult.Output)
-					flag := results.Duplicate.URL(urlMd5)
+					flag := results.Duplicate.URL(&urlResult.Output, &r.Option.ID)
 					if flag {
 						// 没有重复
 						urlResult.TaskName = r.Option.TaskName
