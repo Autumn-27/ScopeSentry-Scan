@@ -8,9 +8,11 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sync"
+	"time"
 )
 
 type SubdomainResult struct {
@@ -106,6 +108,8 @@ type UrlResult struct {
 	Body       string `bson:"body"`
 	Project    string
 	TaskName   string `bson:"taskName"`
+	ResultId   string
+	RootDomain string
 }
 
 type SecretResults struct {
@@ -263,4 +267,12 @@ type DomainSkip struct {
 type DomainResolve struct {
 	Domain string
 	IP     []string
+}
+
+type KatanaResult struct {
+	Timestamp        time.Time
+	Request          *navigation.Request
+	Response         *navigation.Response
+	PassiveReference *navigation.PassiveReference
+	Error            string
 }

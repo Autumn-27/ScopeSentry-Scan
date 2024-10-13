@@ -63,6 +63,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/praetorian-inc/fingerprintx v1.1.9
 	github.com/projectdiscovery/dnsx v1.1.6
+	github.com/projectdiscovery/katana v1.1.0
 	github.com/projectdiscovery/nuclei/v3 v3.2.4
 	github.com/projectdiscovery/retryabledns v1.0.58
 	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000

@@ -96,6 +96,11 @@ func (t *UtilTools) GenerateRandomString(length int) string {
 	}
 	return string(result)
 }
+func (t *UtilTools) GenerateHash() string {
+	randdomS := t.GenerateRandomString(16)
+	hash := t.CalculateMD5(randdomS + "ScopeSnetryHash")
+	return hash
+}
 
 // GetSystemUsage 获取系统使用率
 func (t *UtilTools) GetSystemUsage() (int, float64) {
@@ -561,7 +566,7 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 		return err
 	}
 	defer file.Close() // 函数结束时关闭文件
-
+	defer close(lineChan)
 	// 使用 bufio.Scanner 逐行读取文件
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -572,8 +577,33 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 	if err := scanner.Err(); err != nil {
 		return err
 	}
+	return nil
+}
 
-	close(lineChan) // 读取完毕后关闭通道
+// ReadFileLineReader 逐行读取文件，Reader不限制行大小
+func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string) error {
+	// 打开文件
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close() // 确保文件关闭
+	defer close(lineChan)
+	// 创建一个新的 reader
+	reader := bufio.NewReader(file)
+
+	// 循环读取文件内容
+	for {
+		line, err := reader.ReadString('\n') // 读取一行
+		if err != nil {
+			if err.Error() == "EOF" {
+				break // 读取到文件末尾，结束读取
+			}
+			return err
+		}
+		lineChan <- line
+	}
+
 	return nil
 }
 

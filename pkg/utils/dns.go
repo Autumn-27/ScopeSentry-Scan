@@ -150,7 +150,6 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout
 	err = Tools.ReadFileLineByLine(resultPath, result)
 	if err != nil {
 		result <- fmt.Sprintf("%v", err)
-		close(result)
 		return
 	}
 }

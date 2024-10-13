@@ -28,7 +28,7 @@ func SubdoaminResult(result []types.SubdomainResult, taskId string) bool {
 	for _, r := range result {
 		project := GetAssetOwner(r.Host)
 		r.Project = project
-		r.TaskId = taskId
+		r.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, r)
 		NotificationMsg += fmt.Sprintf("%v - %v\n", r.Host, r.IP)
 	}
@@ -67,14 +67,14 @@ func AssetResult(httpRestlts []types.AssetHttp, assetOthers []types.AssetOther, 
 		project := GetAssetOwner(h.URL)
 		h.Project = project
 		h.Domain = ParseUrlToDomain(h.URL)
-		h.TaskId = taskId
+		h.TaskName = taskId
 		hs := WebFingerScan(h)
 		interfaceSlice = append(interfaceSlice, hs)
 	}
 	for _, a := range assetOthers {
 		project := GetAssetOwner(a.Host)
 		a.Project = project
-		a.TaskId = taskId
+		a.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, a)
 	}
 	if len(interfaceSlice) != 0 {
@@ -101,7 +101,7 @@ func SubTakerResult(result []types.SubTakeResult, taskId string) {
 	for _, r := range result {
 		project := GetAssetOwner(r.Input)
 		r.Project = project
-		r.TaskId = taskId
+		r.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, r)
 		NotificationMsg += fmt.Sprintf("%v - %v\n resp: %v\n", r.Input, r.Cname, r.Response)
 	}
@@ -153,7 +153,7 @@ func SensitiveResult(result []types.SensitiveResult, taskId string) {
 	for _, r := range result {
 		project := GetAssetOwner(r.Url)
 		r.Project = project
-		r.TaskId = taskId
+		r.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -197,7 +197,7 @@ func UrlResult(result []types.UrlResult, taskId string, secretFlag bool) {
 		r.Length = ContentLength
 		project := GetAssetOwner(r.Input)
 		r.Project = project
-		r.TaskId = taskId
+		//r.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -222,7 +222,7 @@ func CrawlerResult(result []types.CrawlerResult, taskId string) {
 	for _, r := range result {
 		project := GetAssetOwner(r.Url)
 		r.Project = project
-		r.TaskId = taskId
+		r.TaskName = taskId
 		interfaceSlice = append(interfaceSlice, r)
 	}
 	if len(interfaceSlice) != 0 {
@@ -271,14 +271,14 @@ func VulnResult(result []types.VulnResult) {
 }
 
 type TmpPageMonitResultWithoutIdkey struct {
-	Url     string   `bson:"url"`
-	Content []string `bson:"content"`
-	Hash    []string `bson:"hash"`
-	Diff    []string `bson:"diff"`
-	State   int      `bson:"state"`
-	Project string   `bson:"project"`
-	Time    string   `bson:"time"`
-	TaskId  string   `bson:"taskId"`
+	Url      string   `bson:"url"`
+	Content  []string `bson:"content"`
+	Hash     []string `bson:"hash"`
+	Diff     []string `bson:"diff"`
+	State    int      `bson:"state"`
+	Project  string   `bson:"project"`
+	Time     string   `bson:"time"`
+	TaskName string   `bson:"taskId"`
 }
 
 func PageMonitoringInitResult(result []types.TmpPageMonitResult, taskId string) {
@@ -341,13 +341,13 @@ func PageMonitoringInitResult(result []types.TmpPageMonitResult, taskId string) 
 		} else {
 			if r.Url != "" {
 				tmpR := TmpPageMonitResultWithoutIdkey{
-					Url:     r.Url,
-					Project: GetAssetOwner(r.Url),
-					Content: []string{},
-					Hash:    []string{},
-					Diff:    []string{},
-					State:   1,
-					TaskId:  taskId,
+					Url:      r.Url,
+					Project:  GetAssetOwner(r.Url),
+					Content:  []string{},
+					Hash:     []string{},
+					Diff:     []string{},
+					State:    1,
+					TaskName: taskId,
 				}
 				interfaceSlice = append(interfaceSlice, tmpR)
 			}

@@ -8,6 +8,7 @@
 package katana
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
@@ -19,6 +20,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -65,7 +67,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -185,7 +187,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 
 	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
 	resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
-	//defer utils.Tools.DeleteFile(resultFile)
+	defer utils.Tools.DeleteFile(resultFile)
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
@@ -201,8 +203,39 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 	}
+	resultChan := make(chan string, 20)
 
-	return nil, nil
+	go func() {
+		err = utils.Tools.ReadFileLineReader(resultFile, resultChan)
+		if err != nil {
+			logger.SlogInfoLocal(fmt.Sprintf("%v", err))
+		}
+	}()
+	var katanaResult types.KatanaResult
+	var urllist []string
+	var mu sync.Mutex
+	for result := range resultChan {
+		err = json.Unmarshal([]byte(result), &katanaResult)
+		if err != nil {
+			p.Log(fmt.Sprintf("[%v]JSON解析错误:%v", result, err), "e")
+			continue
+		}
+		var r types.UrlResult
+		r.Input = data.URL
+		r.Source = katanaResult.Request.Source
+		r.Output = katanaResult.Request.URL
+		r.OutputType = katanaResult.Request.Attribute
+		r.Status = katanaResult.Response.StatusCode
+		r.Length = len(katanaResult.Response.Body)
+		r.Body = katanaResult.Response.Body
+		r.Time = utils.Tools.GetTimeNow()
+		mu.Lock()
+		urllist = append(urllist, katanaResult.Request.URL)
+		mu.Unlock()
+		p.Result <- r
+	}
+	p.Log(fmt.Sprintf("%v found url: %v", data.URL, len(urllist)))
+	return urllist, nil
 }
 
 //func (p *Plugin) Execute(input interface{}) (interface{}, error) {

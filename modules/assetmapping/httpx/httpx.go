@@ -90,7 +90,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {

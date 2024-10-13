@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -57,9 +58,20 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				// 这里的输入为urlresult或者是urllist
+				// 这里的输入为types.UrlResult，将types.UrlResult处理一下存入数据库并发送到下个模块
 				// 原始的types.AssetOther 、 types.AssetHttp 在读取input的时候已经发送到下个模块了
-				fmt.Printf("%v\n", result)
+				if urlResult, ok := result.(types.UrlResult); ok {
+					urlMd5 := utils.Tools.CalculateMD5(urlResult.Output)
+					flag := results.Duplicate.URL(urlMd5)
+					if flag {
+						// 没有重复
+						urlResult.TaskName = r.Option.TaskName
+						hash := utils.Tools.GenerateHash()
+						urlResult.ResultId = hash
+						go results.Handler.URL(&urlResult)
+						r.NextModule.GetInput() <- urlResult
+					}
+				}
 			}
 		}
 	}()
@@ -97,6 +109,7 @@ func (r *Runner) ModuleRun() error {
 				defer allPluginWg.Done()
 
 				if len(r.Option.URLScan) != 0 {
+					var urlList []string
 					// 调用插件
 					for _, pluginName := range r.Option.URLScan {
 						//var plgWg sync.WaitGroup
@@ -115,8 +128,14 @@ func (r *Runner) ModuleRun() error {
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
+									urlS, err := plg.Execute(data)
+									if err == nil {
+										urls, ok := urlS.([]string)
+										if ok {
+											if len(urls) > 0 {
+												urlList = append(urlList, urls...)
+											}
+										}
 									}
 								}
 							}(data)
@@ -130,6 +149,20 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 						}
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+					}
+					if len(urlList) > 0 {
+						// 如果urlList不为空，则发送到爬虫模块，将这些url作为输入进行爬虫
+						r.NextModule.GetInput() <- urlList
+					} else {
+						// 如果为空，则将http资产的url作为数组传递到爬虫模块进行爬虫
+						if httpData, ok := data.(types.AssetHttp); ok {
+							r.NextModule.GetInput() <- []string{httpData.URL}
+						}
+					}
+				} else {
+					// 如果没有开启url扫描，则将爬虫的目标发到下个模块
+					if httpData, ok := data.(types.AssetHttp); ok {
+						r.NextModule.GetInput() <- []string{httpData.URL}
 					}
 				}
 

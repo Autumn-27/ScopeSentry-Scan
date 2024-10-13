@@ -124,3 +124,31 @@ func (h *handler) AssetHttpInsert(result *types.AssetHttp) {
 		return
 	}
 }
+
+func (h *handler) URL(result *types.UrlResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Input)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Input, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	// 创建result的副本，并将Body设置为空
+	// 创建一个新的result对象，但Body设为空
+	resultCopy := types.UrlResult{
+		Input:      result.Input,
+		Source:     result.Source,
+		OutputType: result.OutputType,
+		Output:     result.Output,
+		Status:     result.Status,
+		Length:     result.Length,
+		Time:       result.Time,
+		Project:    result.Project,
+		TaskName:   result.TaskName,
+		ResultId:   result.ResultId,
+		RootDomain: result.RootDomain,
+		Body:       "", // 设置Body为空
+	}
+	interfaceSlice = &resultCopy
+	ResultQueues["URLScan"].Queue <- interfaceSlice
+}

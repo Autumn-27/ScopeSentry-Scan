@@ -132,3 +132,7 @@ func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson
 		return true, id, result
 	}
 }
+
+func (d *duplicate) URL(key string) bool {
+	return d.DuplicateLocalCache(key)
+}

@@ -122,18 +122,26 @@ type logMessage struct {
 	Log  string `json:"log"`
 }
 
-func PluginsLog(msg string, tp string, module string, name string) {
+func PluginsLog(msg string, tp string, module string, id string) {
 	switch tp {
 	case "i":
 		SlogInfoLocal(msg)
+		msg = "[info]" + msg
 	case "e":
 		SlogErrorLocal(msg)
+		msg = "[error]" + msg
 	case "d":
 		SlogDebugLocal(msg)
+		msg = "[debug]" + msg
 	}
-
+	key := fmt.Sprintf("logs:plugins:%v:%v", module, id)
+	SendPluginLogToRedis(key, msg)
 }
 
 func SendPluginLogToRedis(key string, msg string) {
-
+	ctx := context.Background()
+	_, err := redis.RedisClient.SAdd(ctx, key, msg)
+	if err != nil {
+		SlogError(fmt.Sprintf("SendPluginLogToRedis sadd error %v", err))
+	}
 }
