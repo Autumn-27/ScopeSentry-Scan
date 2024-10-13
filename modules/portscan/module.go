@@ -88,7 +88,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetHandle), duration)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScan), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
