@@ -34,6 +34,7 @@ type Plugin struct {
 	KatanaFileName string
 	OsType         string
 	KatanaDir      string
+	TaskId         string
 }
 
 func NewPlugin() *Plugin {
@@ -59,6 +60,13 @@ func NewPlugin() *Plugin {
 		KatanaDir:      dir,
 		OsType:         osType,
 	}
+}
+func (p *Plugin) SetTaskId(id string) {
+	p.TaskId = id
+}
+
+func (p *Plugin) GetTaskId() string {
+	return p.TaskId
 }
 func (p Plugin) Log(msg string, tp ...string) {
 	var logTp string
@@ -323,5 +331,6 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		KatanaFileName: p.KatanaFileName,
 		KatanaDir:      p.KatanaDir,
 		OsType:         p.OsType,
+		TaskId:         p.TaskId,
 	}
 }

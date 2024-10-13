@@ -33,6 +33,7 @@ type Plugin struct {
 	RustDir      string
 	OsType       string
 	Custom       interface{}
+	TaskId       string
 }
 
 func NewPlugin() *Plugin {
@@ -59,6 +60,14 @@ func NewPlugin() *Plugin {
 		OsType:       osType,
 		PluginId:     "66b4ddeb983387df2b7ee7726653874d",
 	}
+}
+
+func (p *Plugin) SetTaskId(id string) {
+	p.TaskId = id
+}
+
+func (p *Plugin) GetTaskId() string {
+	return p.TaskId
 }
 func (p Plugin) Log(msg string, tp ...string) {
 	var logTp string
@@ -262,5 +271,6 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		RustFileName: p.RustFileName,
 		PluginId:     p.PluginId,
 		Custom:       p.Custom,
+		TaskId:       p.TaskId,
 	}
 }

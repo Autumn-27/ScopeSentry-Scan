@@ -37,7 +37,7 @@ func Scan(urls []string, taskId string) {
 			Status: response.StatusCode,
 			Msg:    response.Redirect,
 			Length: response.ContentLength,
-			TaskId: taskId,
+			//TaskId: taskId,
 		}})
 	}
 	if len(urls) != 0 {

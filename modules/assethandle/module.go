@@ -170,6 +170,7 @@ func (r *Runner) ModuleRun() error {
 								plg.SetParameter("")
 							}
 							plg.SetResult(resultChan)
+							plg.SetTaskId(r.Option.ID)
 							var pluginFunc func()
 							if ty == "other" {
 								pluginFunc = func(data interface{}) func() {

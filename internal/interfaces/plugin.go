@@ -19,6 +19,8 @@ type Plugin interface {
 	SetResult(ch chan interface{})
 	SetParameter(args string)
 	GetParameter() string
+	SetTaskId(id string)
+	GetTaskId() string
 	Execute(input interface{}) (interface{}, error)
 	Install() error
 	Check() error

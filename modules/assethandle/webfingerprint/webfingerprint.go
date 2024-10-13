@@ -24,6 +24,7 @@ type Plugin struct {
 	PluginId  string
 	Result    chan interface{}
 	Custom    interface{}
+	TaskId    string
 }
 
 func NewPlugin() *Plugin {
@@ -32,6 +33,13 @@ func NewPlugin() *Plugin {
 		Module:   "AssetHandle",
 		PluginId: "80718cc3fcb4827d942e6300184707e2",
 	}
+}
+func (p *Plugin) SetTaskId(id string) {
+	p.TaskId = id
+}
+
+func (p *Plugin) GetTaskId() string {
+	return p.TaskId
 }
 
 func (p *Plugin) SetCustom(cu interface{}) {
@@ -246,6 +254,7 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		Module:   p.Module,
 		PluginId: p.PluginId,
 		Custom:   p.Custom,
+		TaskId:   p.TaskId,
 	}
 }
 

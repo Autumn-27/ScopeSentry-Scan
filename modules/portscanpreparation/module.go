@@ -111,6 +111,7 @@ func (r *Runner) ModuleRun() error {
 								plg.SetParameter("")
 							}
 							plg.SetResult(resultChan)
+							plg.SetTaskId(r.Option.ID)
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
