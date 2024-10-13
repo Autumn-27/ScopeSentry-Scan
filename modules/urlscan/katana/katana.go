@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -56,6 +57,15 @@ func NewPlugin() *Plugin {
 		KatanaDir:      dir,
 		OsType:         osType,
 	}
+}
+func (p Plugin) Log(msg string, tp ...string) {
+	var logTp string
+	if len(tp) > 0 {
+		logTp = tp[0] // 使用传入的参数
+	} else {
+		logTp = "i"
+	}
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -150,8 +160,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	threads := "10"
 	timeout := "5"
 	maxDepth := "5"
+	executionTimeout := 60
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth")
+		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -162,6 +173,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					timeout = value
 				case "depth":
 					maxDepth = value
+				case "et":
+					executionTimeout, _ = strconv.Atoi(value)
+
 				default:
 					continue
 				}
@@ -182,11 +196,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-p", "10",
 		"-o", resultFile,
 	}
-	fmt.Printf("%v %v", cmd, args)
-	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, 1*time.Hour)
+	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
+	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute)
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 	}
+
 	return nil, nil
 }
 

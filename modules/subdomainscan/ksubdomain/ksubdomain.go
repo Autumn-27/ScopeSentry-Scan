@@ -38,6 +38,15 @@ func NewPlugin() *Plugin {
 		PluginId: "e8f55f5e0e9f4af1ca40eb19048b8c82",
 	}
 }
+func (p Plugin) Log(msg string, tp ...string) {
+	var logTp string
+	if len(tp) > 0 {
+		logTp = tp[0] // 使用传入的参数
+	} else {
+		logTp = "i"
+	}
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
+}
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
 }

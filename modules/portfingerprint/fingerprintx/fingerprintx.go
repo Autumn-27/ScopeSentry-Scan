@@ -85,6 +85,16 @@ func (p *Plugin) SetParameter(args string) {
 	p.Parameter = args
 }
 
+func (p Plugin) Log(msg string, tp ...string) {
+	var logTp string
+	if len(tp) > 0 {
+		logTp = tp[0] // 使用传入的参数
+	} else {
+		logTp = "i"
+	}
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
+}
+
 func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }

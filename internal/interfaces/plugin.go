@@ -23,4 +23,5 @@ type Plugin interface {
 	Install() error
 	Check() error
 	Clone() Plugin
+	Log(msg string, tp ...string)
 }

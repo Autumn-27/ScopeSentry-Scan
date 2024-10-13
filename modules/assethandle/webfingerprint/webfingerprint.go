@@ -8,9 +8,11 @@
 package webfingerprint
 
 import (
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"strings"
 	"sync"
 )
@@ -78,6 +80,16 @@ func (p *Plugin) Check() error {
 
 func (p *Plugin) SetParameter(args string) {
 	p.Parameter = args
+}
+
+func (p Plugin) Log(msg string, tp ...string) {
+	var logTp string
+	if len(tp) > 0 {
+		logTp = tp[0] // 使用传入的参数
+	} else {
+		logTp = "i"
+	}
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetName())
 }
 
 func (p *Plugin) GetParameter() string {

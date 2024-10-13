@@ -121,3 +121,19 @@ type logMessage struct {
 	Name string `json:"name"`
 	Log  string `json:"log"`
 }
+
+func PluginsLog(msg string, tp string, module string, name string) {
+	switch tp {
+	case "i":
+		SlogInfoLocal(msg)
+	case "e":
+		SlogErrorLocal(msg)
+	case "d":
+		SlogDebugLocal(msg)
+	}
+
+}
+
+func SendPluginLogToRedis(key string, msg string) {
+
+}
