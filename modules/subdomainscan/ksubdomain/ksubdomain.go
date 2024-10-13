@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -181,14 +182,17 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	wildcardDNSRecordsLen := len(wildcardSubdomainResults)
 	parameter := p.GetParameter()
 	var subfile string
+	executionTimeout := 60
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "subfile")
+		args, err := utils.Tools.ParseArgs(parameter, "subfile", "et")
 		if err != nil {
 		} else {
 			for key, value := range args {
 				switch key {
 				case "subfile":
 					subfile = value
+				case "et":
+					executionTimeout, _ = strconv.Atoi(value)
 				}
 			}
 		}
@@ -219,7 +223,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	rawSubdomain = append(rawSubdomain, target)
 	// 拼接完子域名之后开始运行验证子域名
 	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, time.Duration(executionTimeout)*time.Minute)
 	verificationCount := 0
 	// 读取结果
 	for result := range subdomainVerificationResult {

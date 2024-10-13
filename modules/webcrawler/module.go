@@ -115,7 +115,6 @@ func (r *Runner) ModuleRun() error {
 									defer plgWg.Done()
 									_, err := plg.Execute(data)
 									if err != nil {
-
 									}
 								}
 							}(data)

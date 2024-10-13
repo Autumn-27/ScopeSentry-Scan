@@ -62,7 +62,9 @@ func UpdateSubDomainDicConfig() {
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("UpdateSubDomainDicConfig load error: %v", err))
 		return
-	}
+	}\\
+
+
 	for id, content := range results {
 		filePath := filepath.Join(global.DictPath, "subdomain", id)
 		err = utils.Tools.EnsureFilePathExists(filePath)
