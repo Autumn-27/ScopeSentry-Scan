@@ -21,6 +21,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/url"
+	"strings"
 )
 
 type duplicate struct {
@@ -134,13 +136,30 @@ func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson
 	}
 }
 
-func (d *duplicate) URL(url *string, taskId *string) bool {
-	urlMd5 := utils.Tools.CalculateMD5(*url)
-	key := "duplicates:" + *taskId + ":url:" + urlMd5
+func (d *duplicate) URL(rawUrl *string, taskId *string) bool {
+	dupKey := d.URLParams(*rawUrl)
+	key := "duplicates:" + *taskId + ":url:" + dupKey
 	return d.DuplicateLocalCache(key)
 }
 
 func (d *duplicate) Crawler(value *string, taskId *string) bool {
 	key := "duplicates:" + *taskId + ":crawler:" + *value
 	return d.DuplicateLocalCache(key)
+}
+
+func (d *duplicate) URLParams(rawUrl string) string {
+	parsedURL, err := url.Parse(rawUrl)
+	dupKey := utils.Tools.CalculateMD5(strings.TrimLeft(strings.TrimLeft(rawUrl, "http://"), "https://"))
+	if err != nil {
+	} else {
+		queryParams := parsedURL.Query()
+		if len(queryParams) > 0 {
+			paramskey := fmt.Sprintf("%s%s", parsedURL.Host, parsedURL.Path)
+			for key, _ := range queryParams {
+				paramskey += key
+			}
+			dupKey = utils.Tools.CalculateMD5(paramskey)
+		}
+	}
+	return dupKey
 }

@@ -243,27 +243,24 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 			key := ""
 			if req.Method == "GET" {
-				key = req.URL
+				key = results.Duplicate.URLParams(req.URL)
 			} else {
+				postKey := results.Duplicate.URLParams(req.URL)
 				if body != "" {
 					bodyKeyV := strings.Split(body, "&")
 					for _, part := range bodyKeyV {
 						bodyKey := strings.Split(part, "=")
 						if len(bodyKey) > 1 {
-							key += bodyKey[0]
+							postKey += bodyKey[0]
 						}
 					}
 				}
+				key = results.Duplicate.URLParams(postKey)
 			}
-			if key == "" {
-				key = req.URL
-			}
-			if key != "" {
-				taskId := p.GetTaskId()
-				dFlag := results.Duplicate.Crawler(&key, &taskId)
-				if !dFlag {
-					continue
-				}
+			taskId := p.GetTaskId()
+			dFlag := results.Duplicate.Crawler(&key, &taskId)
+			if !dFlag {
+				continue
 			}
 			resultNumber += 1
 			crawlerResult := types.CrawlerResult{
