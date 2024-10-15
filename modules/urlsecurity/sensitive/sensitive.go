@@ -10,14 +10,13 @@ package sensitive
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback/source"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"strings"
-	"time"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"github.com/dlclark/regexp2"
 )
 
 type Plugin struct {
@@ -113,55 +112,101 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.UrlResult\n", p.Name, input))
 		return nil, errors.New("input is not types.UrlResult")
 	}
-	waybackResults := make(chan source.Result, 100)
-	go func() {
-		for result := range waybackResults {
-			// 去重
-			flag := results.Duplicate.URL(&result.URL, &p.TaskId)
-			if flag {
-				// 没有重复
-				var r types.UrlResult
-				r.Input = data.URL
-				r.Source = result.Source
-				r.Output = result.URL
-				r.OutputType = ""
-				response, err := utils.Requests.HttpGet(result.URL)
-				if err != nil {
-					r.Status = 0
-					r.Length = 0
-					r.Body = ""
-				} else {
-					r.Status = response.StatusCode
-					r.Length = len(response.Body)
-					r.Body = response.Body
+	if data.Status != 200 || data.Body == "" {
+		return nil, nil
+	}
+	if len(global.SensitiveRules) == 0 {
+		configupdater.UpdateSensitive()
+	}
+	chunkSize := 5120
+	overlapSize := 100
+	findFlag := false
+	for _, rule := range global.SensitiveRules {
+		//start := time.Now()
+		if rule.State {
+			r, err := regexp2.Compile(rule.Regular, 0)
+			if err != nil {
+				p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
+				continue
+			}
+			resultChan, errorChan := processInChunks(r, data.Body, chunkSize, overlapSize)
+			for matches := range resultChan {
+				if len(matches) != 0 {
+					var tmpResult types.SensitiveResult
+					if findFlag {
+						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: "", Time: system.GetTimeNow(), Color: rule.Color, Md5: fmt.Sprintf("md5==%v", resMd5)}
+					} else {
+						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: resp, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
+					}
+					findFlag = true
 				}
-				r.Time = utils.Tools.GetTimeNow()
-				p.Result <- r
+			}
+			if err := <-errorChan; err != nil {
+				p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
+			}
+		}
+	}
+	return nil, nil
+}
+
+func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) (chan []string, chan error) {
+	resultChan := make(chan []string, 10)
+	errorChan := make(chan error, 1)
+
+	go func() {
+		defer close(resultChan)
+		defer close(errorChan)
+		for start := 0; start < len(text); start += chunkSize {
+			end := start + chunkSize
+			if end > len(text) {
+				end = len(text)
 			}
 
+			chunkEnd := end
+			if end+overlapSize < len(text) {
+				chunkEnd = end + overlapSize
+			}
+
+			matches, err := findMatchesInChunk(regex, text[start:chunkEnd])
+			if err != nil {
+				errorChan <- err
+				return
+			}
+
+			if len(matches) > 0 {
+				resultChan <- matches
+			}
 		}
 	}()
-	start := time.Now()
-	resultNumber := 0
-	urlWithoutHTTP := strings.TrimPrefix(data.URL, "http://")
-	urlWithoutHTTPS := strings.TrimPrefix(urlWithoutHTTP, "https://")
 
-	// Waybackarchive
-	number := source.WaybackarchiveRun(urlWithoutHTTPS, waybackResults)
-	p.Log(fmt.Sprintf("Waybackarchive targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
-	resultNumber += number
-	// Alienvault
-	number = source.AlienvaultRun(data.Host, waybackResults)
-	p.Log(fmt.Sprintf("Alienvault targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
-	resultNumber += number
-	// Commoncrawl
-	number = source.CommoncrawlRun(data.Host, waybackResults)
-	resultNumber += number
-	p.Log(fmt.Sprintf("Commoncrawl targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
-	end := time.Now()
-	duration := end.Sub(start)
-	p.Log(fmt.Sprintf("target %v all waybvack number %v running time:%v", urlWithoutHTTPS, resultNumber, duration))
-	return nil, nil
+	return resultChan, errorChan
+}
+
+func findMatchesInChunk(regex *regexp2.Regexp, text string) ([]string, error) {
+	var matches []string
+	m, _ := regex.FindStringMatch(text)
+	for m != nil {
+		matches = append(matches, m.String())
+		m, _ = regex.FindNextMatch(m)
+	}
+	mc := uniqueStrings(matches)
+	return mc, nil
+}
+
+func uniqueStrings(input []string) []string {
+	// 创建一个映射来记录出现过的字符串
+	seen := make(map[string]bool)
+	var result []string
+
+	// 遍历输入的切片
+	for _, str := range input {
+		// 如果该字符串还未出现，则添加到结果切片和映射中
+		if !seen[str] {
+			seen[str] = true
+			result = append(result, str)
+		}
+	}
+	return result
 }
 
 func (p *Plugin) Clone() interfaces.Plugin {
