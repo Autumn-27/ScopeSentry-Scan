@@ -129,57 +129,50 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
 				continue
 			}
-			resultChan, errorChan := processInChunks(r, data.Body, chunkSize, overlapSize)
-			for matches := range resultChan {
-				if len(matches) != 0 {
-					var tmpResult types.SensitiveResult
-					if findFlag {
-						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: "", Time: system.GetTimeNow(), Color: rule.Color, Md5: fmt.Sprintf("md5==%v", resMd5)}
-					} else {
-						tmpResult = types.SensitiveResult{Url: url, SID: rule.Name, Match: matches, Body: resp, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
-					}
-					findFlag = true
-				}
-			}
-			if err := <-errorChan; err != nil {
+			result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
+			if err != nil {
 				p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
+			}
+			if len(result) != 0 {
+				var tmpResult types.SensitiveResult
+				if findFlag {
+					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Body: "", Time: system.GetTimeNow(), Color: rule.Color, Md5: fmt.Sprintf("md5==%v", resMd5)}
+				} else {
+					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Body: data.Body, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
+				}
+				findFlag = true
 			}
 		}
 	}
 	return nil, nil
 }
 
-func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) (chan []string, chan error) {
-	resultChan := make(chan []string, 10)
-	errorChan := make(chan error, 1)
-
-	go func() {
-		defer close(resultChan)
-		defer close(errorChan)
-		for start := 0; start < len(text); start += chunkSize {
-			end := start + chunkSize
-			if end > len(text) {
-				end = len(text)
-			}
-
-			chunkEnd := end
-			if end+overlapSize < len(text) {
-				chunkEnd = end + overlapSize
-			}
-
-			matches, err := findMatchesInChunk(regex, text[start:chunkEnd])
-			if err != nil {
-				errorChan <- err
-				return
-			}
-
-			if len(matches) > 0 {
-				resultChan <- matches
-			}
+func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) ([]string, error) {
+	var result []string
+	for start := 0; start < len(text); start += chunkSize {
+		end := start + chunkSize
+		if end > len(text) {
+			end = len(text)
 		}
-	}()
 
-	return resultChan, errorChan
+		chunkEnd := end
+		if end+overlapSize < len(text) {
+			chunkEnd = end + overlapSize
+		}
+
+		matches, err := findMatchesInChunk(regex, text[start:chunkEnd])
+		if err != nil {
+			return []string{}, err
+		}
+
+		if len(matches) > 0 {
+			result = append(result, matches...)
+		}
+	}
+	if len(result) != 0 {
+		result = uniqueStrings(result)
+	}
+	return result, nil
 }
 
 func findMatchesInChunk(regex *regexp2.Regexp, text string) ([]string, error) {
@@ -189,8 +182,7 @@ func findMatchesInChunk(regex *regexp2.Regexp, text string) ([]string, error) {
 		matches = append(matches, m.String())
 		m, _ = regex.FindNextMatch(m)
 	}
-	mc := uniqueStrings(matches)
-	return mc, nil
+	return matches, nil
 }
 
 func uniqueStrings(input []string) []string {
