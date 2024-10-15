@@ -96,9 +96,30 @@ func (t *UtilTools) GenerateRandomString(length int) string {
 	}
 	return string(result)
 }
+
+// 将整数转换为62进制字符串
+func (t *UtilTools) ToBase62(num int64) string {
+	chars := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	if num == 0 {
+		return string(chars[0])
+	}
+
+	var result string
+	for num > 0 {
+		result = string(chars[num%62]) + result
+		num /= 62
+	}
+	return result
+}
+
+// GenerateHash 生成唯一hash
 func (t *UtilTools) GenerateHash() string {
-	randdomS := t.GenerateRandomString(16)
-	hash := t.CalculateMD5(randdomS + "ScopeSnetryHash")
+	timestamp := time.Now().Unix()
+	secondsSince2000 := timestamp - 1792022400
+	base62Timestamp := t.ToBase62(secondsSince2000)
+
+	randoms := t.GenerateRandomString(4)
+	hash := base62Timestamp + randoms
 	return hash
 }
 
@@ -384,7 +405,6 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 		}
 		return err
 	}
-
 	// 如果没有错误，说明命令执行成功
 	return nil
 }

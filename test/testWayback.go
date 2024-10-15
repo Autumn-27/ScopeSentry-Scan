@@ -10,7 +10,6 @@ package main
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback/source"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 )
@@ -27,7 +26,7 @@ func main() {
 	utils.InitializeDnsTools()
 	utils.InitializeRequests()
 	utils.InitializeResults()
-	result := make(chan wayback.Result, 100)
+	result := make(chan source.Result, 100)
 	go func() {
 		for res := range result {
 			fmt.Println(res.URL)

@@ -20,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/subdomainsecurity/subdomaintakeover"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
 	"sync"
 )
@@ -104,6 +105,10 @@ func (pm *PluginManager) InitializePlugins() error {
 	katanaModule := katana.NewPlugin()
 	pm.RegisterPlugin(katanaModule.Module, katanaModule.Name, katanaModule)
 
+	// wayback
+	waybackModule := wayback.NewPlugin()
+	pm.RegisterPlugin(waybackModule.Module, waybackModule.Name, waybackModule)
+	
 	// rad
 	radModule := rad.NewPlugin()
 	pm.RegisterPlugin(radModule.Module, radModule.Name, radModule)

@@ -118,7 +118,7 @@ func (r *Runner) ModuleRun() error {
 					for _, pluginName := range r.Option.AssetMapping {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
 						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 						if flag {
 							plgWg.Add(1)
@@ -147,7 +147,7 @@ func (r *Runner) ModuleRun() error {
 						} else {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", pluginName))
 					}
 				} else {
 					// 如果没有开启资产测绘，将types.Asset 发送到结果处，在结果处进行转换

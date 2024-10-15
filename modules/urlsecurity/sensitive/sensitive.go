@@ -1,11 +1,11 @@
-// wayback-------------------------------------
-// @file      : wayback.go
+// sensitive-------------------------------------
+// @file      : sensitive.go
 // @author    : Autumn
 // @contact   : rainy-autumn@outlook.com
-// @time      : 2024/10/13 23:43
+// @time      : 2024/10/15 22:26
 // -------------------------------------------
 
-package wayback
+package sensitive
 
 import (
 	"errors"
@@ -32,9 +32,9 @@ type Plugin struct {
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name:     "wayback",
-		Module:   "URLScan",
-		PluginId: "ef244b3462744dad3040f9dcf3194eb1",
+		Name:     "sensitive",
+		Module:   "URLSecurity",
+		PluginId: "2949994c04a4e124b9c98383489510f0",
 	}
 }
 
@@ -108,10 +108,10 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-	data, ok := input.(types.AssetHttp)
+	data, ok := input.(types.UrlResult)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
-		return nil, errors.New("input is not AssetHttp")
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.UrlResult\n", p.Name, input))
+		return nil, errors.New("input is not types.UrlResult")
 	}
 	waybackResults := make(chan source.Result, 100)
 	go func() {

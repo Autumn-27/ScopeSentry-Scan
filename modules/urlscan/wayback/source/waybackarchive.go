@@ -10,12 +10,11 @@ package source
 import (
 	"bufio"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"net/http"
 	"time"
 )
 
-func WaybackarchiveRun(rootUrl string, result chan wayback.Result) int {
+func WaybackarchiveRun(rootUrl string, result chan Result) int {
 	client := &http.Client{
 		Timeout: 10 * time.Second, // 设置超时时间
 	}
@@ -36,7 +35,7 @@ func WaybackarchiveRun(rootUrl string, result chan wayback.Result) int {
 	sc.Buffer(buf, buffseSize)
 	lineCount := 0
 	for sc.Scan() {
-		result <- wayback.Result{
+		result <- Result{
 			URL:    sc.Text(),
 			Source: "waybackarchive",
 		}

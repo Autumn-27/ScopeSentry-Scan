@@ -102,7 +102,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v] %v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 
 func (p *Plugin) GetParameter() string {
@@ -112,8 +112,8 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	asset, ok := input.(*types.AssetOther)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return nil, errors.New("input is not a string")
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
+		return nil, errors.New("input is not types.AssetOther")
 	}
 	fxConfig := scan.Config{
 		DefaultTimeout: time.Duration(3) * time.Second,

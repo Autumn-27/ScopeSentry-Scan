@@ -143,7 +143,7 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout
 	cmd := filepath.Join(global.ExtDir, "ksubdomain", path)
 	err = Tools.ExecuteCommandWithTimeout(cmd, args, timeout)
 	if err != nil {
-		result <- fmt.Sprintf("%v", err)
+		result <- fmt.Sprintf("KsubdomainVerify %v", err)
 		close(result)
 		return
 	}

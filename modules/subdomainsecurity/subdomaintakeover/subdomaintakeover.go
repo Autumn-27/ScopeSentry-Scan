@@ -51,7 +51,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v] %v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -109,7 +109,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	subdomain, ok := input.(types.SubdomainResult)
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
-		return nil, errors.New("input is not a string")
+		return nil, errors.New("input is not a SubdomainResult")
 	}
 	if subdomain.Type == "CNAME" {
 		// 如果是CNAME类型的子域名，开始检查子域名接管

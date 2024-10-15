@@ -56,7 +56,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v] %v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -154,10 +154,12 @@ func (p *Plugin) Check() error {
 		if subdomainResult.Host != "" {
 			verificationCount += 1
 		} else {
-			logger.SlogErrorLocal(result)
+			p.Log(fmt.Sprintf("check error: %v", result), "e")
 		}
 	}
 	if verificationCount == 0 {
+		dir, _ := os.Getwd()
+		utils.Tools.DeleteFile(filepath.Join(dir, "ksubdomain.yaml"))
 		return fmt.Errorf("ksubdomain run error")
 	} else {
 		return nil
@@ -188,12 +190,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if err != nil {
 		} else {
 			for key, value := range args {
-				switch key {
-				case "subfile":
-					subfile = value
-				case "et":
-					executionTimeout, _ = strconv.Atoi(value)
+				if value != "" {
+					switch key {
+					case "subfile":
+						subfile = value
+					case "et":
+						executionTimeout, _ = strconv.Atoi(value)
+					}
 				}
+
 			}
 		}
 	} else {
@@ -266,7 +271,7 @@ func wildcardDNSRecords(domain string) []string {
 	for result := range subdomainVerificationResult {
 		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
 		if subdomainResult.Host != "" {
-			logger.SlogInfoLocal(fmt.Sprintf("%v 发现泛解析IP：%v", domain, subdomainResult.IP))
+			logger.SlogInfoLocal(fmt.Sprintf("ksubdomain target %v 发现泛解析IP：%v", domain, subdomainResult.IP))
 			results = append(results, subdomainResult.IP...)
 		}
 	}

@@ -11,7 +11,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"net/http"
@@ -27,13 +26,13 @@ const (
 
 var year = time.Now().Year()
 
-func CommoncrawlRun(rootUrl string, result chan wayback.Result) int {
+func CommoncrawlRun(rootUrl string, result chan Result) int {
 	bodyBytes, err := utils.Requests.HttpGetByte(indexURL)
 	if err != nil {
 		return 0
 	}
 
-	var indexes []wayback.IndexResponse
+	var indexes []IndexResponse
 	if err := json.Unmarshal(bodyBytes, &indexes); err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("commoncrawl jsondecode error: %v", err))
 		return 0
@@ -66,7 +65,7 @@ func CommoncrawlRun(rootUrl string, result chan wayback.Result) int {
 	return quantity
 }
 
-func getURLs(searchURL, rootURL string, result chan wayback.Result) (bool, int) {
+func getURLs(searchURL, rootURL string, result chan Result) (bool, int) {
 	currentSearchURL := fmt.Sprintf("%s?url=*.%s&output=text&fl=url", searchURL, rootURL)
 	client := &http.Client{
 		Timeout: 10 * time.Second, // 设置超时时间
@@ -85,7 +84,7 @@ func getURLs(searchURL, rootURL string, result chan wayback.Result) (bool, int) 
 	sc.Buffer(buf, buffseSize)
 	lineCount := 0
 	for sc.Scan() {
-		result <- wayback.Result{
+		result <- Result{
 			URL:    sc.Text(),
 			Source: "commoncrawl",
 		}

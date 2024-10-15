@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -75,7 +76,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v] %v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -163,8 +164,8 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.AssetHttp)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return nil, errors.New("input is not a string")
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
+		return nil, errors.New("input is not AssetHttp")
 	}
 	parameter := p.GetParameter()
 	threads := "10"
@@ -176,19 +177,22 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if err != nil {
 		} else {
 			for key, value := range args {
-				switch key {
-				case "t":
-					threads = value
-				case "timeout":
-					timeout = value
-				case "depth":
-					maxDepth = value
-				case "et":
-					executionTimeout, _ = strconv.Atoi(value)
+				if value != "" {
+					switch key {
+					case "t":
+						threads = value
+					case "timeout":
+						timeout = value
+					case "depth":
+						maxDepth = value
+					case "et":
+						executionTimeout, _ = strconv.Atoi(value)
 
-				default:
-					continue
+					default:
+						continue
+					}
 				}
+
 			}
 		}
 	}
@@ -228,19 +232,24 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			p.Log(fmt.Sprintf("[%v]JSON解析错误:%v", result, err), "e")
 			continue
 		}
-		var r types.UrlResult
-		r.Input = data.URL
-		r.Source = katanaResult.Request.Source
-		r.Output = katanaResult.Request.URL
-		r.OutputType = katanaResult.Request.Attribute
-		r.Status = katanaResult.Response.StatusCode
-		r.Length = len(katanaResult.Response.Body)
-		r.Body = katanaResult.Response.Body
-		r.Time = utils.Tools.GetTimeNow()
-		mu.Lock()
-		urllist = append(urllist, katanaResult.Request.URL)
-		mu.Unlock()
-		p.Result <- r
+		// 去重
+		flag := results.Duplicate.URL(&katanaResult.Request.URL, &p.TaskId)
+		if flag {
+			var r types.UrlResult
+			r.Input = data.URL
+			r.Source = katanaResult.Request.Source
+			r.Output = katanaResult.Request.URL
+			r.OutputType = katanaResult.Request.Attribute
+			r.Status = katanaResult.Response.StatusCode
+			r.Length = len(katanaResult.Response.Body)
+			r.Body = katanaResult.Response.Body
+			r.Time = utils.Tools.GetTimeNow()
+			mu.Lock()
+			urllist = append(urllist, katanaResult.Request.URL)
+			mu.Unlock()
+			p.Result <- r
+		}
+
 	}
 	p.Log(fmt.Sprintf("%v found url: %v", data.URL, len(urllist)))
 	return urllist, nil

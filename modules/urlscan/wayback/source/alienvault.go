@@ -10,12 +10,11 @@ package source
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 )
 
-func AlienvaultRun(rootUrl string, result chan wayback.Result) int {
+func AlienvaultRun(rootUrl string, result chan Result) int {
 	page := 1
 	lineCount := 0
 	for {
@@ -25,7 +24,7 @@ func AlienvaultRun(rootUrl string, result chan wayback.Result) int {
 			return 0
 		}
 
-		var response wayback.AlienvaultResponse
+		var response AlienvaultResponse
 		// Get the response body and decode
 		if err := json.Unmarshal(bodyBytes, &response); err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("Alienvault jsondecode error: %v", err))
@@ -34,7 +33,7 @@ func AlienvaultRun(rootUrl string, result chan wayback.Result) int {
 
 		for _, record := range response.URLList {
 			lineCount++
-			result <- wayback.Result{URL: record.URL, Source: "alienvault"}
+			result <- Result{URL: record.URL, Source: "alienvault"}
 		}
 
 		if !response.HasNext {

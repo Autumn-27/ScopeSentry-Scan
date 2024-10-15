@@ -5,7 +5,7 @@
 // @time      : 2024/10/14 20:25
 // -------------------------------------------
 
-package wayback
+package source
 
 type Result struct {
 	URL    string

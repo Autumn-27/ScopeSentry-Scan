@@ -85,11 +85,11 @@ func (r *Runner) ModuleRun() error {
 			}
 			// 该模块接收的数据为types.CrawlerResult、types.UrlResult、types.AssetOther 、 types.AssetHttp
 			// 该模块处理types.CrawlerResult、types.UrlResult， 其余类型数据直接发送到下个模块
-			if _, ok := data.(types.AssetHttp); !ok {
+			if _, ok := data.(types.AssetHttp); ok {
 				r.NextModule.GetInput() <- data
 				continue
 			}
-			if _, ok := data.(types.AssetOther); !ok {
+			if _, ok := data.(types.AssetOther); ok {
 				r.NextModule.GetInput() <- data
 				continue
 			}
@@ -108,7 +108,7 @@ func (r *Runner) ModuleRun() error {
 					for _, pluginName := range r.Option.URLSecurity {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
 						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 						if flag {
 							plgWg.Add(1)
@@ -137,7 +137,7 @@ func (r *Runner) ModuleRun() error {
 						} else {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", pluginName))
 					}
 				}
 			}(data)

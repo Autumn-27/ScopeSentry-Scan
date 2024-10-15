@@ -84,7 +84,7 @@ func (p Plugin) Log(msg string, tp ...string) {
 	} else {
 		logTp = "i"
 	}
-	logger.PluginsLog(fmt.Sprintf("[Plugins %v]%v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
+	logger.PluginsLog(fmt.Sprintf("[Plugins %v] %v", p.GetName(), msg), logTp, p.GetModule(), p.GetPluginId())
 }
 func (p *Plugin) SetCustom(cu interface{}) {
 	p.Custom = cu
@@ -172,8 +172,8 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.([]string)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
-		return nil, errors.New("input is not a string")
+		logger.SlogError(fmt.Sprintf("%v error: %v input is not []string\n", p.Name, input))
+		return nil, errors.New("input is not []string")
 	}
 	start := time.Now()
 	var resultNumber int
@@ -199,12 +199,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			if err != nil {
 			} else {
 				for key, value := range args {
-					switch key {
-					case "et":
-						executionTimeout, _ = strconv.Atoi(value)
-					default:
-						continue
+					if value != "" {
+						switch key {
+						case "et":
+							executionTimeout, _ = strconv.Atoi(value)
+						default:
+							continue
+						}
 					}
+
 				}
 			}
 		}

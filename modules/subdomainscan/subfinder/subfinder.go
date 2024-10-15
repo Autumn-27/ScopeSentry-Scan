@@ -124,15 +124,17 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if err != nil {
 		} else {
 			for key, value := range args {
-				switch key {
-				case "t":
-					threads, _ = strconv.Atoi(value)
-				case "timeout":
-					timeout, _ = strconv.Atoi(value)
-				case "max-time":
-					maxEnumerationTime, _ = strconv.Atoi(value)
-				default:
-					continue
+				if value != "" {
+					switch key {
+					case "t":
+						threads, _ = strconv.Atoi(value)
+					case "timeout":
+						timeout, _ = strconv.Atoi(value)
+					case "max-time":
+						maxEnumerationTime, _ = strconv.Atoi(value)
+					default:
+						continue
+					}
 				}
 			}
 		}

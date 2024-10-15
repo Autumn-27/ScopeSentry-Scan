@@ -61,16 +61,13 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 这里的输入为types.UrlResult，将types.UrlResult处理一下存入数据库并发送到下个模块
 				// 原始的types.AssetOther 、 types.AssetHttp 在读取input的时候已经发送到下个模块了
+				// 该结果已经在插件中进行去重
 				if urlResult, ok := result.(types.UrlResult); ok {
-					flag := results.Duplicate.URL(&urlResult.Output, &r.Option.ID)
-					if flag {
-						// 没有重复
-						urlResult.TaskName = r.Option.TaskName
-						hash := utils.Tools.GenerateHash()
-						urlResult.ResultId = hash
-						go results.Handler.URL(&urlResult)
-						r.NextModule.GetInput() <- urlResult
-					}
+					urlResult.TaskName = r.Option.TaskName
+					hash := utils.Tools.GenerateHash()
+					urlResult.ResultId = hash
+					go results.Handler.URL(&urlResult)
+					r.NextModule.GetInput() <- urlResult
 				}
 			}
 		}
@@ -119,7 +116,7 @@ func (r *Runner) ModuleRun() error {
 					for _, pluginName := range r.Option.URLScan {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
 						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 						if flag {
 							plgWg.Add(1)
@@ -154,7 +151,7 @@ func (r *Runner) ModuleRun() error {
 						} else {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", pluginName))
 					}
 					if len(urlList) > 0 {
 						// 如果urlList不为空，则发送到爬虫模块，将这些url作为输入进行爬虫
