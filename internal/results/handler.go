@@ -164,3 +164,58 @@ func (h *handler) Crawler(result *types.CrawlerResult) {
 	interfaceSlice = &result
 	ResultQueues["WebCrawler"].Queue <- interfaceSlice
 }
+
+func (h *handler) Sensitive(result *types.SensitiveResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	if global.NotificationConfig.SensitiveNotification {
+		NotificationMsg := fmt.Sprintf("Sensitive Scan:\n%v - %v\n", &result.Url, &result.SID)
+		notification.NotificationQueues["URLSecurity"].Queue <- NotificationMsg
+	}
+	ResultQueues["SensitiveResult"].Queue <- interfaceSlice
+
+}
+
+func (h *handler) SensitiveBody(body *string, md5 string) {
+	collectionName := "SensitiveBody"
+	selector := bson.M{"md5": md5}
+
+	update := bson.M{
+		"$set": bson.M{
+			"body": *body,
+			"md5":  md5,
+		},
+	}
+	// 调用 Upsert 方法，执行插入或更新操作
+	_, err := mongodb.MongodbClient.Upsert(collectionName, selector, update)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("SensitiveBody insert mongodb error:%v", err))
+	}
+}
+
+func (h *handler) Dir(result *types.DirResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	if global.NotificationConfig.DirScanNotification {
+		NotificationMsg := ""
+		if result.Msg != "" {
+			NotificationMsg = fmt.Sprintf("%v - %v -%v\n", result.Url, result.Status, result.Msg)
+		} else {
+			NotificationMsg = fmt.Sprintf("%v - %v\n", result.Url, result.Status)
+		}
+		notification.NotificationQueues["DirScan"].Queue <- NotificationMsg
+	}
+	ResultQueues["DirScan"].Queue <- interfaceSlice
+}

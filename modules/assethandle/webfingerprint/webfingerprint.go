@@ -90,7 +90,7 @@ func (p *Plugin) SetParameter(args string) {
 	p.Parameter = args
 }
 
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数

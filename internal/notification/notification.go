@@ -32,7 +32,7 @@ func InitializeNotification() {
 	modules := []string{
 		"SubdomainScan", "SubdomainSecurity",
 		"AssetMapping", "PortScan", "URLScan",
-		"URLSecurity", "WebCrawler", "VulnerabilityScan", "PageMonitor",
+		"URLSecurity", "DirScan", "WebCrawler", "VulnerabilityScan", "PageMonitor",
 	}
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {

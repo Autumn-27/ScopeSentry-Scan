@@ -69,7 +69,7 @@ func (p *Plugin) SetTaskId(id string) {
 func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数
@@ -233,7 +233,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			continue
 		}
 		// 去重
-		flag := results.Duplicate.URL(&katanaResult.Request.URL, &p.TaskId)
+		flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
 		if flag {
 			var r types.UrlResult
 			r.Input = data.URL

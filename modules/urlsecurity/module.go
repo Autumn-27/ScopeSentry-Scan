@@ -51,14 +51,13 @@ func (r *Runner) ModuleRun() error {
 		defer resultWg.Done()
 		for {
 			select {
-			case result, ok := <-resultChan:
+			case _, ok := <-resultChan:
 				if !ok {
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
 					r.NextModule.CloseInput()
 					return
 				}
-				fmt.Println(result)
 			}
 		}
 	}()

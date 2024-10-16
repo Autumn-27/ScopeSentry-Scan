@@ -95,7 +95,7 @@ func (p *Plugin) SetParameter(args string) {
 	p.Parameter = args
 }
 
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数
@@ -114,6 +114,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
 		return nil, errors.New("input is not types.AssetOther")
+	}
+	if asset.Service != "" {
+		// 如果service不为空，说明有其他插件检出，直接返回
+		return nil, nil
 	}
 	fxConfig := scan.Config{
 		DefaultTimeout: time.Duration(3) * time.Second,

@@ -24,6 +24,7 @@ type TaskOptions struct {
 	URLScan             []string                     // URL扫描模块
 	URLSecurity         []string                     // URL安全检测模块
 	WebCrawler          []string                     // 爬虫模块
+	DirScan             []string                     //目录扫描模块
 	VulnerabilityScan   []string                     //漏洞扫描模块
 	Parameters          map[string]map[string]string // 各个插件的参数
 	IsRestart           bool                         // 是否为重启后从本地获取缓存中获取的目标

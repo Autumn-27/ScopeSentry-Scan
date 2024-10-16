@@ -35,12 +35,12 @@ func InitializeDuplicate() {
 }
 
 // SubdomainInTask 本地缓存taskid:subdomain 是否存在，不存在则存入本地缓存，从redis查询是否重复，如果开启了子域名去重，则查询mongdob中是否存在子域名。
-func (d *duplicate) SubdomainInTask(taskId *string, host *string) bool {
-	key := "duplicates:" + *taskId + ":subdomain:" + *host
+func (d *duplicate) SubdomainInTask(taskId string, host string) bool {
+	key := "duplicates:" + taskId + ":subdomain:" + host
 	flag := d.DuplicateLocalCache(key)
 	if flag {
-		keyRedis := "duplicates:" + *taskId + ":domain"
-		valueRedis := *host
+		keyRedis := "duplicates:" + taskId + ":domain"
+		valueRedis := host
 		flag = d.DuplicateRedisCache(keyRedis, valueRedis)
 		return flag
 	}
@@ -64,13 +64,13 @@ func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 	return false
 }
 
-func (d *duplicate) PortIntask(taskId *string, host *string, port *string) bool {
-	key := "duplicates:" + *taskId + ":port:" + *host + ":" + *port
+func (d *duplicate) PortIntask(taskId string, host string, port string) bool {
+	key := "duplicates:" + taskId + ":port:" + host + ":" + port
 	flag := d.DuplicateLocalCache(key)
 	if flag {
 		// 本地缓存中不存在，从redis中查找
-		keyRedis := "duplicates:" + *taskId + ":port"
-		valueRedis := *host + "-" + *port
+		keyRedis := "duplicates:" + taskId + ":port"
+		valueRedis := host + "-" + port
 		flag = d.DuplicateRedisCache(keyRedis, valueRedis)
 		return flag
 	}
@@ -136,14 +136,14 @@ func (d *duplicate) AssetInMongodb(host string, port string) (bool, string, bson
 	}
 }
 
-func (d *duplicate) URL(rawUrl *string, taskId *string) bool {
-	dupKey := d.URLParams(*rawUrl)
-	key := "duplicates:" + *taskId + ":url:" + dupKey
+func (d *duplicate) URL(rawUrl string, taskId string) bool {
+	dupKey := d.URLParams(rawUrl)
+	key := "duplicates:" + taskId + ":url:" + dupKey
 	return d.DuplicateLocalCache(key)
 }
 
-func (d *duplicate) Crawler(value *string, taskId *string) bool {
-	key := "duplicates:" + *taskId + ":crawler:" + *value
+func (d *duplicate) Crawler(value string, taskId string) bool {
+	key := "duplicates:" + taskId + ":crawler:" + value
 	return d.DuplicateLocalCache(key)
 }
 
@@ -162,4 +162,9 @@ func (d *duplicate) URLParams(rawUrl string) string {
 		}
 	}
 	return dupKey
+}
+
+func (d *duplicate) SensitiveBody(md5 string, taskId string) bool {
+	key := "duplicates:" + taskId + ":SensitiveBody:" + md5
+	return d.DuplicateLocalCache(key)
 }

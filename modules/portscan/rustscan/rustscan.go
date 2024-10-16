@@ -69,7 +69,7 @@ func (p *Plugin) SetTaskId(id string) {
 func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数
@@ -244,7 +244,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			continue
 		}
 		if strings.Contains(r, "->") {
-			logger.SlogInfo(fmt.Sprintf("%v Port alive: %v", domainSkip.Domain, r))
+			p.Log(fmt.Sprintf("%v Port alive: %v", domainSkip.Domain, r))
 			continue
 		}
 		logger.SlogDebugLocal(fmt.Sprintf("%v PortScan error: %v", domainSkip.Domain, r))

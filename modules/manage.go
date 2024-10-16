@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation"
@@ -35,9 +36,16 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	vulnerabilityModule.SetInput(vulnerabilityInputChan)
 	op.InputChan["Vulnerability"] = vulnerabilityInputChan
 
+	// 目录扫描模块
+	op.ModuleRunWg.Add(1)
+	dirScanModule := dirscan.NewRunner(op, vulnerabilityModule)
+	dirScanInputChan := make(chan interface{}, 100)
+	dirScanModule.SetInput(dirScanInputChan)
+	op.InputChan["DirScan"] = dirScanInputChan
+
 	// url安全模块
 	op.ModuleRunWg.Add(1)
-	urlSecurityModule := urlsecurity.NewRunner(op, vulnerabilityModule)
+	urlSecurityModule := urlsecurity.NewRunner(op, dirScanModule)
 	urlSecurityInputChan := make(chan interface{}, 100)
 	urlSecurityModule.SetInput(urlSecurityInputChan)
 	op.InputChan["UrlSecurity"] = urlSecurityInputChan

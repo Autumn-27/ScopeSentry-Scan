@@ -155,7 +155,6 @@ func (r *Runner) ModuleRun() error {
 							asset.Service = "unknown"
 							portUint64, err := strconv.ParseUint(asset.Port, 10, 16)
 							if err != nil {
-								fmt.Println("转换错误:", err)
 								logger.SlogError(fmt.Sprintf("端口转换错误: %v", err))
 							} else {
 								rev, err := utils.Requests.TcpRecv(asset.IP, uint16(portUint64))
@@ -168,6 +167,8 @@ func (r *Runner) ModuleRun() error {
 									} else {
 										asset.Raw = json.RawMessage(fmt.Sprintf("{\"data\":%s}", encodedResponse))
 									}
+								} else {
+									asset.Raw = json.RawMessage("")
 								}
 							}
 							resultChan <- asset

@@ -28,7 +28,8 @@ func InitializeResultQueue() {
 	modules := []string{
 		"SubdomainScan", "SubdomainSecurity",
 		"AssetChangeLog", "URLScan",
-		"URLSecurity", "WebCrawler", "VulnerabilityScan",
+		"WebCrawler", "VulnerabilityScan",
+		"SensitiveResult", "DirScan",
 	}
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
@@ -87,12 +88,15 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		name = "AssetChangeLog"
 	case "URLScan":
 		name = "UrlScan"
-	case "URLSecurity":
+	case "SensitiveResult":
 		name = "SensitiveResult"
 	case "WebCrawler":
 		name = "crawler"
 	case "VulnerabilityScan":
 		name = "vulnerability"
+	case "DirScan":
+		name = "DirScanResult"
+
 	}
 	Results.Insert(name, buffer)
 	*buffer = nil

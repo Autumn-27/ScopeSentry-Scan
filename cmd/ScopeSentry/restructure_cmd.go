@@ -116,11 +116,15 @@ func main() {
 		URLScan:             []string{"katana", "wayback"},
 		URLSecurity:         []string{"test"},
 		WebCrawler:          []string{"rad"},
+		DirScan:             []string{"SentryDir"},
 		VulnerabilityScan:   []string{"nuclei"},
 		SubdomainFilename:   "66dda6ee3687eb004e6b3bda",
 		Parameters: map[string]map[string]string{
 			"SubdomainScan": {
 				"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
+			},
+			"DirScan": {
+				"SentryDir": "-d ",
 			},
 		},
 	}

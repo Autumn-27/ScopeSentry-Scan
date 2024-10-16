@@ -45,7 +45,7 @@ func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
 
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数

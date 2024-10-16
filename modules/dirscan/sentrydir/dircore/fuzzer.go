@@ -4,7 +4,7 @@
 // @contact   : rainy-autumn@outlook.com
 // @time      : 2024/4/28 23:00
 // -------------------------------------------
-package core
+package dircore
 
 import (
 	"bufio"
@@ -136,7 +136,7 @@ func (f *Fuzzer) Scan(path string, scanners []*Scanner) error {
 	}
 	key := fmt.Sprintf("%d:%d", response.StatusCode, response.ContentLength)
 	f.RCLMu.Lock()
-	if f.ResponseCodeLength[key] > 5 {
+	if f.ResponseCodeLength[key] > 6 {
 		f.RCLMu.Unlock()
 		return nil
 	}

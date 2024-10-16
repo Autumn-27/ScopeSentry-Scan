@@ -1,11 +1,11 @@
-// subdomaintakeover-------------------------------------
-// @file      : subdomaintakeover.go
+// sentrydir-------------------------------------
+// @file      : sentrydir.go
 // @author    : Autumn
 // @contact   : rainy-autumn@outlook.com
-// @time      : 2024/9/22 20:05
+// @time      : 2024/10/16 19:59
 // -------------------------------------------
 
-package subdomaintakeover
+package sentrydir
 
 import (
 	"errors"
@@ -13,9 +13,12 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan/sentrydir/dircore"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan/sentrydir/dirrunner"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"strings"
+	"path/filepath"
+	"strconv"
 )
 
 type Plugin struct {
@@ -30,9 +33,9 @@ type Plugin struct {
 
 func NewPlugin() *Plugin {
 	return &Plugin{
-		Name:     "SubdomainTakeover",
-		Module:   "SubdomainSecurity",
-		PluginId: "c0c71c101271f38b8be1767f3626d291",
+		Name:     "SentryDir",
+		Module:   "DirScan",
+		PluginId: "920546788addc6d29ea63e4a314a1b85",
 	}
 }
 
@@ -106,45 +109,50 @@ func (p *Plugin) GetParameter() string {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-	subdomain, ok := input.(types.SubdomainResult)
+	data, ok := input.(types.AssetHttp)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
-		return nil, errors.New("input is not a SubdomainResult")
+		return nil, errors.New("input is not types.UrlResult")
 	}
-	if subdomain.Type == "CNAME" {
-		// 如果是CNAME类型的子域名，开始检查子域名接管
-		for _, t := range subdomain.Value {
-			for _, finger := range global.SubdomainTakerFingers {
-				for _, c := range finger.Cname {
-					if strings.Contains(t, c) {
-						bodyByte, err := utils.Requests.HttpGetByte("https://" + t)
-						if err != nil {
-							bodyByte, _ = utils.Requests.HttpGetByte("http://" + t)
-						}
-						body := string(bodyByte)
-						if len(body) != 0 {
-							for _, resp := range finger.Response {
-								if strings.Contains(body, resp) {
-									resultTmp := types.SubTakeResult{}
-									resultTmp.Input = subdomain.Host
-									resultTmp.Value = t
-									resultTmp.Cname = c
-									resultTmp.Response = resp
-									p.Result <- resultTmp
-								}
-							}
-						}
-					}
+	p.Log(fmt.Sprintf("scan terget begin: %v", data.URL))
+	resultHandle := func(response types.HttpResponse) {
+		var result types.DirResult
+		result.Url = response.Url
+		result.Length = response.ContentLength
+		result.Status = response.StatusCode
+		result.Msg = response.Redirect
+		p.Result <- result
+	}
+	parameter := p.GetParameter()
+	dictFile := ""
+	Thread := 10
+	args, err := utils.Tools.ParseArgs(parameter, "d", "t")
+	if err != nil {
+	} else {
+		for key, value := range args {
+			if value != "" {
+				switch key {
+				case "d":
+					dictFile = value
+				case "t":
+					Thread, _ = strconv.Atoi(value)
 				}
 			}
 		}
 	}
-	// 无论是不是CNAME解析，都需要将host发送到
-	result := types.DomainResolve{
-		Domain: subdomain.Host,
-		IP:     subdomain.IP,
+	if dictFile == "" {
+		p.Log(fmt.Sprintf("not found dir dict, parameter :%v", parameter), "w")
+		return nil, nil
 	}
-	p.Result <- result
+
+	dirDicConfigPath := filepath.Join(global.DictPath, "dir", dictFile)
+	controller := dirrunner.Controller{Targets: []string{data.URL}, Dictionary: dirDicConfigPath}
+	op := dircore.Options{
+		Extensions:    []string{"php", "aspx", "jsp", "html", "js"},
+		Thread:        Thread,
+		MatchCallback: resultHandle,
+	}
+	controller.Run(op)
+	p.Log(fmt.Sprintf("scan terget end: %v", data.URL))
 	return nil, nil
 }
 

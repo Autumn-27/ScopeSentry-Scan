@@ -261,7 +261,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				key = results.Duplicate.URLParams(postKey)
 			}
 			taskId := p.GetTaskId()
-			dFlag := results.Duplicate.Crawler(&key, &taskId)
+			dFlag := results.Duplicate.Crawler(key, taskId)
 			if !dFlag {
 				continue
 			}

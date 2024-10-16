@@ -73,6 +73,19 @@ func SlogInfo(msg string) {
 func SlogInfoLocal(msg string) {
 	ZapLog.WithOptions(zap.AddCallerSkip(1)).Info(msg)
 }
+func SlogWarnLocal(msg string) {
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Warn(msg)
+}
+
+func SlogWarn(msg string) {
+	ZapLog.WithOptions(zap.AddCallerSkip(1)).Warn(msg)
+	timeNow := GetTimeNow()
+	err := SendLogToRedis(fmt.Sprintf("%s - [%s] %s\n", timeNow, "WARING", msg))
+	if err != nil {
+		return
+	}
+}
+
 func SlogError(msg string) {
 	ZapLog.WithOptions(zap.AddCallerSkip(1)).Error(msg)
 	timeNow := GetTimeNow()
@@ -126,13 +139,17 @@ func PluginsLog(msg string, tp string, module string, id string) {
 	switch tp {
 	case "i":
 		SlogInfoLocal(msg)
-		msg = "[info]" + msg
+		msg = "[info] " + msg
 	case "e":
 		SlogErrorLocal(msg)
-		msg = "[error]" + msg
+		msg = "[error] " + msg
 	case "d":
 		SlogDebugLocal(msg)
-		msg = "[debug]" + msg
+		msg = "[debug] " + msg
+	case "w":
+		SlogWarnLocal(msg)
+		msg = "[warning] " + msg
+
 	}
 	key := fmt.Sprintf("logs:plugins:%v:%v", module, id)
 	SendPluginLogToRedis(key, msg)

@@ -13,9 +13,10 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/dlclark/regexp2"
 )
 
@@ -45,7 +46,7 @@ func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
 
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数
@@ -118,32 +119,38 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if len(global.SensitiveRules) == 0 {
 		configupdater.UpdateSensitive()
 	}
-	chunkSize := 5120
-	overlapSize := 100
-	findFlag := false
-	for _, rule := range global.SensitiveRules {
-		//start := time.Now()
-		if rule.State {
-			r, err := regexp2.Compile(rule.Regular, 0)
-			if err != nil {
-				p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
-				continue
-			}
-			result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
-			if err != nil {
-				p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
-			}
-			if len(result) != 0 {
-				var tmpResult types.SensitiveResult
-				if findFlag {
-					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Body: "", Time: system.GetTimeNow(), Color: rule.Color, Md5: fmt.Sprintf("md5==%v", resMd5)}
-				} else {
-					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Body: data.Body, Time: system.GetTimeNow(), Color: rule.Color, Md5: resMd5}
+	// 检查body是否在当前任务已经检测过
+	respMd5 := utils.Tools.CalculateMD5(data.Body)
+	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
+	if duplicateFlag {
+		chunkSize := 5120
+		overlapSize := 100
+		findFlag := false
+		for _, rule := range global.SensitiveRules {
+			//start := time.Now()
+			if rule.State {
+				r, err := regexp2.Compile(rule.Regular, 0)
+				if err != nil {
+					p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
+					continue
 				}
-				findFlag = true
+				result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
+				if err != nil {
+					p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
+				}
+				if len(result) != 0 {
+					var tmpResult types.SensitiveResult
+					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Time: utils.Tools.GetTimeNow(), Color: rule.Color, Md5: respMd5}
+					go results.Handler.Sensitive(&tmpResult)
+					findFlag = true
+				}
 			}
 		}
+		if findFlag {
+			results.Handler.SensitiveBody(&data.Body, respMd5)
+		}
 	}
+
 	return nil, nil
 }
 

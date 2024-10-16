@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle/webfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping/httpx"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan/sentrydir"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portfingerprint/fingerprintx"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan/rustscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation/skipcdn"
@@ -90,28 +91,32 @@ func (pm *PluginManager) InitializePlugins() error {
 	pm.RegisterPlugin(rustscanPlugin.Module, rustscanPlugin.Name, rustscanPlugin)
 
 	// 端口指纹识别
-	fingerprintxModule := fingerprintx.NewPlugin()
-	pm.RegisterPlugin(fingerprintxModule.Module, fingerprintxModule.Name, fingerprintxModule)
+	fingerprintxPlugin := fingerprintx.NewPlugin()
+	pm.RegisterPlugin(fingerprintxPlugin.Module, fingerprintxPlugin.Name, fingerprintxPlugin)
 
 	// httpx
-	httpxModule := httpx.NewPlugin()
-	pm.RegisterPlugin(httpxModule.Module, httpxModule.Name, httpxModule)
+	httpxPlugin := httpx.NewPlugin()
+	pm.RegisterPlugin(httpxPlugin.Module, httpxPlugin.Name, httpxPlugin)
 
 	// WebFingerprint
-	webFingerprintmodule := webfingerprint.NewPlugin()
-	pm.RegisterPlugin(webFingerprintmodule.Module, webFingerprintmodule.Name, webFingerprintmodule)
+	webFingerprintPlugin := webfingerprint.NewPlugin()
+	pm.RegisterPlugin(webFingerprintPlugin.Module, webFingerprintPlugin.Name, webFingerprintPlugin)
 
 	// katana
-	katanaModule := katana.NewPlugin()
-	pm.RegisterPlugin(katanaModule.Module, katanaModule.Name, katanaModule)
+	katanaPlugin := katana.NewPlugin()
+	pm.RegisterPlugin(katanaPlugin.Module, katanaPlugin.Name, katanaPlugin)
 
 	// wayback
-	waybackModule := wayback.NewPlugin()
-	pm.RegisterPlugin(waybackModule.Module, waybackModule.Name, waybackModule)
-	
+	waybackPlugin := wayback.NewPlugin()
+	pm.RegisterPlugin(waybackPlugin.Module, waybackPlugin.Name, waybackPlugin)
+
 	// rad
-	radModule := rad.NewPlugin()
-	pm.RegisterPlugin(radModule.Module, radModule.Name, radModule)
+	radPlugin := rad.NewPlugin()
+	pm.RegisterPlugin(radPlugin.Module, radPlugin.Name, radPlugin)
+
+	// SentryDir
+	dirPlugin := sentrydir.NewPlugin()
+	pm.RegisterPlugin(dirPlugin.Module, dirPlugin.Name, dirPlugin)
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

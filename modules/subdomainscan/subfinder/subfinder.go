@@ -49,7 +49,7 @@ func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
 
-func (p Plugin) Log(msg string, tp ...string) {
+func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {
 		logTp = tp[0] // 使用传入的参数
@@ -183,7 +183,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogDebugLocal(result)
 		}
 	}
-	logger.SlogInfoLocal(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
+	p.Log(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
 	return nil, nil
 }
 

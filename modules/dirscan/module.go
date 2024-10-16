@@ -1,11 +1,11 @@
-// portscan-------------------------------------
+// dirscan-------------------------------------
 // @file      : module.go
 // @author    : Autumn
 // @contact   : rainy-autumn@outlook.com
-// @time      : 2024/9/10 21:06
+// @time      : 2024/10/16 19:57
 // -------------------------------------------
 
-package portscan
+package dirscan
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ type Runner struct {
 	Input      chan interface{}
 }
 
-func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Runner {
+func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Runner { // 同样改为值类型
 	return &Runner{
 		Option:     op,
 		NextModule: nextModule,
@@ -59,16 +59,9 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				if portaliveResult, ok := result.(types.PortAlive); ok {
-					port := portaliveResult.Port
-					if port == "" {
-						port = "null"
-					}
-					flag := results.Duplicate.PortIntask(r.Option.ID, portaliveResult.Host, port)
-					if flag {
-						// 本地缓存中不存在
-						r.NextModule.GetInput() <- result
-					}
+				if dirResult, ok := result.(types.DirResult); ok {
+					dirResult.TaskName = r.Option.TaskName
+					go results.Handler.Dir(&dirResult)
 				}
 			}
 		}
@@ -79,7 +72,6 @@ func (r *Runner) ModuleRun() error {
 	var start time.Time
 	var end time.Time
 	for {
-		//
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
@@ -88,7 +80,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScan), duration)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -97,19 +89,22 @@ func (r *Runner) ModuleRun() error {
 			}
 			if !firstData {
 				start = time.Now()
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScan))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity))
 				firstData = true
 			}
+
+			// 发送到下个模块
+			r.NextModule.GetInput() <- data
+
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				//发送来的数据 只能是types.DomainSkip
-				if len(r.Option.PortScan) != 0 {
+				if len(r.Option.URLSecurity) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.PortScan {
+					for _, pluginName := range r.Option.URLSecurity {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
 						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
 						if flag {
 							plgWg.Add(1)
@@ -119,9 +114,6 @@ func (r *Runner) ModuleRun() error {
 							} else {
 								plg.SetParameter("")
 							}
-							newParameter := plg.GetParameter() + " -port " + r.Option.PortRange
-							plg.SetParameter(newParameter)
-
 							plg.SetResult(resultChan)
 							plg.SetTaskId(r.Option.ID)
 							pluginFunc := func(data interface{}) func() {
@@ -141,20 +133,10 @@ func (r *Runner) ModuleRun() error {
 						} else {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
+						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", pluginName))
 					}
-				} else {
-					// 如果没有开启端口扫描，则发送没有端口的
-					domainSkip, _ := data.(types.DomainSkip)
-					result := types.PortAlive{
-						Host: domainSkip.Domain,
-						IP:   "",
-						Port: "",
-					}
-					resultChan <- result
 				}
 			}(data)
-
 		}
 	}
 }
@@ -164,7 +146,7 @@ func (r *Runner) SetInput(ch chan interface{}) {
 }
 
 func (r *Runner) GetName() string {
-	return "PortScan"
+	return "DirScan"
 }
 
 func (r *Runner) GetInput() chan interface{} {

@@ -63,7 +63,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
 					subdomainResult.TaskName = r.Option.TaskName
-					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &subdomainResult.Host)
+					flag := results.Duplicate.SubdomainInTask(r.Option.ID, subdomainResult.Host)
 					if flag {
 						if r.Option.IgnoreOldSubdomains {
 							// 从mongodb中查询是否存在子域名进行去重
@@ -88,7 +88,7 @@ func (r *Runner) ModuleRun() error {
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，或者是没有开启此模块的扫描，直接发送到下个模块
 					target, _ := result.(string)
 					// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
-					flag := results.Duplicate.SubdomainInTask(&r.Option.ID, &target)
+					flag := results.Duplicate.SubdomainInTask(r.Option.ID, target)
 					if flag {
 						if net.ParseIP(target) != nil {
 							tmp := types.SubdomainResult{

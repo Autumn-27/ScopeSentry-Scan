@@ -151,12 +151,13 @@ type SubTakeResult struct {
 }
 
 type DirResult struct {
-	Url      string
-	Status   int
-	Msg      string
-	Project  string
-	Length   int
-	TaskName string `bson:"taskName"`
+	Url        string
+	Status     int
+	Msg        string
+	Project    string
+	Length     int
+	TaskName   string `bson:"taskName"`
+	RootDomain string
 }
 
 type SensitiveRule struct {
@@ -168,15 +169,15 @@ type SensitiveRule struct {
 }
 
 type SensitiveResult struct {
-	Url      string
-	SID      string
-	Match    []string
-	Project  string
-	Body     string
-	Color    string
-	Time     string
-	Md5      string
-	TaskName string `bson:"taskName"`
+	Url        string
+	SID        string
+	Match      []string
+	Project    string
+	Color      string
+	Time       string
+	Md5        string
+	TaskName   string `bson:"taskName"`
+	RootDomain string
 }
 
 type VulnResult struct {
