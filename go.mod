@@ -73,6 +73,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/sirupsen/logrus v1.9.3
+	github.com/traefik/yaegi v0.16.1
 	github.com/valyala/fasthttp v1.52.0
 	go.mongodb.org/mongo-driver v1.13.1
 	go.uber.org/zap v1.25.0
