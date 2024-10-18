@@ -38,6 +38,7 @@ type Plugin struct {
 	OsType      string
 	RadDir      string
 	TaskId      string
+	TaskName    string
 }
 
 type Request struct {
@@ -70,6 +71,15 @@ func NewPlugin() *Plugin {
 		OsType:      osType,
 	}
 }
+
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
+}
+
 func (p *Plugin) SetTaskId(id string) {
 	p.TaskId = id
 }

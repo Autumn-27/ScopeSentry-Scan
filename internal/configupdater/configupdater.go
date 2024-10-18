@@ -56,15 +56,25 @@ func UpdateNodeModulesConfig() {
 	logger.SlogInfoLocal("node config load end")
 }
 
-func UpdateSubDomainDicConfig() {
-	logger.SlogInfoLocal("UpdateSubDomainDicConfig load begin")
-	results, err := mongodb.MongodbClient.FindFilesByPattern("domain_")
-	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("UpdateSubDomainDicConfig load error: %v", err))
-		return
+// UpdateDictionary 更新字典文件
+func UpdateDictionary(id string) {
+	var results map[string][]byte // 根据实际数据结构定义类型
+	var err error
+	if id == "all" {
+		results, err = mongodb.MongodbClient.FindFilesByPattern(".*")
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("UpdateDictionary load error: %v", err))
+			return
+		}
+	} else {
+		results, err = mongodb.MongodbClient.FindFilesByPattern(id)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("UpdateDictionary load error: %v", err))
+			return
+		}
 	}
 	for id, content := range results {
-		filePath := filepath.Join(global.DictPath, "subdomain", id)
+		filePath := filepath.Join(global.DictPath, id)
 		err = utils.Tools.EnsureFilePathExists(filePath)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic create file folder error: %v - %v", id, err))
@@ -75,26 +85,6 @@ func UpdateSubDomainDicConfig() {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
 		}
 	}
-	logger.SlogInfoLocal("UpdateSubDomainDicConfig load end")
-	return
-}
-
-func UpdateDirDicConfig() {
-	logger.SlogInfoLocal("UpdateDirDicConfig load begin")
-	results, err := mongodb.MongodbClient.FindFilesByPattern("dir_")
-	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("UpdateDirDicConfig load error: %v", err))
-		return
-	}
-	for id, content := range results {
-		filePath := filepath.Join(global.DictPath, "dir", id)
-		err := utils.Tools.WriteByteContentFile(filePath, content)
-		if err != nil {
-			logger.SlogErrorLocal(fmt.Sprintf("DirDic writing file error: %v - %v", id, err))
-		}
-	}
-	logger.SlogInfoLocal("UpdateDirDicConfig load end")
-	return
 }
 
 func UpdateSubfinderApiConfig() {
@@ -275,16 +265,13 @@ func UpdateNotification() {
 func Initialize() {
 	//UpdateGlobalModulesConfig()
 	if global.FirstRun {
-		UpdateSubDomainDicConfig()
-		UpdateDirDicConfig()
 		UpdateSubfinderApiConfig()
 		UpdateRadConfig()
 		UpdatePoc()
-	} else {
-		//UpdateNodeModulesConfig()
-		// 暂时设置更新子域名字典 测试用
-		UpdateSubDomainDicConfig()
+		// 更新字典文件 首次运行 拉取所有
+		UpdateDictionary("all")
 	}
+
 	UpdateSensitive()
 	UpdateProject()
 	UpdateWebFinger()

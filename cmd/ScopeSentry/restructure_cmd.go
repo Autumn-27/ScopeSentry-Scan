@@ -26,8 +26,13 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -35,7 +40,7 @@ func main() {
 	// 初始化系统信息
 	config.Initialize()
 	global.VERSION = "1.5"
-	global.AppConfig.Debug = false
+	global.AppConfig.Debug = true
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -67,6 +72,7 @@ func main() {
 	pool.Initialize()
 	// 初始化个模块的协程池
 	pool.PoolManage.InitializeModulesPools(config.ModulesConfig)
+	go pool.StartMonitoring()
 	// 初始化内存缓存
 	err = bigcache.Initialize()
 	if err != nil {
@@ -103,6 +109,8 @@ func main() {
 		log.Fatalf("Failed to init plugins: %v", err)
 		return
 	}
+	// 性能监控
+	go pprof()
 	taskE := options.TaskOptions{
 		ID:                  "1",
 		TaskName:            "test",
@@ -114,7 +122,7 @@ func main() {
 		AssetMapping:        []string{"httpx"},
 		AssetHandle:         []string{"WebFingerprint"},
 		URLScan:             []string{"katana", "wayback"},
-		URLSecurity:         []string{"test"},
+		URLSecurity:         []string{"sensitive"},
 		WebCrawler:          []string{"rad"},
 		DirScan:             []string{"SentryDir"},
 		VulnerabilityScan:   []string{"nuclei"},
@@ -124,7 +132,7 @@ func main() {
 				"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
 			},
 			"DirScan": {
-				"SentryDir": "-d ",
+				"SentryDir": "-d 6712604bcad762b691bf0d93",
 			},
 		},
 	}
@@ -169,4 +177,20 @@ func main() {
 	}()
 	time.Sleep(10 * time.Second)
 	wg.Wait()
+}
+
+func pprof() {
+	if global.AppConfig.Debug {
+		go func() {
+			_ = http.ListenAndServe("0.0.0.0:6060", nil)
+		}()
+		//go DebugMem()
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			sig := <-sigs
+			fmt.Println("收到终止信号:", sig)
+		}()
+	}
 }

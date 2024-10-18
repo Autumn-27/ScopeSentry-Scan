@@ -25,6 +25,7 @@ type Plugin struct {
 	InstallFunc func() bool
 	CheckFunc   func() bool
 	ExecuteFunc func(input interface{}, op options.PluginOption)
+	TaskName    string
 }
 
 func NewPlugin(name string, module string, plgId string, installFunc func() bool, checkFunc func() bool, executeFunc func(input interface{}, op options.PluginOption)) *Plugin {
@@ -37,6 +38,15 @@ func NewPlugin(name string, module string, plgId string, installFunc func() bool
 		ExecuteFunc: executeFunc,
 	}
 }
+
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
+}
+
 func (p *Plugin) SetTaskId(id string) {
 	p.TaskId = id
 }

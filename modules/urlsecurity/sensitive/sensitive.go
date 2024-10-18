@@ -28,6 +28,7 @@ type Plugin struct {
 	Result    chan interface{}
 	Custom    interface{}
 	TaskId    string
+	TaskName  string
 }
 
 func NewPlugin() *Plugin {
@@ -36,6 +37,14 @@ func NewPlugin() *Plugin {
 		Module:   "URLSecurity",
 		PluginId: "2949994c04a4e124b9c98383489510f0",
 	}
+}
+
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
 }
 
 func (p *Plugin) SetTaskId(id string) {
@@ -110,7 +119,6 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.UrlResult\n", p.Name, input))
 		return nil, errors.New("input is not types.UrlResult")
 	}
 	if data.Status != 200 || data.Body == "" {
@@ -140,7 +148,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				}
 				if len(result) != 0 {
 					var tmpResult types.SensitiveResult
-					tmpResult = types.SensitiveResult{Url: data.Output, SID: rule.Name, Match: result, Time: utils.Tools.GetTimeNow(), Color: rule.Color, Md5: respMd5}
+					tmpResult = types.SensitiveResult{
+						Url:      data.Output,
+						SID:      rule.Name,
+						Match:    result,
+						Time:     utils.Tools.GetTimeNow(),
+						Color:    rule.Color,
+						Md5:      respMd5,
+						TaskName: p.TaskName,
+					}
 					go results.Handler.Sensitive(&tmpResult)
 					findFlag = true
 				}

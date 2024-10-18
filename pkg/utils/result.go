@@ -71,7 +71,7 @@ func (r *Result) CompareAssetOther(old, new types.AssetOther) types.AssetChangeL
 		})
 	}
 	if len(Change.Change) != 0 {
-		Change.Timestamp = new.Timestamp
+		Change.Timestamp = new.Time
 		return Change
 	} else {
 		return types.AssetChangeLog{}
@@ -191,7 +191,7 @@ func (r *Result) CompareAssetHttp(old, new types.AssetHttp) types.AssetChangeLog
 		})
 	}
 	if len(Change.Change) != 0 {
-		Change.Timestamp = new.Timestamp
+		Change.Timestamp = new.Time
 		return Change
 	} else {
 		return types.AssetChangeLog{}

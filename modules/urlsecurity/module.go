@@ -37,6 +37,7 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
+	fmt.Println("dddsadwasdwa 进来url检测了")
 	// 创建一个共享的 result 通道
 	resultChan := make(chan interface{}, 100)
 	go func() {
@@ -119,6 +120,7 @@ func (r *Runner) ModuleRun() error {
 							}
 							plg.SetResult(resultChan)
 							plg.SetTaskId(r.Option.ID)
+							plg.SetTaskName(r.Option.TaskName)
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()

@@ -9,10 +9,15 @@ package pool
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/panjf2000/ants/v2"
 	"log"
+	"sort"
 	"sync"
+	"time"
 )
 
 type Manager struct {
@@ -39,7 +44,7 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	modules := []string{
 		"task", "TargetHandler", "SubdomainScan", "SubdomainSecurity",
 		"AssetMapping", "AssetHandle", "PortScan", "PortScanPreparation", "PortFingerprint", "URLScan",
-		"URLSecurity", "WebCrawler", "VulnerabilityScan",
+		"URLSecurity", "WebCrawler", "DirScan", "VulnerabilityScan",
 	}
 
 	for _, moduleName := range modules {
@@ -92,4 +97,39 @@ func (pm *Manager) SubmitTask(moduleName string, task func()) error {
 	}
 
 	return pool.Submit(task)
+}
+
+func (pm *Manager) PrintRunningGoroutines(sortedModuleNames []string) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	if global.AppConfig.Debug {
+		var result string
+		result = "Module Goroutines:"
+		for _, moduleName := range sortedModuleNames {
+			running := pm.pools[moduleName].Running()
+			result += fmt.Sprintf("%s: %d, ", moduleName, running)
+		}
+		// 去掉最后一个多余的逗号和空格
+		if len(result) > 0 {
+			result = result[:len(result)-2]
+			logger.SlogDebugLocal(result)
+		}
+	}
+}
+
+func StartMonitoring() {
+	ticker := time.NewTicker(10 * time.Second) // 每隔10秒打印一次
+	defer ticker.Stop()
+	var moduleNames []string
+	for moduleName := range PoolManage.pools {
+		moduleNames = append(moduleNames, moduleName)
+	}
+	sort.Strings(moduleNames)
+
+	for {
+		select {
+		case <-ticker.C:
+			PoolManage.PrintRunningGoroutines(moduleNames)
+		}
+	}
 }

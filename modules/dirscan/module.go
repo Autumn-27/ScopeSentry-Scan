@@ -80,7 +80,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity), duration)
+					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.DirScan), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -89,19 +89,19 @@ func (r *Runner) ModuleRun() error {
 			}
 			if !firstData {
 				start = time.Now()
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity))
+				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.DirScan))
 				firstData = true
 			}
 
-			// 发送到下个模块
+			// 这里接收的是发送到下个模块
 			r.NextModule.GetInput() <- data
 
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				if len(r.Option.URLSecurity) != 0 {
+				if len(r.Option.DirScan) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.URLSecurity {
+					for _, pluginName := range r.Option.DirScan {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
 						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
@@ -116,6 +116,7 @@ func (r *Runner) ModuleRun() error {
 							}
 							plg.SetResult(resultChan)
 							plg.SetTaskId(r.Option.ID)
+							plg.SetTaskName(r.Option.TaskName)
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()

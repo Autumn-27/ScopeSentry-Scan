@@ -75,8 +75,8 @@ func (r *Runner) ModuleRun() error {
 							changeData.AssetId = id
 							go results.Handler.AssetChangeLog(&changeData)
 							// 对资产进行更新,设置最新的扫描时间
-							assetResult.LastScanTime = assetResult.Timestamp
-							assetResult.Timestamp = oldAsset.Timestamp
+							assetResult.LastScanTime = assetResult.Time
+							assetResult.Time = oldAsset.Time
 							assetResult.Project = oldAsset.Project
 							assetResult.RootDomain = oldAsset.RootDomain
 							go results.Handler.AssetUpdate(id, assetResult)
@@ -84,7 +84,7 @@ func (r *Runner) ModuleRun() error {
 						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
-						assetResult.LastScanTime = assetResult.Timestamp
+						assetResult.LastScanTime = assetResult.Time
 						go results.Handler.AssetOtherInsert(&assetResult)
 					}
 				} else {
@@ -102,8 +102,8 @@ func (r *Runner) ModuleRun() error {
 								changeData.AssetId = id
 								go results.Handler.AssetChangeLog(&changeData)
 								// 对资产进行更新,设置最新的扫描时间
-								assetHttpResult.LastScanTime = assetHttpResult.Timestamp
-								assetHttpResult.Timestamp = oldAssetHttp.Timestamp
+								assetHttpResult.LastScanTime = assetHttpResult.Time
+								assetHttpResult.Time = oldAssetHttp.Time
 								assetHttpResult.Project = oldAssetHttp.Project
 								assetHttpResult.RootDomain = oldAssetHttp.RootDomain
 								go results.Handler.AssetUpdate(id, assetHttpResult)
@@ -177,6 +177,7 @@ func (r *Runner) ModuleRun() error {
 							}
 							plg.SetResult(resultChan)
 							plg.SetTaskId(r.Option.ID)
+							plg.SetTaskName(r.Option.TaskName)
 							var pluginFunc func()
 							if ty == "other" {
 								pluginFunc = func(data interface{}) func() {

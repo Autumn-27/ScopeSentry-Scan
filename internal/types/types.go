@@ -27,7 +27,7 @@ type SubdomainResult struct {
 }
 
 type AssetHttp struct {
-	Timestamp     string                 `bson:"timestamp" csv:"timestamp"`
+	Time          string                 `bson:"time" csv:"time"`
 	LastScanTime  string                 `bson:"lastScanTime"`
 	TLSData       *clients.Response      `bson:"tls" csv:"tls"`
 	Hashes        map[string]interface{} `bson:"hash" csv:"hash"`
@@ -69,7 +69,7 @@ type Project struct {
 	Target []string `bson:"target"`
 }
 type AssetOther struct {
-	Timestamp    string          `bson:"timestamp" csv:"timestamp"`
+	Time         string          `bson:"time" csv:"time"`
 	LastScanTime string          `bson:"lastScanTime"`
 	Host         string          `bson:"host"`
 	IP           string          `bson:"ip"`

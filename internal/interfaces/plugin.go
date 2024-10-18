@@ -21,6 +21,8 @@ type Plugin interface {
 	GetParameter() string
 	SetTaskId(id string)
 	GetTaskId() string
+	SetTaskName(name string)
+	GetTaskName() string
 	Execute(input interface{}) (interface{}, error)
 	Install() error
 	Check() error

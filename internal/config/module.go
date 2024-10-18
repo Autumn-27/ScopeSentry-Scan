@@ -52,6 +52,10 @@ type WebCrawlerConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
 
+type DirScanConfig struct {
+	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
+}
+
 type VulnerabilityScanConfig struct {
 	GoroutineCount int `yaml:"goroutineCount"` // 协程数量
 }
@@ -68,6 +72,7 @@ type ModulesConfigStruct struct {
 	URLScan             URLScanConfig             `yaml:"URLScan"`
 	URLSecurity         URLSecurityConfig         `yaml:"URLSecurity"`
 	WebCrawler          WebCrawlerConfig          `yaml:"webCrawler"`
+	DirScan             DirScanConfig             `yaml:"dirScan"`
 	VulnerabilityScan   VulnerabilityScanConfig   `yaml:"vulnerabilityScan"`
 }
 
@@ -107,6 +112,8 @@ func (cfg *ModulesConfigStruct) GetGoroutineCount(moduleName string) int {
 		return cfg.URLSecurity.GoroutineCount
 	case "WebCrawler":
 		return cfg.WebCrawler.GoroutineCount
+	case "DirScan":
+		return cfg.DirScan.GoroutineCount
 	case "VulnerabilityScan":
 		return cfg.VulnerabilityScan.GoroutineCount
 	default:

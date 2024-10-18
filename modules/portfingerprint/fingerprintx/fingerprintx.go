@@ -30,6 +30,7 @@ type Plugin struct {
 	Result    chan interface{}
 	Custom    interface{}
 	TaskId    string
+	TaskName  string
 }
 
 func NewPlugin() *Plugin {
@@ -38,6 +39,13 @@ func NewPlugin() *Plugin {
 		Module:   "PortFingerprint",
 		PluginId: "648a6f49eed57b1737ac702e02985b00",
 	}
+}
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
 }
 
 func (p *Plugin) SetTaskId(id string) {
@@ -148,8 +156,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		asset.Transport = fingerResult.Transport
 		asset.Version = fingerResult.Version
 		asset.Raw = fingerResult.Raw
-		asset.Timestamp = utils.Tools.GetTimeNow()
-		asset.LastScanTime = asset.Timestamp
+		asset.Time = utils.Tools.GetTimeNow()
+		asset.LastScanTime = asset.Time
 		return nil, nil
 	}
 	return nil, nil

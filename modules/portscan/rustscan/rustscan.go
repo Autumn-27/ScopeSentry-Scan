@@ -34,6 +34,7 @@ type Plugin struct {
 	OsType       string
 	Custom       interface{}
 	TaskId       string
+	TaskName     string
 }
 
 func NewPlugin() *Plugin {
@@ -60,6 +61,14 @@ func NewPlugin() *Plugin {
 		OsType:       osType,
 		PluginId:     "66b4ddeb983387df2b7ee7726653874d",
 	}
+}
+
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
 }
 
 func (p *Plugin) SetTaskId(id string) {

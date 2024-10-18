@@ -52,7 +52,7 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 
 	// 爬虫模块
 	op.ModuleRunWg.Add(1)
-	webCrawlerModule := webcrawler.NewRunner(op, vulnerabilityModule)
+	webCrawlerModule := webcrawler.NewRunner(op, urlSecurityModule)
 	WebCrawlerInputChan := make(chan interface{}, 100)
 	webCrawlerModule.SetInput(WebCrawlerInputChan)
 	op.InputChan["WebCrawler"] = WebCrawlerInputChan

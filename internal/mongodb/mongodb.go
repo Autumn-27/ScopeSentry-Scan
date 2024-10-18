@@ -229,8 +229,8 @@ func (c *Client) FindFilesByPattern(pattern string) (map[string][]byte, error) {
 		if _, err := buf.ReadFrom(dStream); err != nil {
 			return nil, err
 		}
-		idStr := id.Hex()
-		results[idStr] = buf.Bytes()
+		filename := fileInfo["filename"].(string)
+		results[filename] = buf.Bytes()
 	}
 
 	if err := cursor.Err(); err != nil {

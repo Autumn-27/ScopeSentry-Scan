@@ -22,6 +22,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
 	"sync"
 )
@@ -113,6 +114,9 @@ func (pm *PluginManager) InitializePlugins() error {
 	// rad
 	radPlugin := rad.NewPlugin()
 	pm.RegisterPlugin(radPlugin.Module, radPlugin.Name, radPlugin)
+	// sensitive
+	sensitiveModule := sensitive.NewPlugin()
+	pm.RegisterPlugin(sensitiveModule.Module, sensitiveModule.Name, sensitiveModule)
 
 	// SentryDir
 	dirPlugin := sentrydir.NewPlugin()

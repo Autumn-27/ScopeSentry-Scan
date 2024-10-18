@@ -26,6 +26,7 @@ type Plugin struct {
 	Result    chan interface{}
 	Custom    interface{}
 	TaskId    string
+	TaskName  string
 }
 
 func NewPlugin() *Plugin {
@@ -34,6 +35,13 @@ func NewPlugin() *Plugin {
 		Module:   "SubdomainSecurity",
 		PluginId: "c0c71c101271f38b8be1767f3626d291",
 	}
+}
+func (p *Plugin) SetTaskName(name string) {
+	p.TaskName = name
+}
+
+func (p *Plugin) GetTaskName() string {
+	return p.TaskName
 }
 
 func (p *Plugin) SetTaskId(id string) {

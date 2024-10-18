@@ -64,7 +64,7 @@ func HttpxScan(Host []string, resultCallback func(r types.AssetHttp)) {
 
 func httpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	var ah = types.AssetHttp{
-		Timestamp:    system.GetTimeNow(),
+		Time:         system.GetTimeNow(),
 		TLSData:      r.TLSData, // You may need to set an appropriate default value based on the actual type.
 		Hashes:       r.Hashes,
 		CDNName:      r.CDNName,
