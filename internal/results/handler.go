@@ -68,7 +68,7 @@ func (h *handler) SubdomainTakeover(result *types.SubTakeResult) {
 		NotificationMsg := fmt.Sprintf("Subdomain Takeover:\n%v - %v\n", result.Input, result.Cname)
 		notification.NotificationQueues["SubdomainSecurity"].Queue <- NotificationMsg
 	}
-	ResultQueues["SubdomainScan"].Queue <- interfaceSlice
+	ResultQueues["SubdomainSecurity"].Queue <- interfaceSlice
 }
 
 func (h *handler) AssetChangeLog(result *types.AssetChangeLog) {

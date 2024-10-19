@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"flag"
@@ -704,11 +705,11 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		FavIconMMH3:  r.FavIconMMH3,
 		FaviconPath:  r.FaviconPath,
 		RawHeaders:   r.RawHeaders,
-		Jarm:         r.Jarm,
+		Jarm:         r.JarmHash,
 		Technologies: r.Technologies, // You may need to set an appropriate default value based on the actual type.
 		StatusCode:   r.StatusCode,   // You may need to set an appropriate default value.
 		Webcheck:     false,
-		IconContent:  r.IconContent,
+		IconContent:  base64.StdEncoding.EncodeToString(r.FaviconData),
 		WebServer:    r.WebServer,
 		Service:      r.Scheme,
 	}

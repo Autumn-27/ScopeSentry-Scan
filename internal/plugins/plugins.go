@@ -23,6 +23,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/vulnerabilityscan/nuclei"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
 	"sync"
 )
@@ -121,6 +122,11 @@ func (pm *PluginManager) InitializePlugins() error {
 	// SentryDir
 	dirPlugin := sentrydir.NewPlugin()
 	pm.RegisterPlugin(dirPlugin.Module, dirPlugin.Name, dirPlugin)
+
+	// nuclei
+	nucleiPlugin := nuclei.NewPlugin()
+	pm.RegisterPlugin(nucleiPlugin.Module, nucleiPlugin.Name, nucleiPlugin)
+	
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

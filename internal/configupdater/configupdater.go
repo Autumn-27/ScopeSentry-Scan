@@ -204,7 +204,7 @@ type tmpPoc struct {
 	Level   int                `bson:"level"`
 }
 
-func UpdatePoc() {
+func LoadPoc() {
 	logger.SlogInfoLocal("poc load begin")
 	var tmpPocR []tmpPoc
 	if err := mongodb.MongodbClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
@@ -267,11 +267,10 @@ func Initialize() {
 	if global.FirstRun {
 		UpdateSubfinderApiConfig()
 		UpdateRadConfig()
-		UpdatePoc()
+		LoadPoc()
 		// 更新字典文件 首次运行 拉取所有
 		UpdateDictionary("all")
 	}
-
 	UpdateSensitive()
 	UpdateProject()
 	UpdateWebFinger()

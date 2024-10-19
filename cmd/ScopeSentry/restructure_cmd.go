@@ -124,15 +124,18 @@ func main() {
 		URLScan:             []string{"katana", "wayback"},
 		URLSecurity:         []string{"sensitive"},
 		WebCrawler:          []string{"rad"},
-		DirScan:             []string{"SentryDir"},
-		VulnerabilityScan:   []string{"nuclei"},
-		SubdomainFilename:   "66dda6ee3687eb004e6b3bda",
+		//DirScan:             []string{"SentryDir"},
+		VulnerabilityScan: []string{"nuclei"},
+		SubdomainFilename: "66dda6ee3687eb004e6b3bda",
 		Parameters: map[string]map[string]string{
 			"SubdomainScan": {
 				"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
 			},
 			"DirScan": {
 				"SentryDir": "-d 6712604bcad762b691bf0d93",
+			},
+			"VulnerabilityScan": {
+				"nuclei": "-t *",
 			},
 		},
 	}
@@ -159,7 +162,8 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8080"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:https://hackerone.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

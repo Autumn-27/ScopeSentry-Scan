@@ -120,6 +120,24 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if asset.Type != "http" {
 		p.Result <- asset
 	} else {
+		parameter := p.GetParameter()
+		cdncheck := "false"
+		if parameter != "" {
+			args, err := utils.Tools.ParseArgs(parameter, "cdncheck")
+			if err != nil {
+			} else {
+				for key, value := range args {
+					if value != "" {
+						switch key {
+						case "cdncheck":
+							cdncheck = value
+						default:
+							continue
+						}
+					}
+				}
+			}
+		}
 		httpxResultsHandler := func(r types.AssetHttp) {
 			p.Result <- r
 		}
@@ -129,7 +147,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		} else {
 			url = asset.Host
 		}
-		utils.Requests.Httpx(url, httpxResultsHandler)
+		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck)
 	}
 	return nil, nil
 }

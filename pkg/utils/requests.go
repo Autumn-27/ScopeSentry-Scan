@@ -145,13 +145,15 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
+func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string) {
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal) // increase the verbosity (optional)
 
 	options := runner.Options{
 		Methods:                   "GET",
 		JSONOutput:                true,
 		TLSProbe:                  false,
+		Threads:                   30,
+		RateLimit:                 100,
 		InputTargetHost:           []string{Host},
 		Favicon:                   true,
 		ExtractTitle:              true,
@@ -164,7 +166,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
 		ResponseInStdout:          true,
 		Base64ResponseInStdout:    false,
 		Jarm:                      true,
-		OutputCDN:                 false,
+		OutputCDN:                 cdncheck,
 		Location:                  false,
 		HostMaxErrors:             -1,
 		MaxResponseBodySizeToRead: 100000,
@@ -179,6 +181,9 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
 				resultCallback(ah)
 			}
 		},
+	}
+	if err := options.ValidateOptions(); err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("httpx options Validate error: %v", err))
 	}
 
 	httpxRunner, err := runner.New(&options)

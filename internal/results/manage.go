@@ -34,7 +34,8 @@ func InitializeResultQueue() {
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
 		ResultQueues[module] = &ResultQueue{
-			Queue: make(chan interface{}, batchSize),
+			Queue:   make(chan interface{}, batchSize),
+			CloseCh: make(chan struct{}),
 		}
 		go processQueue(module, ResultQueues[module])
 	}
@@ -56,10 +57,13 @@ func processQueue(module string, mq *ResultQueue) {
 	for {
 		select {
 		case batch := <-mq.Queue:
-			buffer = append(buffer, batch)
-			if len(buffer) >= batchSize {
-				flushBuffer(module, &buffer)
+			if batch != nil {
+				buffer = append(buffer, batch)
+				if len(buffer) >= batchSize {
+					flushBuffer(module, &buffer)
+				}
 			}
+
 		case <-ticker.C:
 			if len(buffer) > 0 {
 				flushBuffer(module, &buffer)
