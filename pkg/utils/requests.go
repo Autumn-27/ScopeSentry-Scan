@@ -164,7 +164,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp)) {
 		ResponseInStdout:          true,
 		Base64ResponseInStdout:    false,
 		Jarm:                      true,
-		OutputCDN:                 true,
+		OutputCDN:                 false,
 		Location:                  false,
 		HostMaxErrors:             -1,
 		MaxResponseBodySizeToRead: 100000,

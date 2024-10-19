@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/dlclark/regexp2"
+	"time"
 )
 
 type Plugin struct {
@@ -127,6 +128,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if len(global.SensitiveRules) == 0 {
 		configupdater.UpdateSensitive()
 	}
+	var start time.Time
+	var end time.Time
+	start = time.Now()
 	// 检查body是否在当前任务已经检测过
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
 	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
@@ -166,7 +170,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			results.Handler.SensitiveBody(&data.Body, respMd5)
 		}
 	}
-
+	end = time.Now()
+	duration := end.Sub(start)
+	p.Log(fmt.Sprintf("target %v run time: %v", data.Output, duration))
 	return nil, nil
 }
 

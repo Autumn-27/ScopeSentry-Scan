@@ -276,13 +276,17 @@ func (t *UtilTools) GetRootDomain(input string) (string, error) {
 	input = strings.Trim(input, "/")
 	ip := net.ParseIP(input)
 	if ip != nil {
-		return string(ip), nil
+		return ip.String(), nil
 	}
 	input = "https://" + input
 
 	// 尝试解析为 URL
 	u, err := url.Parse(input)
 	if err == nil && u.Hostname() != "" {
+		ipHost := net.ParseIP(u.Hostname())
+		if ipHost != nil {
+			return ipHost.String(), nil
+		}
 		hostParts := strings.Split(u.Hostname(), ".")
 		if len(hostParts) < 2 {
 			return "", fmt.Errorf("域名格式不正确")

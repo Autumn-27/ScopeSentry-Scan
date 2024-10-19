@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"os"
 	"sort"
 	"strings"
@@ -41,7 +42,7 @@ func (f *Fuzzer) Start() {
 	var mu sync.Mutex
 	file, err := os.Open(f.Dictionary) // 打开文件
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		logger.SlogError(fmt.Sprintf("Sentrydir error open dictionary file:%v", err))
 		return
 	}
 	defer file.Close()

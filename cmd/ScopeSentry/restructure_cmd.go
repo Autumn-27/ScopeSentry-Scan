@@ -159,7 +159,7 @@ func main() {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:http://rainy-autumn.top"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

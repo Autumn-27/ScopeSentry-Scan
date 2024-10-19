@@ -19,6 +19,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type Plugin struct {
@@ -120,8 +121,9 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.AssetHttp)
 	if !ok {
-		return nil, errors.New("input is not types.UrlResult")
+		return nil, errors.New("input is not types.AssetHttp")
 	}
+	start := time.Now()
 	p.Log(fmt.Sprintf("scan terget begin: %v", data.URL))
 	resultHandle := func(response types.HttpResponse) {
 		var result types.DirResult
@@ -153,7 +155,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 
-	dirDicConfigPath := filepath.Join(global.DictPath, "dir", dictFile)
+	dirDicConfigPath := filepath.Join(global.DictPath, dictFile)
 	controller := dirrunner.Controller{Targets: []string{data.URL}, Dictionary: dirDicConfigPath}
 	op := dircore.Options{
 		Extensions:    []string{"php", "aspx", "jsp", "html", "js"},
@@ -161,7 +163,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		MatchCallback: resultHandle,
 	}
 	controller.Run(op)
-	p.Log(fmt.Sprintf("scan terget end: %v", data.URL))
+	end := time.Now()
+	duration := end.Sub(start)
+	p.Log(fmt.Sprintf("scan terget end: %v time: %v", data.URL, duration))
 	return nil, nil
 }
 
