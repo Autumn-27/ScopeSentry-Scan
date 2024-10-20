@@ -710,6 +710,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		StatusCode:   r.StatusCode,   // You may need to set an appropriate default value.
 		Webcheck:     false,
 		IconContent:  base64.StdEncoding.EncodeToString(r.FaviconData),
+		CDN:          r.CDN,
 		WebServer:    r.WebServer,
 		Service:      r.Scheme,
 	}

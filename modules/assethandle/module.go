@@ -62,7 +62,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				r.NextModule.GetInput() <- result
 				if assetResult, ok := result.(types.AssetOther); ok {
-					assetResult.TaskName = r.Option.TaskName
+					assetResult.TaskName = []string{r.Option.TaskName}
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
@@ -79,6 +79,8 @@ func (r *Runner) ModuleRun() error {
 							assetResult.Time = oldAsset.Time
 							assetResult.Project = oldAsset.Project
 							assetResult.RootDomain = oldAsset.RootDomain
+							assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
+							assetResult.Tag = append(assetResult.Tag, oldAsset.Tag...)
 							go results.Handler.AssetUpdate(id, assetResult)
 						}
 						// 资产没有变化，不进行操作
@@ -90,7 +92,7 @@ func (r *Runner) ModuleRun() error {
 				} else {
 					assetHttpResult, okh := result.(types.AssetHttp)
 					if okh {
-						assetHttpResult.TaskName = r.Option.TaskName
+						assetHttpResult.TaskName = []string{r.Option.TaskName}
 						flag, id, bsonData := results.Duplicate.AssetInMongodb(assetHttpResult.Host, assetHttpResult.Port)
 						if flag {
 							var oldAssetHttp types.AssetHttp
@@ -106,6 +108,8 @@ func (r *Runner) ModuleRun() error {
 								assetHttpResult.Time = oldAssetHttp.Time
 								assetHttpResult.Project = oldAssetHttp.Project
 								assetHttpResult.RootDomain = oldAssetHttp.RootDomain
+								assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
+								assetHttpResult.Tag = append(assetHttpResult.Tag, oldAssetHttp.Tag...)
 								go results.Handler.AssetUpdate(id, assetHttpResult)
 							}
 							// 资产没有变化，不进行操作

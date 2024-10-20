@@ -248,7 +248,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					}
 				}
 				if !alreadyExists {
-					httpResult.WebFinger = append(httpResult.WebFinger, finger.Name)
+					httpResult.Technologies = append(httpResult.Technologies, finger.Name)
 				}
 				mu.Unlock()
 			}

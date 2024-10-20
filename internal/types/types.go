@@ -31,32 +31,32 @@ type AssetHttp struct {
 	LastScanTime  string                 `bson:"lastScanTime"`
 	TLSData       *clients.Response      `bson:"tls" csv:"tls"`
 	Hashes        map[string]interface{} `bson:"hash" csv:"hash"`
-	CDNName       string                 `bson:"cdn_name" csv:"cdn_name"`
+	CDNName       string                 `bson:"cdnname" csv:"cdn_name"`
 	Port          string                 `bson:"port" csv:"port"`
 	URL           string                 `bson:"url" csv:"url"`
 	Title         string                 `bson:"title" csv:"title"`
-	Type          string                 `bson:"Type" csv:"Type"`
+	Type          string                 `bson:"type" csv:"type"`
 	Error         string                 `bson:"error" csv:"error"`
 	ResponseBody  string                 `bson:"body" csv:"body"`
 	Host          string                 `bson:"host" csv:"host"`
 	IP            string                 `bson:"ip"`
 	FavIconMMH3   string                 `bson:"favicon" csv:"favicon"`
-	FaviconPath   string                 `bson:"favicon_path" csv:"favicon_path"`
-	RawHeaders    string                 `bson:"raw_header" csv:"raw_header"`
+	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
+	RawHeaders    string                 `bson:"rawheaders" csv:"raw_header"`
 	Jarm          string                 `bson:"jarm" csv:"jarm"`
-	Technologies  []string               `bson:"tech" csv:"tech"`
-	StatusCode    int                    `bson:"status_code" csv:"status_code"`
-	ContentLength int                    `bson:"content_length" csv:"content_length"`
+	Technologies  []string               `bson:"technologies" csv:"tech"`
+	StatusCode    int                    `bson:"statuscode" csv:"status_code"`
+	ContentLength int                    `bson:"contentlength" csv:"content_length"`
 	CDN           bool                   `bson:"cdn" csv:"cdn"`
 	Webcheck      bool                   `bson:"webcheck" csv:"webcheck"`
 	Project       string                 `bson:"project" csv:"project"`
-	WebFinger     []string               `bson:"web_finger" csv:"web_finger"`
-	IconContent   string                 `bson:"iconContent"`
+	IconContent   string                 `bson:"iconcontent"`
 	Domain        string                 `bson:"domain"`
-	TaskName      string                 `bson:"taskName"`
+	TaskName      []string               `bson:"taskName"`
 	WebServer     string                 `bson:"webServer"`
 	Service       string                 `bson:"service"`
 	RootDomain    string                 `bson:"rootDomain"`
+	Tag           []string               `bson:"tag"`
 }
 
 type PortAlive struct {
@@ -80,9 +80,10 @@ type AssetOther struct {
 	Version      string          `bson:"version"`
 	Raw          json.RawMessage `bson:"metadata"`
 	Project      string          `bson:"project"`
-	Type         string
-	TaskName     string `bson:"taskName"`
-	RootDomain   string `bson:"rootDomain"`
+	Type         string          `bson:"type"`
+	Tag          []string        `bson:"tag"`
+	TaskName     []string        `bson:"taskName"`
+	RootDomain   string          `bson:"rootDomain"`
 }
 
 type ChangeLog struct {
