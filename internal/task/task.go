@@ -29,7 +29,6 @@ func GetTask() {
 		os.Exit(0)
 	}
 	if len(keys) > 0 {
-		handle.NewNucleiEngine()
 		// 打印所有以 "task:" 开头的键值对
 		for key, value := range keys {
 			var wg sync.WaitGroup

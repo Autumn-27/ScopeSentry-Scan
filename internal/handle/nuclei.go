@@ -15,22 +15,28 @@ import (
 	"sync"
 )
 
-var NucleiEngine *nuclei.ThreadSafeNucleiEngine
+var NucleiEngines []*nuclei.ThreadSafeNucleiEngine
 var NucleiEngineWg sync.WaitGroup
+var mu sync.Mutex
 
-func NewNucleiEngine() {
+func NewNucleiEngine() *nuclei.ThreadSafeNucleiEngine {
 	ctx := context.Background()
-	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx)
+	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx, nuclei.DisableUpdateCheck())
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("NewNucleiEngine error: %v", err))
-		return
+		return nil
 	}
-	NucleiEngine = ne
+	mu.Lock()
+	NucleiEngines = append(NucleiEngines, ne)
+	mu.Unlock()
+	return ne
 }
 
 func CloseNucleiEngine() {
 	NucleiEngineWg.Wait()
-	if NucleiEngine != nil {
-		NucleiEngine.Close()
+	for _, ne := range NucleiEngines {
+		if ne != nil {
+			ne.Close()
+		}
 	}
 }

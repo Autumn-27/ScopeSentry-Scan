@@ -108,8 +108,8 @@ type UrlResult struct {
 	Body       string `bson:"body"`
 	Project    string
 	TaskName   string `bson:"taskName"`
-	ResultId   string
-	RootDomain string
+	ResultId   string `bson:"resultId"`
+	RootDomain string `bson:"rootDomain"`
 }
 
 type SecretResults struct {
@@ -125,8 +125,8 @@ type CrawlerResult struct {
 	Body       string
 	Project    string
 	TaskName   string `bson:"taskName"`
-	ResultId   string
-	RootDomain string
+	ResultId   string `bson:"resultId"`
+	RootDomain string `bson:"rootDomain"`
 }
 
 type PortDict struct {
@@ -147,7 +147,7 @@ type SubTakeResult struct {
 	Response   string
 	Project    string
 	TaskName   string `bson:"taskName"`
-	RootDomain string
+	RootDomain string `bson:"rootDomain"`
 }
 
 type DirResult struct {
@@ -157,7 +157,7 @@ type DirResult struct {
 	Project    string
 	Length     int
 	TaskName   string `bson:"taskName"`
-	RootDomain string
+	RootDomain string `bson:"rootDomain"`
 }
 
 type SensitiveRule struct {
@@ -177,20 +177,21 @@ type SensitiveResult struct {
 	Time       string
 	Md5        string
 	TaskName   string `bson:"taskName"`
-	RootDomain string
+	RootDomain string `bson:"rootDomain"`
 }
 
 type VulnResult struct {
-	Url      string
-	VulnId   string
-	VulName  string
-	Matched  string
-	Project  string
-	Level    string
-	Time     string
-	Request  string
-	Response string
-	TaskName string `bson:"taskName"`
+	Url        string
+	VulnId     string
+	VulName    string
+	Matched    string
+	Project    string
+	Level      string
+	Time       string
+	Request    string
+	Response   string
+	TaskName   string `bson:"taskName"`
+	RootDomain string `yaml:"rootDomain"`
 }
 type TmpPageMonitResult struct {
 	Url      string
@@ -232,14 +233,15 @@ type HttpResponse struct {
 }
 
 type NotificationConfig struct {
-	SubdomainScan                 bool `bson:"subdomainScan"`
-	DirScanNotification           bool `bson:"dirScanNotification"`
-	PortScanNotification          bool `bson:"portScanNotification"`
-	SensitiveNotification         bool `bson:"sensitiveNotification"`
-	SubdomainNotification         bool `bson:"subdomainNotification"`
-	SubdomainTakeoverNotification bool `bson:"subdomainTakeoverNotification"`
-	PageMonNotification           bool `bson:"pageMonNotification"`
-	VulNotification               bool `bson:"vulNotification"`
+	SubdomainScan                 bool   `bson:"subdomainScan"`
+	DirScanNotification           bool   `bson:"dirScanNotification"`
+	PortScanNotification          bool   `bson:"portScanNotification"`
+	SensitiveNotification         bool   `bson:"sensitiveNotification"`
+	SubdomainNotification         bool   `bson:"subdomainNotification"`
+	SubdomainTakeoverNotification bool   `bson:"subdomainTakeoverNotification"`
+	PageMonNotification           bool   `bson:"pageMonNotification"`
+	VulNotification               bool   `bson:"vulNotification"`
+	VulLevel                      string `bson:"vulLevel"`
 }
 
 type NotificationApi struct {

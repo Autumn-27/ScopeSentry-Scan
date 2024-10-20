@@ -80,7 +80,7 @@ func processBatch(module string, mq *NotificationQueue) {
 // flushBuffer 模拟处理队列中的数据
 func flushBuffer(module string, buffer *string) {
 	// 处理消息
-	*buffer = "[" + global.AppConfig.NodeName + "]" + module + " results:\n" + *buffer
+	*buffer = "[" + global.AppConfig.NodeName + "][" + module + "]results:\n" + *buffer
 	for _, api := range global.NotificationApi {
 		uri := strings.Replace(api.Url, "*msg*", *buffer, -1)
 		if api.Method == "GET" {

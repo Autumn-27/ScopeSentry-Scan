@@ -135,7 +135,7 @@ func main() {
 				"SentryDir": "-d 6712604bcad762b691bf0d93",
 			},
 			"VulnerabilityScan": {
-				"nuclei": "-t 66dd6b0edcf0ee4a4fef8ad3.yaml",
+				"nuclei": "",
 			},
 		},
 	}
@@ -144,30 +144,48 @@ func main() {
 		return
 	}
 	pebbledb.PebbleStore.Put([]byte("task:1"), []byte(jsonStr))
+
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:83"), []byte("1"))
+
 	//taskE = options.TaskOptions{
-	//	ID:                "2",
-	//	TaskName:          "test",
-	//	SubdomainScan:     []string{"subfinder"},
-	//	SubdomainSecurity: []string{"takeover"},
-	//	AssetMapping:      []string{"httpx"},
-	//	AssetHandle:       []string{""},
-	//	PortScan:          []string{"rustscan"},
-	//	URLScan:           []string{"test"},
-	//	URLSecurity:       []string{"test"},
-	//	WebCrawler:        []string{"test"},
+	//	ID:       "2",
+	//	TaskName: "test",
+	//	//SubdomainScan:       []string{"subfinder", "ksubdomain"},
+	//	//SubdomainSecurity:   []string{"SubdomainTakeover"},
+	//	//PortScanPreparation: []string{"SkipCdn"},
+	//	PortScan: []string{"RustScan"},
+	//	//PortFingerprint:     []string{"fingerprintx"},
+	//	//AssetMapping:        []string{"httpx"},
+	//	//AssetHandle:         []string{"WebFingerprint"},
+	//	//URLScan:             []string{"katana", "wayback"},
+	//	//URLSecurity:         []string{"sensitive"},
+	//	//WebCrawler:          []string{"rad"},
+	//	//DirScan:             []string{"SentryDir"},
 	//	VulnerabilityScan: []string{"nuclei"},
+	//	SubdomainFilename: "66dda6ee3687eb004e6b3bda",
+	//	Parameters: map[string]map[string]string{
+	//		"SubdomainScan": {
+	//			"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
+	//		},
+	//		"DirScan": {
+	//			"SentryDir": "-d 6712604bcad762b691bf0d93",
+	//		},
+	//		"VulnerabilityScan": {
+	//			"nuclei": "-t 66dd6b0edcf0ee4a4fef8bf7.yaml",
+	//		},
+	//	},
 	//}
-	//jsonStr, err = utils.StructToJSON(taskE)
+	//jsonStr, err = utils.Tools.StructToJSON(taskE)
 	//if err != nil {
 	//	return
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8080"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:80"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8081"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:https://baidu.com"), []byte("1"))
-	pebbledb.PebbleStore.Put([]byte("1:https://hackerone.com"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("2:http://123.56.16.123"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:80"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8081"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("1:https://baidu.com"), []byte("1"))
+	//pebbledb.PebbleStore.Put([]byte("1:https://hackerone.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))

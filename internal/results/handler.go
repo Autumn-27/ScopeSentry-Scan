@@ -17,6 +17,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strings"
 )
 
 type handler struct {
@@ -218,4 +219,35 @@ func (h *handler) Dir(result *types.DirResult) {
 		notification.NotificationQueues["DirScan"].Queue <- NotificationMsg
 	}
 	ResultQueues["DirScan"].Queue <- interfaceSlice
+}
+
+func (h *handler) Vulnerability(result *types.VulnResult) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	if global.NotificationConfig.VulNotification {
+		NotificationMsg := ""
+		if global.NotificationConfig.VulLevel != "" {
+			if strings.Contains(strings.ToLower(global.NotificationConfig.VulLevel), strings.ToLower(result.Level)+",") {
+				if result.Url != "" {
+					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Url)
+				} else {
+					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Matched)
+				}
+			}
+		} else {
+			if result.Url != "" {
+				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Url)
+			} else {
+				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Matched)
+			}
+		}
+		notification.NotificationQueues["VulnerabilityScan"].Queue <- NotificationMsg
+	}
+	ResultQueues["VulnerabilityScan"].Queue <- interfaceSlice
 }
