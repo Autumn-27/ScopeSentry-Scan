@@ -112,18 +112,18 @@ func main() {
 	// 性能监控
 	go pprof()
 	taskE := options.TaskOptions{
-		ID:                  "1",
-		TaskName:            "test",
-		SubdomainScan:       []string{"subfinder", "ksubdomain"},
-		SubdomainSecurity:   []string{"SubdomainTakeover"},
-		PortScanPreparation: []string{"SkipCdn"},
-		PortScan:            []string{"RustScan"},
-		PortFingerprint:     []string{"fingerprintx"},
-		AssetMapping:        []string{"httpx"},
-		AssetHandle:         []string{"WebFingerprint"},
-		URLScan:             []string{"katana", "wayback"},
-		URLSecurity:         []string{"sensitive"},
-		WebCrawler:          []string{"rad"},
+		ID:       "1",
+		TaskName: "test",
+		//SubdomainScan:       []string{"subfinder", "ksubdomain"},
+		//SubdomainSecurity:   []string{"SubdomainTakeover"},
+		//PortScanPreparation: []string{"SkipCdn"},
+		PortScan: []string{"RustScan"},
+		//PortFingerprint:     []string{"fingerprintx"},
+		//AssetMapping:        []string{"httpx"},
+		//AssetHandle:         []string{"WebFingerprint"},
+		//URLScan:             []string{"katana", "wayback"},
+		//URLSecurity:         []string{"sensitive"},
+		//WebCrawler:          []string{"rad"},
 		//DirScan:             []string{"SentryDir"},
 		VulnerabilityScan: []string{"nuclei"},
 		SubdomainFilename: "66dda6ee3687eb004e6b3bda",
@@ -135,7 +135,7 @@ func main() {
 				"SentryDir": "-d 6712604bcad762b691bf0d93",
 			},
 			"VulnerabilityScan": {
-				"nuclei": "-t *",
+				"nuclei": "-t 66dd6b0edcf0ee4a4fef8ad3.yaml",
 			},
 		},
 	}
@@ -163,6 +163,10 @@ func main() {
 	//}
 	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
 	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8080"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:80"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8081"), []byte("1"))
+	pebbledb.PebbleStore.Put([]byte("1:https://baidu.com"), []byte("1"))
 	pebbledb.PebbleStore.Put([]byte("1:https://hackerone.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
 	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))

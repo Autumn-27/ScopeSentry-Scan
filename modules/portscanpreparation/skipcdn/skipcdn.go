@@ -124,10 +124,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		domainSkip.Skip = true
 		return nil, nil
 	}
-	flag, _ := utils.Tools.CdnCheck(domainSkip.IP[0])
-	domainSkip.Skip = flag
-	if flag {
-		return nil, nil
+	if len(domainSkip.IP) == 1 {
+		flag, _ := utils.Tools.CdnCheck(domainSkip.IP[0])
+		domainSkip.Skip = flag
+	} else {
+		domainSkip.Skip = false
 	}
 	return nil, nil
 }

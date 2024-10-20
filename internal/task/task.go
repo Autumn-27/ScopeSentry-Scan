@@ -61,7 +61,6 @@ func GetTask() {
 			taskFunc := func(op options.TaskOptions) func() {
 				return func() {
 					defer func(PebbleStore *pebbledb.PebbleDB, targetKey []byte) {
-						fmt.Printf("gggggg")
 						err := PebbleStore.Delete(targetKey)
 						if err != nil {
 							logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete error: %v", err))
