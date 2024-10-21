@@ -170,6 +170,7 @@ type SensitiveRule struct {
 }
 
 type SensitiveResult struct {
+	Url        string
 	UrlId      string
 	SID        string
 	Match      []string

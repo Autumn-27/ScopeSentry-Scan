@@ -153,6 +153,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				if len(result) != 0 {
 					var tmpResult types.SensitiveResult
 					tmpResult = types.SensitiveResult{
+						Url:      data.Output,
 						UrlId:    data.ResultId,
 						SID:      rule.Name,
 						Match:    result,

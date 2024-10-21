@@ -208,8 +208,9 @@ func (h *handler) SensitiveUrl(url string, urlId string, bodyId string) {
 	if flag {
 		update := bson.M{
 			"$set": bson.M{
-				"url":   url,
-				"urlId": urlId,
+				"url":    url,
+				"urlId":  urlId,
+				"bodyId": bodyId,
 			},
 		}
 		// 调用 Upsert 方法，执行插入或更新操作
