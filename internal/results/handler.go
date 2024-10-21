@@ -200,6 +200,26 @@ func (h *handler) SensitiveBody(body *string, md5 string) {
 	}
 }
 
+func (h *handler) SensitiveUrl(url string, urlId string, bodyId string) {
+	key := "SenU:" + urlId
+	collectionName := "SensitiveUrl"
+	selector := bson.M{"urlId": urlId}
+	flag := Duplicate.DuplicateLocalCache(key)
+	if flag {
+		update := bson.M{
+			"$set": bson.M{
+				"url":   url,
+				"urlId": urlId,
+			},
+		}
+		// 调用 Upsert 方法，执行插入或更新操作
+		_, err := mongodb.MongodbClient.Upsert(collectionName, selector, update)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("SensitiveUrl insert mongodb error:%v", err))
+		}
+	}
+}
+
 func (h *handler) Dir(result *types.DirResult) {
 	var interfaceSlice interface{}
 	rootDomain, err := utils.Tools.GetRootDomain(result.Url)

@@ -153,7 +153,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				if len(result) != 0 {
 					var tmpResult types.SensitiveResult
 					tmpResult = types.SensitiveResult{
-						Url:      data.Output,
+						UrlId:    data.ResultId,
 						SID:      rule.Name,
 						Match:    result,
 						Time:     utils.Tools.GetTimeNow(),
@@ -168,6 +168,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 		if findFlag {
 			results.Handler.SensitiveBody(&data.Body, respMd5)
+			results.Handler.SensitiveUrl(data.Output, data.ResultId, respMd5)
 		}
 	}
 	end = time.Now()

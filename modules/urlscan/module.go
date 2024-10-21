@@ -166,6 +166,14 @@ func (r *Runner) ModuleRun() error {
 				} else {
 					// 如果没有开启url扫描，则将爬虫的目标发到下个模块
 					if httpData, ok := data.(types.AssetHttp); ok {
+						// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
+						r.NextModule.GetInput() <- types.UrlResult{
+							Input:      httpData.URL,
+							Output:     httpData.URL,
+							OutputType: "httpx",
+							ResultId:   utils.Tools.GenerateHash(),
+							Body:       httpData.ResponseBody,
+						}
 						r.NextModule.GetInput() <- []string{httpData.URL}
 					}
 				}
