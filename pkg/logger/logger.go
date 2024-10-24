@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"time"
@@ -152,7 +153,7 @@ func PluginsLog(msg string, tp string, module string, id string) {
 
 	}
 	key := fmt.Sprintf("logs:plugins:%v:%v", module, id)
-	SendPluginLogToRedis(key, msg)
+	SendPluginLogToRedis(key, fmt.Sprintf("[%v] [%v] %v", global.AppConfig.NodeName, utils.Tools.GetTimeNow(), msg))
 }
 
 func SendPluginLogToRedis(key string, msg string) {
