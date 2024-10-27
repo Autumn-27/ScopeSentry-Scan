@@ -283,3 +283,23 @@ type KatanaResult struct {
 	PassiveReference *navigation.PassiveReference
 	Error            string
 }
+
+type PageMonit struct {
+	Url        string   `bson:"url"`
+	Content    []string `bson:"content"`
+	Hash       []string `bson:"hash"`
+	Md5        string   `bson:"md5"`
+	Length     []int    `bson:"length"`
+	StatusCode []int    `bson:"statusCode"`
+	Similarity float32  `bson:"similarity"`
+	State      int      `bson:"state"`
+	Project    string   `bson:"project"`
+	Time       string   `bson:"time"`
+	TaskName   string   `bson:"taskName"`
+	RootDomain string   `bson:"rootDomain"`
+}
+
+type PageMonitBody struct {
+	Content []string `bson:"content"`
+	Md5     string   `bson:"md5"`
+}

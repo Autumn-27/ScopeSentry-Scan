@@ -29,14 +29,22 @@ func InitializeResultQueue() {
 		"SubdomainScan", "SubdomainSecurity",
 		"AssetChangeLog", "URLScan",
 		"WebCrawler", "VulnerabilityScan",
-		"SensitiveResult", "DirScan",
+		"SensitiveResult", "DirScan", "PageMonitoring", "PageMonitoringBody",
 	}
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
-		ResultQueues[module] = &ResultQueue{
-			Queue:   make(chan interface{}, batchSize),
-			CloseCh: make(chan struct{}),
+		if module == "PageMonitoringUrl" {
+			ResultQueues[module] = &ResultQueue{
+				Queue:   make(chan interface{}, 100),
+				CloseCh: make(chan struct{}),
+			}
+		} else {
+			ResultQueues[module] = &ResultQueue{
+				Queue:   make(chan interface{}, batchSize),
+				CloseCh: make(chan struct{}),
+			}
 		}
+
 		go processQueue(module, ResultQueues[module])
 	}
 
@@ -100,7 +108,10 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		name = "vulnerability"
 	case "DirScan":
 		name = "DirScanResult"
-
+	case "PageMonitoring":
+		name = "PageMonitoring"
+	case "PageMonitoringBody":
+		name = "PageMonitoringBody"
 	}
 	Results.Insert(name, buffer)
 	*buffer = nil

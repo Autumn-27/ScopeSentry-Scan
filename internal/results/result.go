@@ -8,9 +8,11 @@
 package results
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type result struct {
@@ -34,6 +36,14 @@ func InitializeResults() {
 func (r *result) Insert(name string, result *[]interface{}) bool {
 	_, err := mongodb.MongodbClient.InsertMany(name, *result)
 	if err != nil {
+		var writeException mongo.WriteException
+		if errors.As(err, &writeException) {
+			if name == "PageMonitoring" || name == "PageMonitoringBody" {
+				for _, wErr := range writeException.WriteErrors {
+					logger.SlogErrorLocal(fmt.Sprintf("插入失败的文档: %v, 错误: %v\n", wErr))
+				}
+			}
+		}
 		logger.SlogError(fmt.Sprintf("insert %v error: %s", name, err))
 		return false
 	}

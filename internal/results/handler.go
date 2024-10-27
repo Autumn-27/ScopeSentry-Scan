@@ -272,3 +272,21 @@ func (h *handler) Vulnerability(result *types.VulnResult) {
 	}
 	ResultQueues["VulnerabilityScan"].Queue <- interfaceSlice
 }
+
+func (h *handler) PageMonitoringInsert(result *types.PageMonit) {
+	var interfaceSlice interface{}
+	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
+	}
+	result.RootDomain = rootDomain
+	result.Project = h.GetAssetProject(rootDomain)
+	interfaceSlice = &result
+	ResultQueues["PageMonitoring"].Queue <- interfaceSlice
+}
+
+func (h *handler) PageMonitoringInsertBody(result *types.PageMonitBody) {
+	var interfaceSlice interface{}
+	interfaceSlice = &result
+	ResultQueues["PageMonitoringBody"].Queue <- interfaceSlice
+}

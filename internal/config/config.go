@@ -15,6 +15,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 // LoadConfig 读取配置文件并解析
@@ -94,6 +95,11 @@ func CreateDir() {
 
 }
 
+func InitFilterUrlRe() {
+	disallowedRegex := `(?i)\.(png|apng|bmp|gif|ico|cur|jpg|jpeg|jfif|pjp|pjpeg|svg|tif|tiff|webp|xbm|3gp|aac|flac|mpg|mpeg|mp3|mp4|m4a|m4v|m4p|oga|ogg|ogv|mov|wav|webm|eot|woff|woff2|ttf|otf|css)(?:\?|#|$)`
+	global.DisallowedURLFilters = append(global.DisallowedURLFilters, regexp.MustCompile(disallowedRegex))
+}
+
 func Initialize() {
 	global.AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	global.ConfigDir = filepath.Join(global.AbsolutePath, "config")
@@ -113,4 +119,5 @@ func Initialize() {
 	if err != nil {
 		log.Fatalf("子域名接管规则初始化失败: %v", err)
 	}
+	InitFilterUrlRe()
 }

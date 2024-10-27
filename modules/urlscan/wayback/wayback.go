@@ -10,6 +10,7 @@ package wayback
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -123,6 +124,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	waybackResults := make(chan source.Result, 100)
 	go func() {
 		for result := range waybackResults {
+			isMatch := utils.Tools.IsMatchingFilter(global.DisallowedURLFilters, []byte(result.URL))
+			if isMatch {
+				continue
+			}
 			// 去重
 			flag := results.Duplicate.URL(result.URL, p.TaskId)
 			if flag {

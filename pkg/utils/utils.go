@@ -33,6 +33,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -716,6 +717,15 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	}
 	ah.LastScanTime = ah.Time
 	return ah
+}
+
+func (t *UtilTools) IsMatchingFilter(fs []*regexp.Regexp, d []byte) bool {
+	for _, r := range fs {
+		if r.Match(d) {
+			return true
+		}
+	}
+	return false
 }
 
 //func (t *UtilTools) AssetResultToAssetOther(r types.Asset) types.AssetOther {

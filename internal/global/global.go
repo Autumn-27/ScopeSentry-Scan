@@ -9,6 +9,7 @@ package global
 
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"regexp"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 	ConfigDir    string
 	// AppConfig Global variable to hold the loaded configuration
 	AppConfig             Config
+	DisallowedURLFilters  []*regexp.Regexp
 	VERSION               string
 	FirstRun              bool
 	DictPath              string

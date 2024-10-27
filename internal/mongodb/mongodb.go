@@ -159,7 +159,9 @@ func (c *Client) InsertOne(collectionName string, document interface{}) (*mongo.
 
 func (c *Client) InsertMany(collectionName string, documents []interface{}) (*mongo.InsertManyResult, error) {
 	collection := c.GetCollection(collectionName)
-	return collection.InsertMany(context.Background(), documents)
+	// 设置 InsertMany 选项，允许非顺序插入
+	opts := options.InsertMany().SetOrdered(false)
+	return collection.InsertMany(context.Background(), documents, opts)
 }
 
 // Close 关闭与MongoDB的连接
