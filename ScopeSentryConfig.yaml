@@ -1,0 +1,26 @@
+System:
+    NodeName: DESKTOP-N04JBKM-OLjS4R
+    TimeZoneName: ""
+    MaxTaskNum: ""
+    DirscanThread: ""
+    PortscanThread: ""
+    PortBatchSize: ""
+    PortTimeOut: ""
+    VulScanThread: ""
+    State: ""
+    Running: 0
+    Finished: 0
+    Debug: false
+    CrawlerThread: ""
+    UrlThread: ""
+    UrlMaxNum: ""
+    crawlertimeout: ""
+Mongodb:
+    IP: ""
+    Port: ""
+    Username: ""
+    Password: ""
+Redis:
+    IP: ""
+    Port: ""
+    Password: ""

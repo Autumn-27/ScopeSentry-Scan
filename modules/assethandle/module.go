@@ -9,6 +9,7 @@ package assethandle
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"

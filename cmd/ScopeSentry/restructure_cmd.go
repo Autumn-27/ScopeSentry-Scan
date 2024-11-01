@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/node"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
@@ -199,6 +200,11 @@ func main() {
 	go func() {
 		defer wg.Done() // 减少计数器，表示任务完成
 		task.GetTask()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		node.Register()
 	}()
 	time.Sleep(10 * time.Second)
 	wg.Wait()

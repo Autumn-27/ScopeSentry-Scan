@@ -9,8 +9,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"log"
 )
 
 type SubdomainScanConfig struct {
@@ -117,7 +117,7 @@ func (cfg *ModulesConfigStruct) GetGoroutineCount(moduleName string) int {
 	case "VulnerabilityScan":
 		return cfg.VulnerabilityScan.GoroutineCount
 	default:
-		logger.SlogErrorLocal(fmt.Sprintf("Module %v thread limit not found", moduleName))
+		log.Printf(fmt.Sprintf("Module %v thread limit not found", moduleName))
 		return 0 // 默认值，表示没有找到匹配的模块
 	}
 }

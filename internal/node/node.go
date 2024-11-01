@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
@@ -45,6 +46,10 @@ func Register() {
 	for {
 		if firstRegister {
 			memInfo, _ := mem.VirtualMemory()
+			modulesConfig, err := utils.Tools.MarshalYAMLToString(config.ModulesConfig)
+			if err != nil {
+
+			}
 			nodeInfo := map[string]interface{}{
 				"updateTime":    utils.Tools.GetTimeNow(),
 				"running":       0,
@@ -54,9 +59,9 @@ func Register() {
 				"memNum":        0,
 				"state":         1, //1运行中 2暂停 3未连接
 				"version":       global.VERSION,
-				"modulesConfig": utils.Tools.MarshalYAMLToString(config.ModulesConfig),
+				"modulesConfig": modulesConfig,
 			}
-			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
+			err = redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("Error setting initial values: %s", err))
 				return
