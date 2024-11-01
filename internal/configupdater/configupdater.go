@@ -263,7 +263,6 @@ func UpdateNotification() {
 }
 
 func Initialize() {
-	//UpdateGlobalModulesConfig()
 	if global.FirstRun {
 		UpdateSubfinderApiConfig()
 		UpdateRadConfig()
@@ -271,6 +270,8 @@ func Initialize() {
 		// 更新字典文件 首次运行 拉取所有
 		UpdateDictionary("all")
 	}
+	UpdateGlobalModulesConfig()
+	UpdateNodeModulesConfig()
 	UpdateSensitive()
 	UpdateProject()
 	UpdateWebFinger()

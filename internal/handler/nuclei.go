@@ -5,7 +5,7 @@
 // @time      : 2024/10/20 14:48
 // -------------------------------------------
 
-package handle
+package handler
 
 import (
 	"context"

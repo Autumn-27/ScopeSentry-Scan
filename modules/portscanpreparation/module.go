@@ -9,7 +9,6 @@ package portscanpreparation
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
@@ -77,7 +76,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation), duration)
+					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation), duration)
 				}
 				close(resultChan)
 				resultWg.Wait()
@@ -86,7 +85,7 @@ func (r *Runner) ModuleRun() error {
 			}
 			if !firstData {
 				start = time.Now()
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation))
+				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation))
 				firstData = true
 			}
 			allPluginWg.Add(1)

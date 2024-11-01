@@ -13,10 +13,9 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
@@ -52,7 +51,7 @@ func main() {
 		log.Fatalf("Failed to init logger: %v", err)
 	}
 	// 初始化任务计数器
-	handle.InitHandle()
+	handler.InitHandle()
 	// 更新配置、加载字典
 	configupdater.Initialize()
 	// 初始化模块配置
@@ -111,41 +110,41 @@ func main() {
 	}
 	// 性能监控
 	go pprof()
-	taskE := options.TaskOptions{
-		ID:       "1",
-		TaskName: "test",
-		//SubdomainScan:       []string{"subfinder", "ksubdomain"},
-		//SubdomainSecurity:   []string{"SubdomainTakeover"},
-		//PortScanPreparation: []string{"SkipCdn"},
-		PortScan: []string{"RustScan"},
-		//PortFingerprint:     []string{"fingerprintx"},
-		AssetMapping: []string{"httpx"},
-		//AssetHandle:         []string{"WebFingerprint"},
-		URLScan:     []string{"katana", "wayback"},
-		URLSecurity: []string{"sensitive"},
-		//WebCrawler:          []string{"rad"},
-		//DirScan:             []string{"SentryDir"},
-		//VulnerabilityScan: []string{"nuclei"},
-		SubdomainFilename: "66dda6ee3687eb004e6b3bda",
-		Parameters: map[string]map[string]string{
-			"SubdomainScan": {
-				"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
-			},
-			"DirScan": {
-				"SentryDir": "-d 6712604bcad762b691bf0d93",
-			},
-			"VulnerabilityScan": {
-				"nuclei": "-t *",
-			},
-		},
-	}
-	jsonStr, err := utils.Tools.StructToJSON(taskE)
-	if err != nil {
-		return
-	}
-	pebbledb.PebbleStore.Put([]byte("task:1"), []byte(jsonStr))
-
-	pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:83"), []byte("1"))
+	//taskE := options.TaskOptions{
+	//	ID:       "1",
+	//	TaskName: "test",
+	//	//SubdomainScan:       []string{"subfinder", "ksubdomain"},
+	//	//SubdomainSecurity:   []string{"SubdomainTakeover"},
+	//	//PortScanPreparation: []string{"SkipCdn"},
+	//	PortScan: []string{"RustScan"},
+	//	//PortFingerprint:     []string{"fingerprintx"},
+	//	AssetMapping: []string{"httpx"},
+	//	//AssetHandle:         []string{"WebFingerprint"},
+	//	URLScan:     []string{"katana", "wayback"},
+	//	URLSecurity: []string{"sensitive"},
+	//	//WebCrawler:          []string{"rad"},
+	//	//DirScan:             []string{"SentryDir"},
+	//	//VulnerabilityScan: []string{"nuclei"},
+	//	SubdomainFilename: "66dda6ee3687eb004e6b3bda",
+	//	Parameters: map[string]map[string]string{
+	//		"SubdomainScan": {
+	//			"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
+	//		},
+	//		"DirScan": {
+	//			"SentryDir": "-d 6712604bcad762b691bf0d93",
+	//		},
+	//		"VulnerabilityScan": {
+	//			"nuclei": "-t *",
+	//		},
+	//	},
+	//}
+	//jsonStr, err := utils.Tools.StructToJSON(taskE)
+	//if err != nil {
+	//	return
+	//}
+	//pebbledb.PebbleStore.Put([]byte("task:1"), []byte(jsonStr))
+	//
+	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:83"), []byte("1"))
 
 	//taskE = options.TaskOptions{
 	//	ID:       "2",

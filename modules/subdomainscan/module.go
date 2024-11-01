@@ -9,7 +9,6 @@ package subdomainscan
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
@@ -126,7 +125,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handle.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
+					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
 				}
 				close(resultChan)
 				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
@@ -136,7 +135,7 @@ func (r *Runner) ModuleRun() error {
 			}
 			if !firstData {
 				start = time.Now()
-				handle.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
+				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))
 				firstData = true
 			}
 			allPluginWg.Add(1)

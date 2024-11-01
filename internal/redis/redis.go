@@ -103,6 +103,14 @@ func (r *Client) PopFromListR(ctx context.Context, key string) (string, error) {
 	return r.client.RPop(ctx, key).Result()
 }
 
+func (r *Client) GetFirstFromList(ctx context.Context, key string) (string, error) {
+	return r.client.LIndex(ctx, key, 0).Result()
+}
+
+func (r *Client) RemoveFirstFromList(ctx context.Context, key string) (string, error) {
+	return r.client.LPop(ctx, key).Result()
+}
+
 func (r *Client) Exists(ctx context.Context, key string) (bool, error) {
 	exists, err := r.client.Exists(ctx, key).Result()
 	if err != nil {
@@ -110,6 +118,7 @@ func (r *Client) Exists(ctx context.Context, key string) (bool, error) {
 	}
 	return exists == 1, nil
 }
+
 func (r *Client) SAdd(ctx context.Context, key string, members ...interface{}) (int64, error) {
 	return r.client.SAdd(ctx, key, members...).Result()
 }

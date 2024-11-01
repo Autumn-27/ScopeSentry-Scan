@@ -117,6 +117,11 @@ func (pm *Manager) PrintRunningGoroutines(sortedModuleNames []string) {
 	}
 }
 
+func (pm *Manager) GetModuleRunningGoroutines(module string) int {
+	running := pm.pools[module].Running()
+	return running
+}
+
 func StartMonitoring() {
 	ticker := time.NewTicker(10 * time.Second) // 每隔10秒打印一次
 	defer ticker.Stop()

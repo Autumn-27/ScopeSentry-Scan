@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/handle"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
@@ -67,7 +66,7 @@ func Register() {
 		} else {
 			key = "node:" + global.AppConfig.NodeName
 			cpuNum, memNum := utils.Tools.GetSystemUsage()
-			run, fin := handle.TaskHandle.GetRunFin()
+			run, fin := handler.TaskHandle.GetRunFin()
 			nodeInfo := map[string]interface{}{
 				"updateTime": utils.Tools.GetTimeNow(),
 				"cpuNum":     cpuNum,
