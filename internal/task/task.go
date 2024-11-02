@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -122,12 +123,13 @@ func RunRedisTask() {
 		}
 		if exists {
 			var wg sync.WaitGroup
-			logger.SlogInfo("Get a new task")
+
 			taskInfo, err := redis.RedisClient.GetFirstFromList(context.Background(), TaskNodeName)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("GetTask info error: %v", err))
 				continue
 			}
+			logger.SlogInfo(fmt.Sprintf("Get a new task: %v", taskInfo))
 			var runnerOption options.TaskOptions
 			err = json.Unmarshal([]byte(taskInfo), &runnerOption)
 			if err != nil {
@@ -142,6 +144,7 @@ func RunRedisTask() {
 				logger.SlogError(fmt.Sprintf("PebbleStore.Put Task error: %s", err))
 				continue
 			}
+			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
 			for {
 				target, err := redis.RedisClient.PopFromListR(context.Background(), "TaskInfo:"+runnerOption.ID)
 				if err != nil {
@@ -178,15 +181,21 @@ func RunRedisTask() {
 				logger.SlogInfoLocal(fmt.Sprintf("task target pool running goroutines: %v", pool.PoolManage.GetModuleRunningGoroutines("task")))
 			}
 			wg.Wait()
+			logger.SlogInfo(fmt.Sprintf("Task end: %v", runnerOption.ID))
 			handler.CloseNucleiEngine()
 			// 目标运行完毕 删除任务信息
-			// 删除本地缓存
+			// 删除本地缓存任务信息
 			err = pebbledb.PebbleStore.Delete([]byte(taskKey))
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", taskKey, err))
 			}
+			// 任务结束重新初始化花奴才能
+			err = bigcache.Initialize()
+			if err != nil {
+				logger.SlogErrorLocal(fmt.Sprintf("bigcache Initialize error: %v", err))
+			}
 			// 删除redis信息
-			_, err = redis.RedisClient.RemoveFirstFromList(context.Background(), TaskNodeName)
+			_, err = redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
 			}

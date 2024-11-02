@@ -62,6 +62,7 @@ func (r *Runner) ModuleRun() error {
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
+					time.Sleep(10 * time.Second)
 					r.NextModule.CloseInput()
 					return
 				}

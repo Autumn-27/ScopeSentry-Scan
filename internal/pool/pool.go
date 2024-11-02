@@ -57,6 +57,7 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 }
 
 func (pm *Manager) SetGoroutineCount(moduleName string, count int) error {
+	logger.SlogInfoLocal(fmt.Sprintf("%v SetGoroutineCount: %v", moduleName, count))
 	pm.mu.Lock()
 	lock, exists := pm.locks[moduleName]
 	if !exists {

@@ -9,6 +9,7 @@ package configupdater
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
@@ -17,8 +18,10 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	goRedis "github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"os"
 	"path/filepath"
 )
 
@@ -45,7 +48,10 @@ func UpdateNodeModulesConfig() {
 	// 从 Redis 中获取 nodeName 的值
 	modulesConfigString, err := redis.RedisClient.HGet(context.Background(), redisNodeName, "modulesConfig")
 	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("node config load error: %v", err))
+		if !errors.Is(err, goRedis.Nil) {
+			logger.SlogErrorLocal(fmt.Sprintf("node config load error: %v", err))
+
+		}
 		return
 	}
 	err = utils.Tools.WriteContentFile(config.ModulesConfigPath, modulesConfigString)
@@ -155,24 +161,6 @@ func UpdateSensitive() {
 	return
 }
 
-func UpdateNodeName(name string) {
-	logger.SlogInfoLocal("UpdateNodeName begin")
-	oldName := global.AppConfig.NodeName
-	global.AppConfig.NodeName = name
-	key := "node:" + oldName
-	err := redis.RedisClient.HDel(context.Background(), key)
-	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("update node name error: %v", err))
-		return
-	}
-	if err := utils.Tools.WriteYAMLFile(global.ConfigPath, global.AppConfig); err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("update node name write error: %v", err))
-		return
-	}
-	logger.SlogInfoLocal("UpdateNodeName end")
-	return
-}
-
 type tmpProject struct {
 	ID          primitive.ObjectID `bson:"_id"`
 	RootDomains []string           `bson:"root_domains"`
@@ -204,19 +192,54 @@ type tmpPoc struct {
 	Level   int                `bson:"level"`
 }
 
-func LoadPoc() {
+func LoadPoc(id []string) {
 	logger.SlogInfoLocal("poc load begin")
-	var tmpPocR []tmpPoc
-	if err := mongodb.MongodbClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
-		logger.SlogError(fmt.Sprintf("Get Poc List error: %s", err))
-		return
+	filePath := filepath.Join(global.PocDir, "lock")
+	_, err := os.Stat(filePath)
+	existFlag := false
+	if err == nil {
+		existFlag = true // 文件存在
 	}
+	var tmpPocR []tmpPoc
+	// 加载所有poc
+	if len(id) == 0 {
+		if !existFlag {
+			if err := mongodb.MongodbClient.FindAll("PocList", bson.M{}, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
+				logger.SlogError(fmt.Sprintf("Get Poc List error: %s", err))
+				return
+			}
+		}
+	} else {
+		var objectIDs []primitive.ObjectID
+		for _, strID := range id {
+			objID, err := primitive.ObjectIDFromHex(strID)
+			if err != nil {
+				logger.SlogError(fmt.Sprintf("Invalid ObjectID format: %s", strID))
+				return
+			}
+			objectIDs = append(objectIDs, objID)
+		}
+
+		// 查询指定的 id
+		filter := bson.M{"_id": bson.M{"$in": objectIDs}}
+		if err := mongodb.MongodbClient.FindAll("PocList", filter, bson.M{"_id": 1, "content": 1, "name": 1, "level": 1}, &tmpPocR); err != nil {
+			logger.SlogError(fmt.Sprintf("Get Poc List by ID error: %s", err))
+			return
+		}
+	}
+
 	if len(tmpPocR) != 0 {
 		for _, poc := range tmpPocR {
 			id := poc.ID.Hex()
 			err := utils.Tools.WriteContentFile(filepath.Join(global.PocDir, string(id)+".yaml"), poc.Content)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("Failed to write poc %s: %s", poc.Hash, err))
+			}
+		}
+		if !existFlag {
+			err := utils.Tools.WriteContentFile(filePath, "true")
+			if err != nil {
+				logger.SlogError(fmt.Sprintf("Failed to write poc lock: %s", err))
 			}
 		}
 	}
@@ -263,13 +286,10 @@ func UpdateNotification() {
 }
 
 func Initialize() {
-	if global.FirstRun {
-		UpdateSubfinderApiConfig()
-		UpdateRadConfig()
-		LoadPoc()
-		// 更新字典文件 首次运行 拉取所有
-		UpdateDictionary("all")
-	}
+	UpdateSubfinderApiConfig()
+	UpdateRadConfig()
+	LoadPoc([]string{})
+	UpdateDictionary("all")
 	UpdateGlobalModulesConfig()
 	UpdateNodeModulesConfig()
 	UpdateSensitive()

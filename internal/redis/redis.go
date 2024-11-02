@@ -85,6 +85,14 @@ func (r *Client) HDel(ctx context.Context, key string, fields ...string) error {
 	}
 	return r.client.HDel(ctx, key, fields...).Err()
 }
+
+func (r *Client) Del(ctx context.Context, key string) error {
+	if r == nil {
+		return errors.New("redis client nil")
+	}
+	return r.client.Del(ctx, key).Err()
+}
+
 func (r *Client) Expire(ctx context.Context, key string, expiration time.Duration) error {
 	return r.client.Expire(ctx, key, expiration).Err()
 }
@@ -107,7 +115,7 @@ func (r *Client) GetFirstFromList(ctx context.Context, key string) (string, erro
 	return r.client.LIndex(ctx, key, 0).Result()
 }
 
-func (r *Client) RemoveFirstFromList(ctx context.Context, key string) (string, error) {
+func (r *Client) PopFirstFromList(ctx context.Context, key string) (string, error) {
 	return r.client.LPop(ctx, key).Result()
 }
 

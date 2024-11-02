@@ -206,6 +206,11 @@ func main() {
 		defer wg.Done()
 		node.Register()
 	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		go configupdater.RefreshConfig()
+	}()
 	time.Sleep(10 * time.Second)
 	wg.Wait()
 }

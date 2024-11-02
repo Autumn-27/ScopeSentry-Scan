@@ -46,6 +46,16 @@ func LoadConfig() error {
 				Password: getEnv("REDIS_PASSWORD", ""),
 			},
 		}
+		nodeName := global.AppConfig.NodeName
+		if nodeName == "" {
+			hostname, err := os.Hostname()
+			if err != nil {
+				fmt.Println("Error:", err)
+				hostname = utils.Tools.GenerateRandomString(6)
+			}
+			global.AppConfig.NodeName = hostname + "-" + utils.Tools.GenerateRandomString(6)
+		}
+		global.AppConfig.State = 1
 		// 创建配置文件
 		if err := createConfigFile(global.ConfigPath, global.AppConfig); err != nil {
 			return err

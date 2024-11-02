@@ -10,6 +10,7 @@ package global
 // Config 结构体
 type Config struct {
 	NodeName     string        `yaml:"NodeName"`
+	State        int           `yaml:"state"`
 	TimeZoneName string        `yaml:"TimeZoneName"`
 	Debug        bool          `yaml:"debug"`
 	MongoDB      MongoDBConfig `yaml:"mongodb"`
