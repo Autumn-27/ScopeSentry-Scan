@@ -164,12 +164,13 @@ func UpdateSensitive() {
 type tmpProject struct {
 	ID          primitive.ObjectID `bson:"_id"`
 	RootDomains []string           `bson:"root_domains"`
+	Ignore      string             `bson:"ignore"`
 }
 
 func UpdateProject() {
 	logger.SlogInfoLocal("project load begin")
 	var tmpProjects []tmpProject
-	if err := mongodb.MongodbClient.FindAll("project", bson.M{}, bson.M{"_id": 1, "root_domains": 1}, &tmpProjects); err != nil {
+	if err := mongodb.MongodbClient.FindAll("project", bson.M{}, bson.M{"_id": 1, "root_domains": 1, "ignore": 1}, &tmpProjects); err != nil {
 		return
 	}
 	global.Projects = []types.Project{}
@@ -179,6 +180,13 @@ func UpdateProject() {
 		// 将 tmpProject 的值赋给 types.Project 的对应字段
 		proj.ID = tmpProj.ID.Hex()
 		proj.Target = tmpProj.RootDomains
+		ignoreList, regexList, err := utils.Tools.GenerateIgnore(tmpProj.Ignore)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("GenerateIgnore error: %v", err))
+			return
+		}
+		proj.IgnoreList = ignoreList
+		proj.IgnoreRegexList = regexList
 		global.Projects = append(global.Projects, proj)
 	}
 	logger.SlogInfoLocal("project load end")

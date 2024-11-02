@@ -11,6 +11,7 @@ import (
 	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -65,10 +66,10 @@ type PortAlive struct {
 	Port string `bson:"port"`
 }
 type Project struct {
-	ID              string   `bson:"id"`
-	Target          []string `bson:"target"`
-	IgnoreList      []string `bson:"ignoreList"`
-	IgnoreRegexList []string `yaml:"ignoreRegexList"`
+	ID              string           `bson:"id"`
+	Target          []string         `bson:"target"`
+	IgnoreList      []string         `bson:"ignoreList"`
+	IgnoreRegexList []*regexp.Regexp `yaml:"ignoreRegexList"`
 }
 
 type AssetOther struct {

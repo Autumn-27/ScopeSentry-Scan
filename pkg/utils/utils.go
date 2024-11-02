@@ -728,9 +728,106 @@ func (t *UtilTools) IsMatchingFilter(fs []*regexp.Regexp, d []byte) bool {
 	return false
 }
 
-//func (t *UtilTools) AssetResultToAssetOther(r types.Asset) types.AssetOther {
-//	var ao = types.AssetOther{
+//	func (t *UtilTools) AssetResultToAssetOther(r types.Asset) types.AssetOther {
+//		var ao = types.AssetOther{
 //
+//		}
+//		return ao
 //	}
-//	return ao
-//}
+//
+// generateIPRange 生成 IP 范围
+func generateIPRange(start, end string) ([]string, error) {
+	startIP := net.ParseIP(start)
+	endIP := net.ParseIP(end)
+
+	if startIP == nil || endIP == nil {
+		return nil, fmt.Errorf("invalid IP addresses: %s, %s", start, end)
+	}
+
+	var ipList []string
+	for ip := startIP; !ip.Equal(endIP); incrementIP(ip) {
+		ipList = append(ipList, ip.String())
+	}
+	ipList = append(ipList, endIP.String()) // 添加结束 IP
+
+	return ipList, nil
+}
+
+// incrementIP 增加 IP 地址
+func incrementIP(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] != 0 {
+			break
+		}
+	}
+}
+
+// ipRangeToSlice 将 IP 网络转换为字符串切片
+func ipRangeToSlice(ipNet *net.IPNet) []string {
+	var ipList []string
+	for ip := ipNet.IP.Mask(ipNet.Mask); ipNet.Contains(ip); incrementIP(ip) {
+		ipList = append(ipList, ip.String())
+	}
+	return ipList
+}
+
+func (t *UtilTools) GenerateTarget(target string) ([]string, error) {
+	if strings.Contains(target, "http://") || strings.Contains(target, "https://") {
+		return []string{target}, nil
+	}
+
+	if strings.Contains(target, "-") {
+		// 处理 IP 范围
+		parts := strings.Split(target, "-")
+		if len(parts) != 2 {
+			return []string{target}, nil
+		}
+		startIP := strings.TrimSpace(parts[0])
+		endIP := strings.TrimSpace(parts[1])
+		ipRange, err := generateIPRange(startIP, endIP)
+		if err != nil {
+			return []string{target}, nil
+		}
+		return ipRange, err
+	}
+
+	if strings.Contains(target, "/") {
+		// 处理网络
+		_, ipNet, err := net.ParseCIDR(target)
+		if err != nil {
+			return []string{target}, nil
+		}
+		return ipRangeToSlice(ipNet), nil
+	}
+
+	// 返回单个目标
+	return []string{target}, nil
+}
+
+func (t *UtilTools) GenerateIgnore(ignore string) ([]string, []*regexp.Regexp, error) {
+	var ignoreList []string
+	var regexList []*regexp.Regexp
+	for _, ta := range strings.Split(ignore, "\n") {
+		ta = strings.ReplaceAll(ta, "http://", "")
+		ta = strings.ReplaceAll(ta, "https://", "")
+		ta = strings.TrimSpace(ta)
+		if !strings.Contains(ta, "*") {
+			result, err := t.GenerateTarget(ta)
+			if err != nil {
+				return nil, nil, err
+			}
+			ignoreList = append(ignoreList, result...)
+		} else {
+			// 转义并替换为正则表达式
+			tEscaped := regexp.QuoteMeta(ta)
+			tEscaped = strings.ReplaceAll(tEscaped, `\*`, `.*`)
+			regex, err := regexp.Compile(tEscaped)
+			if err != nil {
+				return nil, nil, err
+			}
+			regexList = append(regexList, regex)
+		}
+	}
+	return ignoreList, regexList, nil
+}

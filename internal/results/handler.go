@@ -33,6 +33,18 @@ func (h *handler) GetAssetProject(host string) string {
 	for _, p := range global.Projects {
 		for _, t := range p.Target {
 			if host == t {
+				// 判断是否为黑名单
+				for _, igTarget := range p.IgnoreList {
+					if host == igTarget {
+						return ""
+					}
+				}
+				// 正则判断是否为黑名单
+				for _, igRegex := range p.IgnoreRegexList {
+					if igRegex.MatchString(host) {
+						return ""
+					}
+				}
 				return p.ID
 			}
 		}
