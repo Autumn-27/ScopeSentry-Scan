@@ -65,9 +65,12 @@ type PortAlive struct {
 	Port string `bson:"port"`
 }
 type Project struct {
-	ID     string   `bson:"id"`
-	Target []string `bson:"target"`
+	ID              string   `bson:"id"`
+	Target          []string `bson:"target"`
+	IgnoreList      []string `bson:"ignoreList"`
+	IgnoreRegexList []string `yaml:"ignoreRegexList"`
 }
+
 type AssetOther struct {
 	Time         string          `bson:"time" csv:"time"`
 	LastScanTime string          `bson:"lastScanTime"`
