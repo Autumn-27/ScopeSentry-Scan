@@ -9,9 +9,9 @@ package runner
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"sync"
 	"time"
 )
@@ -21,6 +21,7 @@ func Run(op options.TaskOptions) {
 	var start time.Time
 	var end time.Time
 	start = time.Now()
+	handler.TaskHandle.ProgressStart("scan", op.Target, op.ID, 1)
 	op.ModuleRunWg = &wg
 	op.TargetParser = append(op.TargetParser, "7bbaec6487f51a9aafeff4720c7643f0")
 	process := modules.CreateScanProcess(&op)
@@ -39,5 +40,6 @@ func Run(op options.TaskOptions) {
 	wg.Wait()
 	end = time.Now()
 	duration := end.Sub(start)
-	logger.SlogInfoLocal(fmt.Sprintf("ModuleRun completed: %v %v %v", op.ID, op.Target, duration))
+	handler.TaskHandle.ProgressEnd("scan", op.Target, op.ID, 1, duration)
+	handler.TaskHandle.TaskEnd(op.Target, op.ID)
 }

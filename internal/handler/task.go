@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
 	"time"
@@ -86,4 +87,21 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int,
 		logger.SlogError(fmt.Sprintf("ProgressEnd redis error: %s", err))
 		return
 	}
+}
+
+func (h *Handle) TaskEnd(target string, taskId string) {
+	key := "TaskInfo:time:" + taskId
+	err := redis.RedisClient.Set(context.Background(), key, system.GetTimeNow())
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("TaskEnds push redis error: %s", err))
+		return
+	}
+
+	key = "TaskInfo:tmp:" + taskId
+	_, err = system.RedisClient.AddToList(context.Background(), key, target)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("TaskEnds push redis error: %s", err))
+		return
+	}
+
 }
