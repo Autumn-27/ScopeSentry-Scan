@@ -111,14 +111,14 @@ func (r *Runner) ModuleRun() error {
 				} else {
 					if len(r.Option.PortFingerprint) != 0 {
 						// 调用插件
-						for _, pluginName := range r.Option.PortFingerprint {
+						for _, pluginId := range r.Option.PortFingerprint {
 							//var plgWg sync.WaitGroup
 							var plgWg sync.WaitGroup
-							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+							plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 							if flag {
+								logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", plg.GetName(), data))
 								plgWg.Add(1)
-								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+								args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 								if argsFlag {
 									plg.SetParameter(args)
 								} else {
@@ -145,10 +145,10 @@ func (r *Runner) ModuleRun() error {
 									// 如果已经识别到端口的服务，则退出循环不执行之后的插件
 									break
 								}
+								logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", plg.GetName(), data))
 							} else {
-								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+								logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 							}
-							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 						}
 						// 如果没有检测到端口服务，则获取原始响应
 						if asset.Service == "" {

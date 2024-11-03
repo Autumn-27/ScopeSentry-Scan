@@ -9,7 +9,6 @@ package pebbledb
 
 import (
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/cockroachdb/pebble"
 )
 
@@ -100,7 +99,6 @@ func (p *PebbleDB) GetKeysWithPrefix(prefix string) (map[string][]byte, error) {
 	// 遍历所有符合条件的键
 	for iter.First(); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		logger.SlogInfoLocal(fmt.Sprintf("Key: %s", string(key)))
 		value := iter.Value()
 		result[string(key)] = value
 	}

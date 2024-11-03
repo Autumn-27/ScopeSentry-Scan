@@ -109,13 +109,13 @@ func (r *Runner) ModuleRun() error {
 			go func(data interface{}) {
 				defer allPluginWg.Done()
 				// 处理输入数据
-				for _, pluginName := range r.Option.TargetParser {
+				for _, pluginId := range r.Option.TargetParser {
 					var plgWg sync.WaitGroup
-					logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 					if flag {
+						logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", plg.GetName(), data))
 						plgWg.Add(1)
-						args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+						args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 						if argsFlag {
 							plg.SetParameter(args)
 						} else {
@@ -138,10 +138,10 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 						}
 						plgWg.Wait()
+						logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", plg.GetName(), data))
 					} else {
-						logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+						logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 					}
-					logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 				}
 			}(data)
 

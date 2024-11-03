@@ -19,7 +19,7 @@ import (
 func Run(op options.TaskOptions) {
 	var wg sync.WaitGroup
 	op.ModuleRunWg = &wg
-	op.TargetParser = append(op.TargetParser, "TargetParser")
+	op.TargetParser = append(op.TargetParser, "7bbaec6487f51a9aafeff4720c7643f0")
 	process := modules.CreateScanProcess(&op)
 	ch := make(chan interface{})
 	process.SetInput(ch)

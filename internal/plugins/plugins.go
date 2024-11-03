@@ -71,62 +71,62 @@ func (pm *PluginManager) GetPlugin(module, name string) (interfaces.Plugin, bool
 func (pm *PluginManager) InitializePlugins() error {
 	// TargetParser
 	targetparserPlugin := targetparser.NewPlugin()
-	pm.RegisterPlugin("TargetHandler", targetparserPlugin.Name, targetparserPlugin)
+	pm.RegisterPlugin("TargetHandler", targetparserPlugin.PluginId, targetparserPlugin)
 	// SubdomainScan模块
 	// subfinder
 	subfinderPlugin := subfinder.NewPlugin()
-	pm.RegisterPlugin(subfinderPlugin.Module, subfinderPlugin.Name, subfinderPlugin)
+	pm.RegisterPlugin(subfinderPlugin.Module, subfinderPlugin.PluginId, subfinderPlugin)
 	// kusbdomain
 	ksubdomainPlugin := ksubdomain.NewPlugin()
-	pm.RegisterPlugin(ksubdomainPlugin.Module, ksubdomainPlugin.Name, ksubdomainPlugin)
+	pm.RegisterPlugin(ksubdomainPlugin.Module, ksubdomainPlugin.PluginId, ksubdomainPlugin)
 
 	// SubdomainSecurity模块
 	subdomainTakeoverPlugin := subdomaintakeover.NewPlugin()
-	pm.RegisterPlugin(subdomainTakeoverPlugin.Module, subdomainTakeoverPlugin.Name, subdomainTakeoverPlugin)
+	pm.RegisterPlugin(subdomainTakeoverPlugin.Module, subdomainTakeoverPlugin.PluginId, subdomainTakeoverPlugin)
 
 	// 端口扫描预处理
 	skipcdnPlugin := skipcdn.NewPlugin()
-	pm.RegisterPlugin(skipcdnPlugin.Module, skipcdnPlugin.Name, skipcdnPlugin)
+	pm.RegisterPlugin(skipcdnPlugin.Module, skipcdnPlugin.PluginId, skipcdnPlugin)
 
 	// 端口扫描rustscan
 	rustscanPlugin := rustscan.NewPlugin()
-	pm.RegisterPlugin(rustscanPlugin.Module, rustscanPlugin.Name, rustscanPlugin)
+	pm.RegisterPlugin(rustscanPlugin.Module, rustscanPlugin.PluginId, rustscanPlugin)
 
 	// 端口指纹识别
 	fingerprintxPlugin := fingerprintx.NewPlugin()
-	pm.RegisterPlugin(fingerprintxPlugin.Module, fingerprintxPlugin.Name, fingerprintxPlugin)
+	pm.RegisterPlugin(fingerprintxPlugin.Module, fingerprintxPlugin.PluginId, fingerprintxPlugin)
 
 	// httpx
 	httpxPlugin := httpx.NewPlugin()
-	pm.RegisterPlugin(httpxPlugin.Module, httpxPlugin.Name, httpxPlugin)
+	pm.RegisterPlugin(httpxPlugin.Module, httpxPlugin.PluginId, httpxPlugin)
 
 	// WebFingerprint
 	webFingerprintPlugin := webfingerprint.NewPlugin()
-	pm.RegisterPlugin(webFingerprintPlugin.Module, webFingerprintPlugin.Name, webFingerprintPlugin)
+	pm.RegisterPlugin(webFingerprintPlugin.Module, webFingerprintPlugin.PluginId, webFingerprintPlugin)
 
 	// katana
 	katanaPlugin := katana.NewPlugin()
-	pm.RegisterPlugin(katanaPlugin.Module, katanaPlugin.Name, katanaPlugin)
+	pm.RegisterPlugin(katanaPlugin.Module, katanaPlugin.PluginId, katanaPlugin)
 
 	// wayback
 	waybackPlugin := wayback.NewPlugin()
-	pm.RegisterPlugin(waybackPlugin.Module, waybackPlugin.Name, waybackPlugin)
+	pm.RegisterPlugin(waybackPlugin.Module, waybackPlugin.PluginId, waybackPlugin)
 
 	// rad
 	radPlugin := rad.NewPlugin()
-	pm.RegisterPlugin(radPlugin.Module, radPlugin.Name, radPlugin)
+	pm.RegisterPlugin(radPlugin.Module, radPlugin.PluginId, radPlugin)
 	// sensitive
 	sensitiveModule := sensitive.NewPlugin()
-	pm.RegisterPlugin(sensitiveModule.Module, sensitiveModule.Name, sensitiveModule)
+	pm.RegisterPlugin(sensitiveModule.Module, sensitiveModule.PluginId, sensitiveModule)
 
 	// SentryDir
 	dirPlugin := sentrydir.NewPlugin()
-	pm.RegisterPlugin(dirPlugin.Module, dirPlugin.Name, dirPlugin)
+	pm.RegisterPlugin(dirPlugin.Module, dirPlugin.PluginId, dirPlugin)
 
 	// nuclei
 	nucleiPlugin := nuclei.NewPlugin()
-	pm.RegisterPlugin(nucleiPlugin.Module, nucleiPlugin.Name, nucleiPlugin)
-	
+	pm.RegisterPlugin(nucleiPlugin.Module, nucleiPlugin.PluginId, nucleiPlugin)
+
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

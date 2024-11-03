@@ -106,14 +106,14 @@ func (r *Runner) ModuleRun() error {
 				//发送来的数据 只能是types.DomainSkip
 				if len(r.Option.PortScan) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.PortScan {
+					for _, pluginId := range r.Option.PortScan {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 						if flag {
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute: %v", plg.GetName(), data))
 							plgWg.Add(1)
-							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 							if argsFlag {
 								plg.SetParameter(args)
 							} else {
@@ -139,10 +139,10 @@ func (r *Runner) ModuleRun() error {
 								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 							}
 							plgWg.Wait()
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", plg.GetName(), data))
 						} else {
-							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
 				} else {
 					// 如果没有开启端口扫描，则发送没有端口的

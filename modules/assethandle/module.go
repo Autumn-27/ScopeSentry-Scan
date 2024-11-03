@@ -166,14 +166,14 @@ func (r *Runner) ModuleRun() error {
 				}
 				if len(r.Option.AssetHandle) != 0 {
 					// 调用插件
-					for _, pluginName := range r.Option.AssetHandle {
+					for _, pluginId := range r.Option.AssetHandle {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", pluginName))
-						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 						if flag {
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetName()))
 							plgWg.Add(1)
-							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 							if argsFlag {
 								plg.SetParameter(args)
 							} else {
@@ -209,10 +209,10 @@ func (r *Runner) ModuleRun() error {
 								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 							}
 							plgWg.Wait()
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", plg.GetName()))
 						} else {
-							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginName))
+							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 						}
-						logger.SlogDebugLocal(fmt.Sprintf("%v plugin end execute", pluginName))
 					}
 				}
 				// 如果没有开启此模块，或者开启此模块并且插件运行结束，将data发送到结果处理处

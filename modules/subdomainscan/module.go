@@ -153,14 +153,14 @@ func (r *Runner) ModuleRun() error {
 					// 跳过插件
 					skipPluginFlag := true
 					// 调用插件
-					for _, pluginName := range r.Option.SubdomainScan {
+					for _, pluginId := range r.Option.SubdomainScan {
 						//var plgWg sync.WaitGroup
 						var plgWg sync.WaitGroup
-						logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", pluginName, data))
-						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginName)
+						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 						if flag {
+							logger.SlogInfoLocal(fmt.Sprintf("%v plugin start execute: %v", plg.GetName(), data))
 							plgWg.Add(1)
-							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetName())
+							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 							if argsFlag {
 								plg.SetParameter(args)
 							} else {
@@ -188,16 +188,16 @@ func (r *Runner) ModuleRun() error {
 								logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 							}
 							plgWg.Wait()
+							logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", plg.GetName(), data))
 						} else {
 							// 插件没有找到跳过此插件
-							logger.SlogError(fmt.Sprintf("plugin %v not found, Skip this plugin", pluginName))
+							logger.SlogError(fmt.Sprintf("plugin %v not found, Skip this plugin", pluginId))
 							// 在多个插件都没有找到的情况下只发送一次
 							if skipPluginFlag {
 								resultChan <- data
 								skipPluginFlag = false
 							}
 						}
-						logger.SlogInfoLocal(fmt.Sprintf("%v plugin end execute: %v", pluginName, data))
 					}
 				}
 
