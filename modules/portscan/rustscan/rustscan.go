@@ -141,9 +141,9 @@ func (p *Plugin) Install() error {
 	RustscanPath := filepath.Join(global.ExtDir, "rustscan")
 	RustscanExecPath := filepath.Join(RustscanPath, p.RustFileName)
 	if _, err := os.Stat(RustscanExecPath); os.IsNotExist(err) {
-		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", p.RustDir, p.RustFileName), RustscanExecPath)
+		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/raw/refs/heads/1.5-restructure/tools", p.RustDir, p.RustFileName), RustscanExecPath)
 		if err != nil {
-			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", p.RustDir, p.RustFileName), RustscanExecPath)
+			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/1.5-restructure/tools", p.RustDir, p.RustFileName), RustscanExecPath)
 			if err != nil {
 				return err
 			}

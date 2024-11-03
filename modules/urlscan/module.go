@@ -82,6 +82,7 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				time.Sleep(3 * time.Second)
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
@@ -89,6 +90,7 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLScan), duration)
 				}
+				logger.SlogDebugLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				close(resultChan)
 				resultWg.Wait()
 				r.Option.ModuleRunWg.Done()

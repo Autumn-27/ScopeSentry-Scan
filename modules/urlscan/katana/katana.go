@@ -177,7 +177,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, errors.New("input is not AssetHttp")
 	}
 	parameter := p.GetParameter()
-	threads := "10"
+	threads := "5"
 	timeout := "5"
 	maxDepth := "5"
 	executionTimeout := 60
@@ -205,7 +205,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
-
+	start := time.Now()
 	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
 	resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
 	defer utils.Tools.DeleteFile(resultFile)
@@ -260,7 +260,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 
 	}
-	p.Log(fmt.Sprintf("%v found url: %v", data.URL, len(urllist)))
+	end := time.Now()
+	duration := end.Sub(start)
+	p.Log(fmt.Sprintf("target %v all url number %v running time:%v", data.URL, len(urllist), duration))
 	return urllist, nil
 }
 

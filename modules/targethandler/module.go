@@ -87,6 +87,7 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				time.Sleep(3 * time.Second)
 				// 等待所有插件运行完毕
 				allPluginWg.Wait()
 				close(resultChan)

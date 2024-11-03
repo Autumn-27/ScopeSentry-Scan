@@ -75,6 +75,7 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				time.Sleep(3 * time.Second)
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
@@ -106,7 +107,7 @@ func (r *Runner) ModuleRun() error {
 						var plgWg sync.WaitGroup
 						plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 						if flag {
-							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetPluginId()))
+							logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetName()))
 							plgWg.Add(1)
 							args, argsFlag := utils.Tools.GetParameter(r.Option.Parameters, r.GetName(), plg.GetPluginId())
 							if argsFlag {

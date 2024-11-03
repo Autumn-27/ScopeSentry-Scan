@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -122,7 +123,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, errors.New("input is not AssetHttp")
 	}
 	waybackResults := make(chan source.Result, 100)
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for result := range waybackResults {
 			isMatch := utils.Tools.IsMatchingFilter(global.DisallowedURLFilters, []byte(result.URL))
 			if isMatch {
@@ -150,7 +154,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				r.Time = utils.Tools.GetTimeNow()
 				p.Result <- r
 			}
-
 		}
 	}()
 	start := time.Now()
@@ -173,6 +176,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	end := time.Now()
 	duration := end.Sub(start)
 	p.Log(fmt.Sprintf("target %v all waybvack number %v running time:%v", urlWithoutHTTPS, resultNumber, duration))
+	wg.Wait()
 	return nil, nil
 }
 

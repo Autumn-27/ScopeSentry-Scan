@@ -18,6 +18,9 @@ import (
 
 func Run(op options.TaskOptions) {
 	var wg sync.WaitGroup
+	var start time.Time
+	var end time.Time
+	start = time.Now()
 	op.ModuleRunWg = &wg
 	op.TargetParser = append(op.TargetParser, "7bbaec6487f51a9aafeff4720c7643f0")
 	process := modules.CreateScanProcess(&op)
@@ -34,5 +37,7 @@ func Run(op options.TaskOptions) {
 	close(ch)
 	time.Sleep(10 * time.Second)
 	wg.Wait()
-	logger.SlogInfoLocal(fmt.Sprintf("ModuleRun completed: %v %v", op.ID, op.Target))
+	end = time.Now()
+	duration := end.Sub(start)
+	logger.SlogInfoLocal(fmt.Sprintf("ModuleRun completed: %v %v %v", op.ID, op.Target, duration))
 }

@@ -83,6 +83,7 @@ func (r *Runner) ModuleRun() error {
 		select {
 		case data, ok := <-r.Input:
 			if !ok {
+				time.Sleep(3 * time.Second)
 				allPluginWg.Wait()
 				// 通道已关闭，结束处理
 				if firstData {
