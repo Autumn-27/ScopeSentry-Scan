@@ -98,7 +98,7 @@ func (h *Handle) TaskEnd(target string, taskId string) {
 	}
 
 	key = "TaskInfo:tmp:" + taskId
-	_, err = system.RedisClient.AddToList(context.Background(), key, target)
+	_, err = redis.RedisClient.AddToList(context.Background(), key, target)
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("TaskEnds push redis error: %s", err))
 		return
