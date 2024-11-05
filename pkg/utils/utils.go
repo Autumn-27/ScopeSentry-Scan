@@ -831,3 +831,17 @@ func (t *UtilTools) GenerateIgnore(ignore string) ([]string, []*regexp.Regexp, e
 	}
 	return ignoreList, regexList, nil
 }
+
+func (t *UtilTools) IsSuffixURL(rawURL string, suffix string) bool {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		fmt.Println("URL 解析错误:", err)
+		return false
+	}
+
+	// 获取路径部分，去掉查询参数
+	path := parsedURL.Path
+
+	// 判断路径是否以 ".js" 结尾
+	return strings.HasSuffix(path, suffix)
+}

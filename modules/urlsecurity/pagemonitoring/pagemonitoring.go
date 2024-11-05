@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strings"
 )
 
 type Plugin struct {
@@ -118,8 +119,19 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("input is not types.UrlResult")
 	}
+	flag := utils.Tools.IsSuffixURL(data.Output, ".js")
+	if flag {
+		if strings.Contains(data.Body, "<!DOCTYPE html>") {
+			data.Body = ""
+			data.Status = 0
+			data.Length = 0
+		}
+	}
 	urlMd5 := utils.Tools.CalculateMD5(data.Output)
-	bodyHash := utils.Tools.CalculateMD5(data.Body)
+	bodyHash := ""
+	if data.Status != 0 {
+		bodyHash = utils.Tools.CalculateMD5(data.Body)
+	}
 	pageMonit := types.PageMonit{
 		Url:        data.Output,
 		StatusCode: []int{data.Status},

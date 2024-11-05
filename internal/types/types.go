@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"regexp"
 	"sync"
 	"time"
@@ -204,17 +203,7 @@ type TmpPageMonitResult struct {
 	Content  string
 	TaskName string `bson:"taskName"`
 }
-type PageMonitResult struct {
-	ID       primitive.ObjectID `bson:"_id"`
-	Url      string             `bson:"url"`
-	Content  []string           `bson:"content"`
-	Hash     []string           `bson:"hash"`
-	Diff     []string           `bson:"diff"`
-	State    int                `bson:"state"`
-	Project  string             `bson:"project"`
-	Time     string             `bson:"time"`
-	TaskName string             `bson:"taskName"`
-}
+
 type WebFinger struct {
 	ID      string
 	Express []string
