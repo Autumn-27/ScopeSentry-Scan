@@ -22,6 +22,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/targethandler/targetparser"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/katana"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/pagemonitoring"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/vulnerabilityscan/nuclei"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
@@ -116,8 +117,12 @@ func (pm *PluginManager) InitializePlugins() error {
 	radPlugin := rad.NewPlugin()
 	pm.RegisterPlugin(radPlugin.Module, radPlugin.PluginId, radPlugin)
 	// sensitive
-	sensitiveModule := sensitive.NewPlugin()
-	pm.RegisterPlugin(sensitiveModule.Module, sensitiveModule.PluginId, sensitiveModule)
+	sensitivePlugin := sensitive.NewPlugin()
+	pm.RegisterPlugin(sensitivePlugin.Module, sensitivePlugin.PluginId, sensitivePlugin)
+
+	// pagemonitoring
+	pagemonitoringPlugin := pagemonitoring.NewPlugin()
+	pm.RegisterPlugin(pagemonitoringPlugin.Module, pagemonitoringPlugin.PluginId, pagemonitoringPlugin)
 
 	// SentryDir
 	dirPlugin := sentrydir.NewPlugin()

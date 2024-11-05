@@ -64,7 +64,7 @@ func (r *Runner) ModuleRun() error {
 					if port == "" {
 						port = "null"
 					}
-					flag := results.Duplicate.PortIntask(r.Option.ID, portaliveResult.Host, port)
+					flag := results.Duplicate.PortIntask(r.Option.ID, portaliveResult.Host, port, r.Option.IsRestart)
 					if flag {
 						// 本地缓存中不存在
 						r.NextModule.GetInput() <- result
@@ -95,6 +95,11 @@ func (r *Runner) ModuleRun() error {
 				resultWg.Wait()
 				r.Option.ModuleRunWg.Done()
 				return nil
+			}
+			_, ok = data.(types.DomainSkip)
+			if !ok {
+				r.NextModule.GetInput() <- data
+				continue
 			}
 			if !firstData {
 				start = time.Now()

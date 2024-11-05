@@ -122,6 +122,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
 		return nil, errors.New("input is not AssetHttp")
 	}
+	p.Log(fmt.Sprintf("target %v running", data.URL))
 	waybackResults := make(chan source.Result, 100)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -176,6 +177,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	end := time.Now()
 	duration := end.Sub(start)
 	p.Log(fmt.Sprintf("target %v all waybvack number %v running time:%v", urlWithoutHTTPS, resultNumber, duration))
+	close(waybackResults)
 	wg.Wait()
 	return nil, nil
 }

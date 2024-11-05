@@ -137,7 +137,7 @@ func RunRedisTask() {
 				continue
 			}
 			// 将任务配置写入本地
-
+			runnerOption.IsRestart = false
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 			err = pebbledb.PebbleStore.Put([]byte(taskKey), []byte(taskInfo))
 			if err != nil {
@@ -145,42 +145,58 @@ func RunRedisTask() {
 				continue
 			}
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
-			for {
-				target, err := redis.RedisClient.PopFromListR(context.Background(), "TaskInfo:"+runnerOption.ID)
-				if err != nil {
-					// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
-					if !errors.Is(err, goRedis.Nil) {
-						logger.SlogError(fmt.Sprintf("GetRedisTask redis error: %v", err))
-						// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-						os.Exit(0)
+			if runnerOption.Type == "page_monitoring" {
+				//// 运行页面监控程序
+				//for {
+				//	targets, err := redis.RedisClient.BatchGetAndDelete(context.Background(), "TaskInfo:"+runnerOption.ID, 50)
+				//	if err != nil {
+				//		// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
+				//		if !errors.Is(err, goRedis.Nil) {
+				//			logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
+				//			// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
+				//			os.Exit(0)
+				//		}
+				//		break
+				//	}
+				//}
+			} else {
+				for {
+					target, err := redis.RedisClient.PopFromListR(context.Background(), "TaskInfo:"+runnerOption.ID)
+					if err != nil {
+						// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
+						if !errors.Is(err, goRedis.Nil) {
+							logger.SlogError(fmt.Sprintf("GetRedisTask redis error: %v", err))
+							// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
+							os.Exit(0)
+						}
+						break
 					}
-					break
-				}
-				wg.Add(1)
-				optionCopy := runnerOption
-				optionCopy.Target = target
-				taskFunc := func(op options.TaskOptions) func() {
-					return func() {
-						// 目标运行完毕删除目标
-						defer DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
-						defer wg.Done()
-						runner.Run(op)
+					wg.Add(1)
+					optionCopy := runnerOption
+					optionCopy.Target = target
+					taskFunc := func(op options.TaskOptions) func() {
+						return func() {
+							// 目标运行完毕删除目标
+							defer DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
+							defer wg.Done()
+							runner.Run(op)
+						}
+					}(optionCopy)
+					// 将任务目标写入本地
+					err = pebbledb.PebbleStore.Put([]byte(fmt.Sprintf("%v:%v", runnerOption.ID, target)), []byte(""))
+					if err != nil {
+						logger.SlogError(fmt.Sprintf("PebbleStore.Put target error: %v", err))
 					}
-				}(optionCopy)
-				// 将任务目标写入本地
-				err = pebbledb.PebbleStore.Put([]byte(fmt.Sprintf("%v:%v", runnerOption.ID, target)), []byte(""))
-				if err != nil {
-					logger.SlogError(fmt.Sprintf("PebbleStore.Put target error: %v", err))
+					// 提交任务
+					err = pool.PoolManage.SubmitTask("task", taskFunc)
+					if err != nil {
+						logger.SlogError(fmt.Sprintf("task pool error: %v", err))
+						wg.Done()
+					}
+					logger.SlogInfoLocal(fmt.Sprintf("task target pool running goroutines: %v", pool.PoolManage.GetModuleRunningGoroutines("task")))
 				}
-				// 提交任务
-				err = pool.PoolManage.SubmitTask("task", taskFunc)
-				if err != nil {
-					logger.SlogError(fmt.Sprintf("task pool error: %v", err))
-					wg.Done()
-				}
-				logger.SlogInfoLocal(fmt.Sprintf("task target pool running goroutines: %v", pool.PoolManage.GetModuleRunningGoroutines("task")))
+				wg.Wait()
 			}
-			wg.Wait()
 			logger.SlogInfo(fmt.Sprintf("Task end: %v", runnerOption.ID))
 			handler.CloseNucleiEngine()
 			// 目标运行完毕 删除任务信息

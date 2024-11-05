@@ -85,6 +85,11 @@ func (r *Runner) ModuleRun() error {
 				r.Option.ModuleRunWg.Done()
 				return nil
 			}
+			_, ok = data.(types.DomainResolve)
+			if !ok {
+				r.NextModule.GetInput() <- data
+				continue
+			}
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScanPreparation))

@@ -131,6 +131,47 @@ func (r *Client) SAdd(ctx context.Context, key string, members ...interface{}) (
 	return r.client.SAdd(ctx, key, members...).Result()
 }
 
+// LRange 获取列表中指定范围的元素
+func (r *Client) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
+	if r.client == nil {
+		return nil, errors.New("redis client nil")
+	}
+	return r.client.LRange(ctx, key, start, stop).Result()
+}
+
+// LRem 删除列表中指定数量的元素
+func (r *Client) LRem(ctx context.Context, key string, count int64, value string) error {
+	if r.client == nil {
+		return errors.New("redis client nil")
+	}
+	return r.client.LRem(ctx, key, count, value).Err()
+}
+
+// BatchGetAndDelete 批量获取并删除列表元素
+func (r *Client) BatchGetAndDelete(ctx context.Context, key string, count int64) ([]string, error) {
+	if r.client == nil {
+		return nil, errors.New("redis client nil")
+	}
+
+	// 获取列表中指定数量的元素
+	elements, err := r.LRange(ctx, key, 0, count-1)
+	if err != nil {
+		return nil, err
+	}
+
+	// 使用管道批量删除获取到的元素
+	pipe := r.client.Pipeline()
+	for _, element := range elements {
+		pipe.LRem(ctx, key, 0, element) // 0 表示删除所有匹配的元素
+	}
+	_, err = pipe.Exec(ctx) // 执行管道
+	if err != nil {
+		return nil, err
+	}
+
+	return elements, nil
+}
+
 // SIsMember 检查成员是否存在于集合中
 func (r *Client) SIsMember(ctx context.Context, key string, member interface{}) (bool, error) {
 	return r.client.SIsMember(ctx, key, member).Result()

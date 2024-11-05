@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	batchSize     = 50
+	batchSize     = 60
 	flushInterval = 30 * time.Second
 )
 
@@ -67,7 +67,7 @@ func processQueue(module string, mq *ResultQueue) {
 		case batch := <-mq.Queue:
 			if batch != nil {
 				buffer = append(buffer, batch)
-				if len(buffer) >= batchSize {
+				if len(buffer) >= batchSize-2 {
 					flushBuffer(module, &buffer)
 				}
 			}

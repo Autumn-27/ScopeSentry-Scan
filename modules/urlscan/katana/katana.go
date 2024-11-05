@@ -176,6 +176,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
 		return nil, errors.New("input is not AssetHttp")
 	}
+	p.Log(fmt.Sprintf("target %v running", data.URL))
 	parameter := p.GetParameter()
 	threads := "5"
 	timeout := "5"
