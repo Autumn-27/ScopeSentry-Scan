@@ -146,19 +146,23 @@ func RunRedisTask() {
 			}
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
 			if runnerOption.Type == "page_monitoring" {
-				//// 运行页面监控程序
-				//for {
-				//	targets, err := redis.RedisClient.BatchGetAndDelete(context.Background(), "TaskInfo:"+runnerOption.ID, 50)
-				//	if err != nil {
-				//		// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
-				//		if !errors.Is(err, goRedis.Nil) {
-				//			logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
-				//			// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-				//			os.Exit(0)
-				//		}
-				//		break
-				//	}
-				//}
+				// 运行页面监控程序
+				for {
+					targets, err := redis.RedisClient.BatchGetAndDelete(context.Background(), "TaskInfo:"+runnerOption.ID, 50)
+					if len(targets) == 0 {
+						break
+					}
+					if err != nil {
+						// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
+						if !errors.Is(err, goRedis.Nil) {
+							logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
+							// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
+							os.Exit(0)
+						}
+						break
+					}
+					runner.PageMonitoringRunner(targets)
+				}
 			} else {
 				for {
 					target, err := redis.RedisClient.PopFromListR(context.Background(), "TaskInfo:"+runnerOption.ID)

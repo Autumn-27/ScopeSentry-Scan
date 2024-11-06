@@ -217,6 +217,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.6 // indirect
+	github.com/hbollon/go-edlib v1.6.0 // indirect
 	github.com/hdm/jarm-go v0.0.7 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/invopop/jsonschema v0.12.0 // indirect

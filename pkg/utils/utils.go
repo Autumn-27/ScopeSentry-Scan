@@ -20,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+	"github.com/hbollon/go-edlib"
 	"github.com/projectdiscovery/cdncheck"
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -844,4 +845,15 @@ func (t *UtilTools) IsSuffixURL(rawURL string, suffix string) bool {
 
 	// 判断路径是否以 ".js" 结尾
 	return strings.HasSuffix(path, suffix)
+}
+
+// CompareContentSimilarity 计算编辑距离相似度
+func (t *UtilTools) CompareContentSimilarity(content1, content2 string) (float64, error) {
+	// 使用编辑距离计算相似度
+	similarity, err := edlib.StringsSimilarity(content1, content2, edlib.Levenshtein)
+	if err != nil {
+		return 0, fmt.Errorf("error calculating similarity: %v", err)
+	}
+	percentage := similarity * 100
+	return float64(percentage), nil
 }
