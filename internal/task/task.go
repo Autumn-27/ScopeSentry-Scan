@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -51,6 +52,8 @@ func RunPebbledbTask() {
 			logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
 			var runnerOption options.TaskOptions
 			err = utils.Tools.JSONToStruct(value, &runnerOption)
+			// 任务增加全局上下文
+			contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
 			// 设置为本地获取的任务
 			runnerOption.IsRestart = true
 			if err != nil {
@@ -80,10 +83,21 @@ func RunPebbledbTask() {
 				// 使用局部变量创建闭包
 				taskFunc := func(op options.TaskOptions) func() {
 					return func() {
-						// 目标运行完毕删除目标
-						defer DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
 						defer wg.Done()
-						runner.Run(op)
+						select {
+						case <-contextmanager.GlobalContextManagers.GetContext(op.ID).Done():
+							// 任务取消直接返回
+							return
+						default:
+							err := runner.Run(op)
+							if err != nil {
+								// 说明该任务取消了，直接返回不进行删除目标
+								return
+							} else {
+								// 目标运行完毕删除目标
+								DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
+							}
+						}
 					}
 				}(optionCopy)
 
@@ -101,8 +115,10 @@ func RunPebbledbTask() {
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", key, err))
 			}
-			// 记得判断是否需要增加一个等待 所有目标执行完毕再任务结束
+			// 删除任务上下文
+			contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			logger.SlogInfoLocal(fmt.Sprintf("PebbleStore task run end: %v", runnerOption.ID))
+
 		}
 		// 关闭nuclei引擎
 		handler.CloseNucleiEngine()
@@ -164,6 +180,8 @@ func RunRedisTask() {
 					runner.PageMonitoringRunner(targets)
 				}
 			} else {
+				// 任务增加全局上下文
+				contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
 				for {
 					target, err := redis.RedisClient.PopFromListR(context.Background(), "TaskInfo:"+runnerOption.ID)
 					if err != nil {
@@ -180,10 +198,21 @@ func RunRedisTask() {
 					optionCopy.Target = target
 					taskFunc := func(op options.TaskOptions) func() {
 						return func() {
-							// 目标运行完毕删除目标
-							defer DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
 							defer wg.Done()
-							runner.Run(op)
+							select {
+							case <-contextmanager.GlobalContextManagers.GetContext(op.ID).Done():
+								// 任务取消直接返回
+								return
+							default:
+								err := runner.Run(op)
+								if err != nil {
+									// 说明该任务取消了，直接返回不进行删除目标
+									return
+								} else {
+									// 目标运行完毕删除目标
+									DeletePebbleTarget(pebbledb.PebbleStore, []byte(op.ID+":"+op.Target))
+								}
+							}
 						}
 					}(optionCopy)
 					// 将任务目标写入本地
@@ -200,6 +229,8 @@ func RunRedisTask() {
 					logger.SlogInfoLocal(fmt.Sprintf("task target pool running goroutines: %v", pool.PoolManage.GetModuleRunningGoroutines("task")))
 				}
 				wg.Wait()
+				// 删除任务上下文
+				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
 			logger.SlogInfo(fmt.Sprintf("Task end: %v", runnerOption.ID))
 			handler.CloseNucleiEngine()

@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
@@ -221,7 +222,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-o", resultFile,
 	}
 	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
-	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute)
+	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 	}

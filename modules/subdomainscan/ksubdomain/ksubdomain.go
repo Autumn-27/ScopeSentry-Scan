@@ -8,8 +8,10 @@
 package ksubdomain
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -156,7 +158,7 @@ func (p *Plugin) Check() error {
 	rawSubdomain := []string{"scope-sentry.top"}
 	subdomainVerificationResult := make(chan string, 1)
 	verificationCount := 0
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 5*time.Minute)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 5*time.Minute, context.Background())
 	for result := range subdomainVerificationResult {
 		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
 		if subdomainResult.Host != "" {
@@ -236,7 +238,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	rawSubdomain = append(rawSubdomain, target)
 	// 拼接完子域名之后开始运行验证子域名
 	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, time.Duration(executionTimeout)*time.Minute)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, time.Duration(executionTimeout)*time.Minute, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	verificationCount := 0
 	// 读取结果
 	for result := range subdomainVerificationResult {
@@ -273,7 +275,7 @@ func wildcardDNSRecords(domain string) []string {
 		targets = append(targets, subdomain)
 	}
 	subdomainVerificationResult := make(chan string, 1)
-	go utils.DNS.KsubdomainVerify(targets, subdomainVerificationResult, 1*time.Hour)
+	go utils.DNS.KsubdomainVerify(targets, subdomainVerificationResult, 1*time.Hour, context.Background())
 	var results []string
 	// 读取结果
 	for result := range subdomainVerificationResult {

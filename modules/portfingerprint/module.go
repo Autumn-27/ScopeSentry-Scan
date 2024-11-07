@@ -10,6 +10,7 @@ package portfingerprint
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -72,6 +73,12 @@ func (r *Runner) ModuleRun() error {
 	for {
 		//
 		select {
+		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+			allPluginWg.Wait()
+			close(resultChan)
+			resultWg.Wait()
+			r.Option.ModuleRunWg.Done()
+			return nil
 		case data, ok := <-r.Input:
 			if !ok {
 				time.Sleep(3 * time.Second)

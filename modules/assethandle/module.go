@@ -9,6 +9,7 @@ package assethandle
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -131,6 +132,12 @@ func (r *Runner) ModuleRun() error {
 	for {
 		//
 		select {
+		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+			allPluginWg.Wait()
+			close(resultChan)
+			resultWg.Wait()
+			r.Option.ModuleRunWg.Done()
+			return nil
 		case data, ok := <-r.Input:
 			if !ok {
 				time.Sleep(3 * time.Second)
@@ -164,6 +171,9 @@ func (r *Runner) ModuleRun() error {
 				case types.AssetHttp:
 					ty = "htttp"
 					assetHttp = a
+				default:
+					r.NextModule.GetInput() <- data
+					return
 				}
 				if len(r.Option.AssetHandle) != 0 {
 					// 调用插件

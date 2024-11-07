@@ -7,6 +7,7 @@
 package dircore
 
 import (
+	"context"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 )
 
@@ -15,4 +16,5 @@ type Options struct {
 	Thread             int
 	IncludeStatusCodes []int
 	MatchCallback      func(response types.HttpResponse)
+	Ct                 context.Context
 }

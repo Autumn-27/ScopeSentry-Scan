@@ -45,6 +45,7 @@ func (c *Controller) Run(options dircore.Options) {
 			Options:            options,
 			MaxSameLen:         30,
 			ResponseCodeLength: make(map[string]int),
+			Ct:                 options.Ct,
 		}
 		fuzz.Start()
 	}

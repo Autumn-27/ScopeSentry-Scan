@@ -8,6 +8,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -110,7 +111,7 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 }
 
 // KsubdomainVerify 利用Ksubdomain对域名进行验证
-func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout time.Duration) {
+func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout time.Duration, externalCtx context.Context) {
 	randomString := Tools.GenerateRandomString(6)
 	if len(target) == 0 {
 		result <- fmt.Sprintf("KsubdomainVerify target number is 0")
@@ -141,7 +142,7 @@ func (d *DnsTools) KsubdomainVerify(target []string, result chan string, timeout
 	}
 	args := []string{"v", "-f", targetPath, "-o", resultPath}
 	cmd := filepath.Join(global.ExtDir, "ksubdomain", path)
-	err = Tools.ExecuteCommandWithTimeout(cmd, args, timeout)
+	err = Tools.ExecuteCommandWithTimeout(cmd, args, timeout, externalCtx)
 	if err != nil {
 		result <- fmt.Sprintf("KsubdomainVerify %v", err)
 		close(result)

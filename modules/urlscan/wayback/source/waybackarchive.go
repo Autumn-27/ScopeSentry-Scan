@@ -9,12 +9,13 @@ package source
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-func WaybackarchiveRun(rootUrl string, result chan Result) int {
+func WaybackarchiveRun(rootUrl string, result chan Result, ctx context.Context) int {
 	client := &http.Client{
 		Timeout: 10 * time.Second, // 设置超时时间
 	}
@@ -35,11 +36,16 @@ func WaybackarchiveRun(rootUrl string, result chan Result) int {
 	sc.Buffer(buf, buffseSize)
 	lineCount := 0
 	for sc.Scan() {
-		result <- Result{
-			URL:    sc.Text(),
-			Source: "waybackarchive",
+		select {
+		case <-ctx.Done():
+			return lineCount
+		default:
+			result <- Result{
+				URL:    sc.Text(),
+				Source: "waybackarchive",
+			}
+			lineCount++
 		}
-		lineCount++
 	}
 	return lineCount
 }

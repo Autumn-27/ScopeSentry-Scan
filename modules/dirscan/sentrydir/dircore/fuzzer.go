@@ -8,6 +8,7 @@ package dircore
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -29,6 +30,7 @@ type Fuzzer struct {
 	Mu                 sync.Mutex
 	RCLMu              sync.Mutex
 	ResponseCodeLength map[string]int
+	Ct                 context.Context
 }
 
 func (f *Fuzzer) Start() {
@@ -48,50 +50,56 @@ func (f *Fuzzer) Start() {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		path := scanner.Text()
-		semaphore <- struct{}{}
-		wg.Add(1)
-		if flag >= MaxRetries {
+		select {
+		case <-f.Ct.Done():
 			return
-		}
-		go func(path string, flag *int) {
-			defer func() {
-				<-semaphore
-				wg.Done()
-			}()
-			mu.Lock()
-			if *flag >= MaxRetries {
-				mu.Unlock()
+		default:
+			path := scanner.Text()
+			semaphore <- struct{}{}
+			wg.Add(1)
+			if flag >= MaxRetries {
 				return
 			}
-			mu.Unlock()
-			scanners := f.GetScannersFor(path)
-			err := f.Scan(f.BasePath+path, scanners)
-			if err != nil {
+			go func(path string, flag *int) {
+				defer func() {
+					<-semaphore
+					wg.Done()
+				}()
 				mu.Lock()
-				*flag += 1
 				if *flag >= MaxRetries {
 					mu.Unlock()
 					return
 				}
 				mu.Unlock()
-				//if strings.Contains(fmt.Sprintf("%v", err), "timed out") || strings.Contains(fmt.Sprintf("%v", err), "the server closed connection") {
-				//	mu.Lock()
-				//	*flag += 1
-				//	if *flag >= MaxRetries {
-				//		mu.Unlock()
-				//		return
-				//	}
-				//	mu.Unlock()
-				//}
-			} else {
-				mu.Lock()
-				if *flag > 0 {
-					*flag -= 1
+				scanners := f.GetScannersFor(path)
+				err := f.Scan(f.BasePath+path, scanners)
+				if err != nil {
+					mu.Lock()
+					*flag += 1
+					if *flag >= MaxRetries {
+						mu.Unlock()
+						return
+					}
+					mu.Unlock()
+					//if strings.Contains(fmt.Sprintf("%v", err), "timed out") || strings.Contains(fmt.Sprintf("%v", err), "the server closed connection") {
+					//	mu.Lock()
+					//	*flag += 1
+					//	if *flag >= MaxRetries {
+					//		mu.Unlock()
+					//		return
+					//	}
+					//	mu.Unlock()
+					//}
+				} else {
+					mu.Lock()
+					if *flag > 0 {
+						*flag -= 1
+					}
+					mu.Unlock()
 				}
-				mu.Unlock()
-			}
-		}(path, &flag)
+			}(path, &flag)
+		}
+
 	}
 	time.Sleep(time.Second * 5)
 	wg.Wait()

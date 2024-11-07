@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
@@ -133,36 +134,42 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	// 检查body是否在当前任务已经检测过
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
 	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	if duplicateFlag {
 		chunkSize := 5120
 		overlapSize := 100
 		findFlag := false
 		for _, rule := range global.SensitiveRules {
 			//start := time.Now()
-			if rule.State {
-				r, err := regexp2.Compile(rule.Regular, 0)
-				if err != nil {
-					p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
-					continue
-				}
-				result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
-				if err != nil {
-					p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
-				}
-				if len(result) != 0 {
-					var tmpResult types.SensitiveResult
-					tmpResult = types.SensitiveResult{
-						Url:      data.Output,
-						UrlId:    data.ResultId,
-						SID:      rule.Name,
-						Match:    result,
-						Time:     utils.Tools.GetTimeNow(),
-						Color:    rule.Color,
-						Md5:      respMd5,
-						TaskName: p.TaskName,
+			select {
+			case <-ctx.Done():
+				return nil, nil
+			default:
+				if rule.State {
+					r, err := regexp2.Compile(rule.Regular, 0)
+					if err != nil {
+						p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
+						continue
 					}
-					go results.Handler.Sensitive(&tmpResult)
-					findFlag = true
+					result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
+					if err != nil {
+						p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
+					}
+					if len(result) != 0 {
+						var tmpResult types.SensitiveResult
+						tmpResult = types.SensitiveResult{
+							Url:      data.Output,
+							UrlId:    data.ResultId,
+							SID:      rule.Name,
+							Match:    result,
+							Time:     utils.Tools.GetTimeNow(),
+							Color:    rule.Color,
+							Md5:      respMd5,
+							TaskName: p.TaskName,
+						}
+						go results.Handler.Sensitive(&tmpResult)
+						findFlag = true
+					}
 				}
 			}
 		}

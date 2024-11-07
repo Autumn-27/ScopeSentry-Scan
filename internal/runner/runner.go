@@ -9,6 +9,7 @@ package runner
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-func Run(op options.TaskOptions) {
+func Run(op options.TaskOptions) error {
 	var wg sync.WaitGroup
 	var start time.Time
 	var end time.Time
@@ -41,10 +42,16 @@ func Run(op options.TaskOptions) {
 	wg.Wait()
 	end = time.Now()
 	duration := end.Sub(start)
-	// 记录模块完成日志
-	handler.TaskHandle.ProgressEnd("scan", op.Target, op.ID, 1, duration)
-	// 记录完成时间以及完成目标
-	handler.TaskHandle.TaskEnd(op.Target, op.ID)
-	// 增加完成计数
-	handler.TaskHandle.EndTask()
+	select {
+	case <-contextmanager.GlobalContextManagers.GetContext(op.ID).Done():
+		return fmt.Errorf("task Cancel")
+	default:
+		// 记录模块完成日志
+		handler.TaskHandle.ProgressEnd("scan", op.Target, op.ID, 1, duration)
+		// 记录完成时间以及完成目标
+		handler.TaskHandle.TaskEnd(op.Target, op.ID)
+		// 增加完成计数
+		handler.TaskHandle.EndTask()
+		return nil
+	}
 }

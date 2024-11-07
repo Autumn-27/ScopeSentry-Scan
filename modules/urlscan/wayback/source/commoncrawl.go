@@ -9,6 +9,7 @@ package source
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -26,7 +27,7 @@ const (
 
 var year = time.Now().Year()
 
-func CommoncrawlRun(rootUrl string, result chan Result) int {
+func CommoncrawlRun(rootUrl string, result chan Result, ctx context.Context) int {
 	bodyBytes, err := utils.Requests.HttpGetByte(indexURL)
 	if err != nil {
 		return 0
@@ -55,17 +56,25 @@ func CommoncrawlRun(rootUrl string, result chan Result) int {
 		}
 	}
 	quantity := 0
+	// 遍历符合年份的API地址，获取URL
 	for _, apiURL := range searchIndexes {
-		further, n := getURLs(apiURL, rootUrl, result)
-		if !further {
-			break
+		// 在每次调用 getURLs 时传递上下文
+		select {
+		case <-ctx.Done():
+			// 如果上下文被取消，则提前退出
+			return quantity
+		default:
+			further, n := getURLs(apiURL, rootUrl, result, ctx)
+			if !further {
+				break
+			}
+			quantity += n
 		}
-		quantity += n
 	}
 	return quantity
 }
 
-func getURLs(searchURL, rootURL string, result chan Result) (bool, int) {
+func getURLs(searchURL, rootURL string, result chan Result, ctx context.Context) (bool, int) {
 	currentSearchURL := fmt.Sprintf("%s?url=*.%s&output=text&fl=url", searchURL, rootURL)
 	client := &http.Client{
 		Timeout: 10 * time.Second, // 设置超时时间
@@ -84,11 +93,16 @@ func getURLs(searchURL, rootURL string, result chan Result) (bool, int) {
 	sc.Buffer(buf, buffseSize)
 	lineCount := 0
 	for sc.Scan() {
-		result <- Result{
+		select {
+		case result <- Result{
 			URL:    sc.Text(),
 			Source: "commoncrawl",
+		}:
+			lineCount++
+		case <-ctx.Done():
+			// 如果上下文被取消，则提前退出
+			return false, lineCount
 		}
-		lineCount++
 	}
 	return true, lineCount
 }

@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -209,7 +210,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
 	rustScanExecPath := filepath.Join(filepath.Join(global.ExtDir, "rustscan"), p.RustFileName)
-	cmd := exec.Command(rustScanExecPath, args...)
+	cmd := exec.CommandContext(contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()), rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("RustScan StdoutPipe error： %v", err))

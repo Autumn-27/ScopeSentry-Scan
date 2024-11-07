@@ -9,6 +9,7 @@ package urlsecurity
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -68,6 +69,12 @@ func (r *Runner) ModuleRun() error {
 	var end time.Time
 	for {
 		select {
+		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+			allPluginWg.Wait()
+			close(resultChan)
+			resultWg.Wait()
+			r.Option.ModuleRunWg.Done()
+			return nil
 		case data, ok := <-r.Input:
 			if !ok {
 				time.Sleep(3 * time.Second)
@@ -85,11 +92,10 @@ func (r *Runner) ModuleRun() error {
 			}
 			// 该模块接收的数据为types.CrawlerResult、types.UrlResult、types.AssetOther 、 types.AssetHttp
 			// 该模块处理types.CrawlerResult、types.UrlResult， 其余类型数据直接发送到下个模块
-			if _, ok := data.(types.AssetHttp); ok {
-				r.NextModule.GetInput() <- data
-				continue
-			}
-			if _, ok := data.(types.AssetOther); ok {
+			switch data.(type) {
+			case types.UrlResult:
+			case types.CrawlerResult:
+			default:
 				r.NextModule.GetInput() <- data
 				continue
 			}

@@ -27,6 +27,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
@@ -395,13 +396,27 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	return true, nil
 }
 
-func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration) error {
+func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration, externalCtx context.Context) error {
 	// 创建一个带有超时的上下文
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel() // 确保在函数结束后取消上下文，防止资源泄漏
-
+	// 使用 select 来监控两个上下文：超时上下文和外部传入的上下文
+	// 创建一个新的上下文，该上下文会在任意一个上下文被取消时取消
+	mergedCtx, mergedCancel := context.WithCancel(ctx)
+	go func() {
+		// 监听外部上下文的取消
+		select {
+		case <-externalCtx.Done():
+			mergedCancel() // 外部上下文取消时，取消合并的上下文
+			return
+		case <-ctx.Done():
+			// 超时上下文取消时，合并上下文也取消
+			mergedCancel()
+			return
+		}
+	}()
 	// 创建命令对象，使用带上下文的 exec.CommandContext
-	cmd := exec.CommandContext(ctx, command, args...)
+	cmd := exec.CommandContext(mergedCtx, command, args...)
 
 	// 执行命令，不获取输出
 	err := cmd.Run()
@@ -855,5 +870,6 @@ func (t *UtilTools) CompareContentSimilarity(content1, content2 string) (float64
 		return 0, fmt.Errorf("error calculating similarity: %v", err)
 	}
 	percentage := similarity * 100
-	return float64(percentage), nil
+	result := math.Round(float64(percentage*100)) / 100
+	return result, nil
 }

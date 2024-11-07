@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -173,13 +174,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if err != nil {
 		log.Fatalf("failed to create subfinder runner: %v", err)
 	}
-	err = subfinder.RunEnumeration()
+	err = subfinder.RunEnumerationWithCtx(contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
 		return nil, err
 	}
 	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour)
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 
 	// 读取结果
 	for result := range subdomainVerificationResult {

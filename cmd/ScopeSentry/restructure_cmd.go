@@ -12,6 +12,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
@@ -61,6 +62,8 @@ func main() {
 		log.Fatalf("Failed to init ModulesConfig: %v", err)
 		return
 	}
+	// 初始化上下文管理器
+	contextmanager.NewContextManager()
 	// 初始化tools
 	utils.InitializeTools()
 	utils.InitializeDnsTools()

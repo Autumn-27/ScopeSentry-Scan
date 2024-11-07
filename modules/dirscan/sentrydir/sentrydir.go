@@ -10,6 +10,7 @@ package sentrydir
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
@@ -161,6 +162,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		Extensions:    []string{"php", "aspx", "jsp", "html", "js"},
 		Thread:        Thread,
 		MatchCallback: resultHandle,
+		Ct:            contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()),
 	}
 	controller.Run(op)
 	end := time.Now()

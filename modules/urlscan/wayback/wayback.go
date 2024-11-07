@@ -10,6 +10,7 @@ package wayback
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
@@ -161,17 +162,17 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	resultNumber := 0
 	urlWithoutHTTP := strings.TrimPrefix(data.URL, "http://")
 	urlWithoutHTTPS := strings.TrimPrefix(urlWithoutHTTP, "https://")
-
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	// Waybackarchive
-	number := source.WaybackarchiveRun(urlWithoutHTTPS, waybackResults)
+	number := source.WaybackarchiveRun(urlWithoutHTTPS, waybackResults, ctx)
 	p.Log(fmt.Sprintf("Waybackarchive targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
 	resultNumber += number
 	// Alienvault
-	number = source.AlienvaultRun(data.Host, waybackResults)
+	number = source.AlienvaultRun(data.Host, waybackResults, ctx)
 	p.Log(fmt.Sprintf("Alienvault targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
 	resultNumber += number
 	// Commoncrawl
-	number = source.CommoncrawlRun(data.Host, waybackResults)
+	number = source.CommoncrawlRun(data.Host, waybackResults, ctx)
 	resultNumber += number
 	p.Log(fmt.Sprintf("Commoncrawl targert %v obtain the number of URLs: %v", urlWithoutHTTPS, number))
 	end := time.Now()

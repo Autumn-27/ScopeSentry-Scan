@@ -42,11 +42,16 @@ func main() {
 	// 初始化日志模块
 	logger.NewLogger()
 	utils.InitializeDnsTools()
-	_, b, _ := utils.Tools.GenerateIgnore("*.baidu.com\nrainy-sautyu.top")
-	for _, k := range b {
-		flag := k.MatchString("baidu.com")
-		fmt.Println(flag)
+	//_, b, _ := utils.Tools.GenerateIgnore("*.baidu.com\nrainy-sautyu.top")
+	//for _, k := range b {
+	//	flag := k.MatchString("baidu.com")
+	//	fmt.Println(flag)
+	//}
+	similarity, err := utils.Tools.CompareContentSimilarity("adddw", "ddddddddddddddddddddddddwww")
+	if err != nil {
+		return
 	}
+	fmt.Println(similarity)
 	//a := utils.DNS.QueryOne("dwas.dwadwasdwa")
 	//fmt.Println(a)
 	// 获取当前时间戳（秒）
