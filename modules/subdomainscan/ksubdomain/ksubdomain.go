@@ -215,10 +215,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("ksubdomain 运行失败: 没有提供子域名字典，请查看任务配置"))
 		return nil, nil
 	}
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	subfile = filepath.Join(global.DictPath, "subdomain", subfile)
 	subDictChan := make(chan string, 10)
 	go func() {
-		err := utils.Tools.ReadFileLineByLine(subfile, subDictChan)
+		err := utils.Tools.ReadFileLineReader(subfile, subDictChan, ctx)
 		if err != nil {
 			logger.SlogInfoLocal(fmt.Sprintf("%v", err))
 		}
@@ -238,7 +239,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	rawSubdomain = append(rawSubdomain, target)
 	// 拼接完子域名之后开始运行验证子域名
 	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, time.Duration(executionTimeout)*time.Minute, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, time.Duration(executionTimeout)*time.Minute, ctx)
 	verificationCount := 0
 	// 读取结果
 	for result := range subdomainVerificationResult {
@@ -256,6 +257,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			verificationCount += 1
 			p.Result <- subdomainResult
 		} else {
+			if strings.Contains(result, "context canceled") {
+				return nil, nil
+			}
 			logger.SlogErrorLocal(result)
 		}
 	}

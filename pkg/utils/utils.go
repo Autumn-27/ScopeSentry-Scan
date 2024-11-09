@@ -14,6 +14,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
@@ -26,6 +27,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
+	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -421,9 +423,18 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	// 执行命令，不获取输出
 	err := cmd.Run()
 	if err != nil {
-		// 如果是超时错误，返回具体错误信息
-		if ctx.Err() == context.DeadlineExceeded {
-			return ctx.Err()
+		// 如果是上下文取消的错误
+		if errors.Is(mergedCtx.Err(), context.Canceled) {
+			// 上下文被取消
+			logger.SlogWarnLocal(fmt.Sprintf("command execution canceled: %v", command))
+			return nil
+		}
+
+		// 如果是超时错误
+		if errors.Is(mergedCtx.Err(), context.DeadlineExceeded) {
+			// 上下文超时
+			logger.SlogWarnLocal(fmt.Sprintf("command execution timed out: %v", command))
+			return nil
 		}
 		return err
 	}
@@ -600,7 +611,7 @@ func (t *UtilTools) EnsureFilePathExists(filePath string) error {
 }
 
 // ReadFileLineByLine 函数逐行读取文件，并将每一行发送到通道中
-func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) error {
+func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string, ctx context.Context) error {
 	defer close(lineChan)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return nil
@@ -616,7 +627,12 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 	// 使用 bufio.Scanner 逐行读取文件
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lineChan <- scanner.Text() // 将读取到的行发送到通道
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			lineChan <- scanner.Text() // 将读取到的行发送到通道
+		}
 	}
 
 	// 检查读取过程中是否发生错误
@@ -626,38 +642,57 @@ func (t *UtilTools) ReadFileLineByLine(filePath string, lineChan chan<- string) 
 	return nil
 }
 
-// ReadFileLineReader 逐行读取文件，Reader不限制行大小
-func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string) error {
-
+// ReadFileLineReader 读取文件按行处理，每行是一个完整的JSON对象
+func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string, ctx context.Context) error {
 	defer close(lineChan)
+
 	// 检查文件是否存在
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
 		return err
 	}
+
 	// 打开文件
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
-	defer file.Close() // 确保文件关闭
-	// 创建一个新的 reader
-	reader := bufio.NewReader(file)
+	defer file.Close()
 
-	// 循环读取文件内容
+	// 使用大缓冲区来提高读取性能
+	reader := bufio.NewReaderSize(file, 16*1024) // 16KB 缓冲区
+
+	// 循环按行读取文件
 	for {
-		line, err := reader.ReadString('\n') // 读取一行
-		if err != nil {
-			if err.Error() == "EOF" {
-				break // 读取到文件末尾，结束读取
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 读取一行
+			line, err := reader.ReadString('\n')
+			if err != nil && err != io.EOF {
+				return err
 			}
-			return err
-		}
-		lineChan <- line
-	}
+			if err == io.EOF && len(line) == 0 {
+				return nil // 文件读取完毕
+			}
 
-	return nil
+			// 去除末尾的换行符和空格
+			line = strings.TrimSpace(line)
+
+			// 将每行发送到 lineChan
+			select {
+			case lineChan <- line:
+			case <-ctx.Done():
+				return nil
+			}
+
+			if err == io.EOF {
+				return nil // 到达文件末尾，退出循环
+			}
+		}
+	}
 }
 
 func (t *UtilTools) CdnCheck(host string) (bool, string) {

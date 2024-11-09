@@ -10,6 +10,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
@@ -103,5 +104,9 @@ func (h *Handle) TaskEnd(target string, taskId string) {
 		logger.SlogError(fmt.Sprintf("TaskEnds push redis error: %s", err))
 		return
 	}
+}
 
+func (h *Handle) StopTask(id string) {
+	logger.SlogInfo(fmt.Sprintf("stop task: %v", id))
+	contextmanager.GlobalContextManagers.CancelContext(id)
 }

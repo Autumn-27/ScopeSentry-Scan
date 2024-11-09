@@ -59,7 +59,6 @@ func (r *Runner) ModuleRun() error {
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
 					r.NextModule.CloseInput()
-					r.Option.ModuleRunWg.Done()
 					return
 				}
 				if subdomainResult, ok := result.(types.SubdomainResult); ok {
@@ -116,14 +115,18 @@ func (r *Runner) ModuleRun() error {
 	firstData = false
 	var start time.Time
 	var end time.Time
+	doneCalled := false
 	for {
 		// 输入有两种可能，一种域名，一种ip
 		select {
 		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 			allPluginWg.Wait()
-			close(resultChan)
-			resultWg.Wait()
-			r.Option.ModuleRunWg.Done()
+			if !doneCalled {
+				close(resultChan)
+				resultWg.Wait()
+				r.Option.ModuleRunWg.Done()
+				doneCalled = true // 标记已调用 Done
+			}
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -136,10 +139,13 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
 				}
-				close(resultChan)
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
-				resultWg.Wait()
 				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
+				if !doneCalled {
+					close(resultChan)
+					resultWg.Wait()
+					r.Option.ModuleRunWg.Done()
+					doneCalled = true // 标记已调用 Done
+				}
 				return nil
 			}
 			_, ok = data.(string)

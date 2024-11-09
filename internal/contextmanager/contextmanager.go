@@ -39,6 +39,11 @@ func (cm *ContextManager) AddContext(taskID string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
+	// 如果 taskID 已经存在，跳过添加
+	if _, exists := cm.contexts[taskID]; exists {
+		// 这里可以选择直接返回，或者执行其他处理逻辑
+		return
+	}
 	// 创建新的上下文及其取消函数
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -55,6 +60,7 @@ func (cm *ContextManager) CancelContext(taskID string) {
 
 	if cancel, ok := cm.cancels[taskID]; ok {
 		cancel()
+		logger.SlogInfo(fmt.Sprintf("stop task success: %v", taskID))
 	}
 }
 

@@ -79,14 +79,18 @@ func (r *Runner) ModuleRun() error {
 	firstData = false
 	var start time.Time
 	var end time.Time
+	doneCalled := false
 	for {
 		// 输入为DNS信息
 		select {
 		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 			allPluginWg.Wait()
-			close(resultChan)
-			resultWg.Wait()
-			r.Option.ModuleRunWg.Done()
+			if !doneCalled {
+				close(resultChan)
+				resultWg.Wait()
+				r.Option.ModuleRunWg.Done()
+				doneCalled = true // 标记已调用 Done
+			}
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -99,11 +103,12 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity), duration)
 				}
-				close(resultChan)
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 插件运行完毕", r.GetName()))
-				resultWg.Wait()
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
-				r.Option.ModuleRunWg.Done()
+				if !doneCalled {
+					close(resultChan)
+					resultWg.Wait()
+					r.Option.ModuleRunWg.Done()
+					doneCalled = true // 标记已调用 Done
+				}
 				return nil
 			}
 			_, ok = data.(types.SubdomainResult)

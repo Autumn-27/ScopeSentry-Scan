@@ -223,14 +223,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 		args := []string{"--url-file", targetPath, "--json", resultPath, "--config", radConfigPath}
-		err = utils.Tools.ExecuteCommandWithTimeout(filepath.Join(filepath.Join(global.ExtDir, "rad"), p.RadFileName), args, time.Duration(executionTimeout)*time.Minute, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
+		ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+		err = utils.Tools.ExecuteCommandWithTimeout(filepath.Join(filepath.Join(global.ExtDir, "rad"), p.RadFileName), args, time.Duration(executionTimeout)*time.Minute, ctx)
 		if err != nil {
 			logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 		}
-		resultChan := make(chan string, 20)
+		resultChan := make(chan string, 100)
 
 		go func() {
-			err = utils.Tools.ReadFileLineReader(resultPath, resultChan)
+			err = utils.Tools.ReadFileLineReader(resultPath, resultChan, ctx)
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("%v", err))
 			}

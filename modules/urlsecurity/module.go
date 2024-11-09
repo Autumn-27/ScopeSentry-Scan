@@ -67,13 +67,17 @@ func (r *Runner) ModuleRun() error {
 	firstData = false
 	var start time.Time
 	var end time.Time
+	doneCalled := false
 	for {
 		select {
 		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 			allPluginWg.Wait()
-			close(resultChan)
-			resultWg.Wait()
-			r.Option.ModuleRunWg.Done()
+			if !doneCalled {
+				close(resultChan)
+				resultWg.Wait()
+				r.Option.ModuleRunWg.Done()
+				doneCalled = true // 标记已调用 Done
+			}
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -85,9 +89,12 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity), duration)
 				}
-				close(resultChan)
-				resultWg.Wait()
-				r.Option.ModuleRunWg.Done()
+				if !doneCalled {
+					close(resultChan)
+					resultWg.Wait()
+					r.Option.ModuleRunWg.Done()
+					doneCalled = true // 标记已调用 Done
+				}
 				return nil
 			}
 			// 该模块接收的数据为types.CrawlerResult、types.UrlResult、types.AssetOther 、 types.AssetHttp

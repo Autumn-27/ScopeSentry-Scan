@@ -222,14 +222,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-o", resultFile,
 	}
 	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
-	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute, ctx)
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 	}
-	resultChan := make(chan string, 20)
+	resultChan := make(chan string, 100)
 
 	go func() {
-		err = utils.Tools.ReadFileLineReader(resultFile, resultChan)
+		err = utils.Tools.ReadFileLineReader(resultFile, resultChan, ctx)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
 		}
@@ -260,7 +261,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			mu.Unlock()
 			p.Result <- r
 		}
-
 	}
 	end := time.Now()
 	duration := end.Sub(start)

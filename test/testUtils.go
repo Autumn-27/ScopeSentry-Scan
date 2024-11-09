@@ -8,6 +8,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
@@ -15,6 +16,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"time"
 )
 
 func ToBase62(num int64) string {
@@ -42,16 +44,22 @@ func main() {
 	// 初始化日志模块
 	logger.NewLogger()
 	utils.InitializeDnsTools()
+	resultChan := make(chan string, 100)
+	go utils.Tools.ReadFileLineReader("C:\\Users\\autumn\\AppData\\Local\\JetBrains\\GoLand2023.3\\tmp\\GoLand\\ext\\katana\\result\\3MBJIanIesNNIFps", resultChan, context.Background())
+	time.Sleep(3 * time.Second)
+	for result := range resultChan {
+		fmt.Println(result)
+	}
 	//_, b, _ := utils.Tools.GenerateIgnore("*.baidu.com\nrainy-sautyu.top")
 	//for _, k := range b {
 	//	flag := k.MatchString("baidu.com")
 	//	fmt.Println(flag)
 	//}
-	similarity, err := utils.Tools.CompareContentSimilarity("adddw", "ddddddddddddddddddddddddwww")
-	if err != nil {
-		return
-	}
-	fmt.Println(similarity)
+	//similarity, err := utils.Tools.CompareContentSimilarity("adddw", "ddddddddddddddddddddddddwww")
+	//if err != nil {
+	//	return
+	//}
+	//fmt.Println(similarity)
 	//a := utils.DNS.QueryOne("dwas.dwadwasdwa")
 	//fmt.Println(a)
 	// 获取当前时间戳（秒）

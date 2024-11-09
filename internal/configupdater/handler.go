@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"time"
@@ -68,6 +69,8 @@ func RefreshConfig() {
 					UpdateWebFinger()
 				case "notification":
 					UpdateNotification()
+				case "stop_task":
+					handler.TaskHandle.StopTask(jsonData.Content)
 				}
 			}
 		}
