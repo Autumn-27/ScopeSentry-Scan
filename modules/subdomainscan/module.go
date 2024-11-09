@@ -65,7 +65,7 @@ func (r *Runner) ModuleRun() error {
 					subdomainResult.TaskName = r.Option.TaskName
 					flag := results.Duplicate.SubdomainInTask(r.Option.ID, subdomainResult.Host, r.Option.IsRestart)
 					if flag {
-						if r.Option.IgnoreOldSubdomains && !r.Option.IsRestart {
+						if r.Option.Duplicates == "subdomain" && !r.Option.IsRestart {
 							// 从mongodb中查询是否存在子域名进行去重
 							flag = results.Duplicate.SubdomainInMongoDb(&subdomainResult)
 							if flag {
