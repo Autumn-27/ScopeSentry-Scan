@@ -1,0 +1,10 @@
+GET / HTTP/1.1
+Host: truck-api.eu-east-1.indriverapp.com
+User-Agent: httpx - Open-source project (github.com/projectdiscovery/httpx)
+Accept-Charset: utf-8
+Accept-Encoding: gzip
+
+
+
+
+http://truck-api.eu-east-1.indriverapp.com:80

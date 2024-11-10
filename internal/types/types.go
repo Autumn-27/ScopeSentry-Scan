@@ -21,6 +21,7 @@ type SubdomainResult struct {
 	Value      []string
 	IP         []string
 	Time       string
+	Tags       []string `bson:"tags"`
 	Project    string
 	TaskName   string `bson:"taskName"`
 	RootDomain string `bson:"rootDomain"`
@@ -40,6 +41,7 @@ type AssetHttp struct {
 	ResponseBody  string                 `bson:"body" csv:"body"`
 	Host          string                 `bson:"host" csv:"host"`
 	IP            string                 `bson:"ip"`
+	Screenshot    string                 `bson:"screenshot"`
 	FavIconMMH3   string                 `bson:"favicon" csv:"favicon"`
 	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
 	RawHeaders    string                 `bson:"rawheaders" csv:"raw_header"`
@@ -56,7 +58,7 @@ type AssetHttp struct {
 	WebServer     string                 `bson:"webServer"`
 	Service       string                 `bson:"service"`
 	RootDomain    string                 `bson:"rootDomain"`
-	Tag           []string               `bson:"tag"`
+	Tags          []string               `bson:"tags"`
 }
 
 type PortAlive struct {
@@ -84,7 +86,7 @@ type AssetOther struct {
 	Raw          json.RawMessage `bson:"metadata"`
 	Project      string          `bson:"project"`
 	Type         string          `bson:"type"`
-	Tag          []string        `bson:"tag"`
+	Tags         []string        `bson:"tags"`
 	TaskName     []string        `bson:"taskName"`
 	RootDomain   string          `bson:"rootDomain"`
 }
@@ -111,9 +113,10 @@ type UrlResult struct {
 	Time       string `json:"time"`
 	Body       string `bson:"body"`
 	Project    string
-	TaskName   string `bson:"taskName"`
-	ResultId   string `bson:"resultId"`
-	RootDomain string `bson:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	ResultId   string   `bson:"resultId"`
+	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type SecretResults struct {
@@ -128,9 +131,10 @@ type CrawlerResult struct {
 	Method     string
 	Body       string
 	Project    string
-	TaskName   string `bson:"taskName"`
-	ResultId   string `bson:"resultId"`
-	RootDomain string `bson:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	ResultId   string   `bson:"resultId"`
+	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type PortDict struct {
@@ -150,8 +154,9 @@ type SubTakeResult struct {
 	Cname      string
 	Response   string
 	Project    string
-	TaskName   string `bson:"taskName"`
-	RootDomain string `bson:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type DirResult struct {
@@ -160,16 +165,18 @@ type DirResult struct {
 	Msg        string
 	Project    string
 	Length     int
-	TaskName   string `bson:"taskName"`
-	RootDomain string `bson:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type SensitiveRule struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	State   bool   `json:"enabled"`
-	Regular string `json:"pattern"`
-	Color   string `bson:"color"`
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	State   bool     `json:"enabled"`
+	Regular string   `json:"pattern"`
+	Color   string   `bson:"color"`
+	Tags    []string `bson:"tags"`
 }
 
 type SensitiveResult struct {
@@ -181,8 +188,9 @@ type SensitiveResult struct {
 	Color      string
 	Time       string
 	Md5        string
-	TaskName   string `bson:"taskName"`
-	RootDomain string `bson:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type VulnResult struct {
@@ -195,8 +203,9 @@ type VulnResult struct {
 	Time       string
 	Request    string
 	Response   string
-	TaskName   string `bson:"taskName"`
-	RootDomain string `yaml:"rootDomain"`
+	TaskName   string   `bson:"taskName"`
+	RootDomain string   `yaml:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 type TmpPageMonitResult struct {
 	Url      string
@@ -289,6 +298,7 @@ type PageMonit struct {
 	Time       string   `bson:"time"`
 	TaskName   string   `bson:"taskName"`
 	RootDomain string   `bson:"rootDomain"`
+	Tags       []string `bson:"tags"`
 }
 
 type PageMonitBody struct {

@@ -122,8 +122,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	} else {
 		parameter := p.GetParameter()
 		cdncheck := "false"
+		screenshot := false
 		if parameter != "" {
-			args, err := utils.Tools.ParseArgs(parameter, "cdncheck")
+			args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot")
 			if err != nil {
 			} else {
 				for key, value := range args {
@@ -131,6 +132,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						switch key {
 						case "cdncheck":
 							cdncheck = value
+						case "screenshot":
+							if value == "true" {
+								screenshot = true
+							}
 						default:
 							continue
 						}
@@ -147,7 +152,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		} else {
 			url = asset.Host
 		}
-		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck)
+		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck, screenshot)
 	}
 	return nil, nil
 }

@@ -1,0 +1,3 @@
+ https://watchdocs.indriverapp.com:443 (200 OK)
+D:\code\ScopeSentry\ScopeSentry-Scan\output\response\watchdocs.indriverapp.com_443\3eb67773b768ec271b94e9453e5f0a6fb0d41c0c.txt https://watchdocs.indriverapp.com:443 (200 OK)
+i.eu-east-1.indriverapp.com:80 (301 Moved Permanently)

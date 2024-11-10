@@ -145,7 +145,7 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string) {
+func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool) {
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal) // increase the verbosity (optional)
 
 	options := runner.Options{
@@ -169,7 +169,11 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 		OutputCDN:                 cdncheck,
 		Location:                  false,
 		HostMaxErrors:             -1,
+		StoreResponse:             false,
+		StoreChain:                false,
 		MaxResponseBodySizeToRead: 100000,
+		Screenshot:                screenshot,
+		ScreenshotTimeout:         5,
 		//InputFile: "./targetDomains.txt", // path to file containing the target domains list
 		OnResult: func(r runner.Result) {
 			// handle error

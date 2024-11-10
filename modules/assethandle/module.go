@@ -81,7 +81,7 @@ func (r *Runner) ModuleRun() error {
 							assetResult.Project = oldAsset.Project
 							assetResult.RootDomain = oldAsset.RootDomain
 							assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
-							assetResult.Tag = append(assetResult.Tag, oldAsset.Tag...)
+							assetResult.Tags = append(assetResult.Tags, oldAsset.Tags...)
 							go results.Handler.AssetUpdate(id, assetResult)
 						}
 						// 资产没有变化，不进行操作
@@ -110,7 +110,7 @@ func (r *Runner) ModuleRun() error {
 								assetHttpResult.Project = oldAssetHttp.Project
 								assetHttpResult.RootDomain = oldAssetHttp.RootDomain
 								assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
-								assetHttpResult.Tag = append(assetHttpResult.Tag, oldAssetHttp.Tag...)
+								assetHttpResult.Tags = append(assetHttpResult.Tags, oldAssetHttp.Tags...)
 								go results.Handler.AssetUpdate(id, assetHttpResult)
 							}
 							// 资产没有变化，不进行操作

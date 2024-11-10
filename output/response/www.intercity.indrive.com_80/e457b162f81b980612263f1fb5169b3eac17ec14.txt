@@ -1,0 +1,10 @@
+GET / HTTP/1.1
+Host: www.intercity.indrive.com
+User-Agent: httpx - Open-source project (github.com/projectdiscovery/httpx)
+Accept-Charset: utf-8
+Accept-Encoding: gzip
+
+
+
+
+http://www.intercity.indrive.com:80

@@ -249,6 +249,9 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 // DeleteFile 删除指定文件
 func (t *UtilTools) DeleteFile(filePath string) {
 	// 检查文件是否存在
+	if filePath == "" {
+		return
+	}
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return
 	} else if err != nil {
@@ -741,6 +744,11 @@ func removeDefaultPort(rawURL string) string {
 }
 
 func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
+	defer Tools.DeleteFile(r.ScreenshotPath)
+	Screenshot := ""
+	if r.ScreenshotBytes != nil {
+		Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
+	}
 	var ah = types.AssetHttp{
 		Time:         system.GetTimeNow(),
 		TLSData:      r.TLSData, // You may need to set an appropriate default value based on the actual type.
@@ -765,6 +773,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		CDN:          r.CDN,
 		WebServer:    r.WebServer,
 		Service:      r.Scheme,
+		Screenshot:   Screenshot,
 	}
 	ah.LastScanTime = ah.Time
 	return ah
