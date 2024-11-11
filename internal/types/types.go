@@ -192,6 +192,7 @@ type SensitiveResult struct {
 	TaskName   string   `bson:"taskName"`
 	RootDomain string   `bson:"rootDomain"`
 	Tags       []string `bson:"tags"`
+	Status     int      `bson:"status"` // 1表示未处理 2表示处理中 3表示忽略 4表示疑似 5表示确认
 }
 
 type VulnResult struct {
@@ -207,6 +208,7 @@ type VulnResult struct {
 	TaskName   string   `bson:"taskName"`
 	RootDomain string   `yaml:"rootDomain"`
 	Tags       []string `bson:"tags"`
+	Status     int      `bson:"status"` // 1表示未处理 2表示处理中 3表示忽略 4表示疑似 5表示确认
 }
 type TmpPageMonitResult struct {
 	Url      string

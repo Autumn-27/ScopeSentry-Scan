@@ -166,6 +166,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							Color:    rule.Color,
 							Md5:      respMd5,
 							TaskName: p.TaskName,
+							Status:   1,
 						}
 						go results.Handler.Sensitive(&tmpResult)
 						findFlag = true
