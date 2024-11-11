@@ -65,6 +65,7 @@ func (r *Runner) ModuleRun() error {
 					crawlerResult.TaskName = r.Option.TaskName
 					hash := utils.Tools.GenerateHash()
 					crawlerResult.ResultId = hash
+					crawlerResult.Time = utils.Tools.GetTimeNow()
 					go results.Handler.Crawler(&crawlerResult)
 					r.NextModule.GetInput() <- crawlerResult
 				}

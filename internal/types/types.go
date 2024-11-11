@@ -134,6 +134,7 @@ type CrawlerResult struct {
 	TaskName   string   `bson:"taskName"`
 	ResultId   string   `bson:"resultId"`
 	RootDomain string   `bson:"rootDomain"`
+	Time       string   `json:"time"`
 	Tags       []string `bson:"tags"`
 }
 
