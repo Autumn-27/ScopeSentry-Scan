@@ -20,7 +20,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/hbollon/go-edlib"
 	"github.com/projectdiscovery/cdncheck"
 	"github.com/projectdiscovery/httpx/runner"
@@ -750,7 +749,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
 	}
 	var ah = types.AssetHttp{
-		Time:         system.GetTimeNow(),
+		Time:         Tools.GetTimeNow(),
 		TLSData:      r.TLSData, // You may need to set an appropriate default value based on the actual type.
 		Hashes:       r.Hashes,
 		CDNName:      r.CDNName,
