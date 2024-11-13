@@ -65,7 +65,7 @@ func RunPebbledbTask() {
 			// 运行任务目标
 			RunPebbleTarget(runnerOption)
 			// 任务运行完毕删除任务
-			err = pebbledb.PebbleStore.Delete([]byte("task:" + key))
+			err = pebbledb.PebbleStore.Delete([]byte(key))
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", key, err))
 			}
@@ -213,7 +213,7 @@ func RunRedisTask() {
 			// 删除redis信息
 			_, err = redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
 			if err != nil {
-				logger.SlogErrorLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
+				logger.SlogWarnLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
 			}
 		}
 	}

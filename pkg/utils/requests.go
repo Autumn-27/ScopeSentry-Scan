@@ -151,7 +151,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 	options := runner.Options{
 		Methods:                   "GET",
 		JSONOutput:                true,
-		TLSProbe:                  false,
+		TLSProbe:                  true,
 		Threads:                   30,
 		RateLimit:                 100,
 		InputTargetHost:           []string{Host},

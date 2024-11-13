@@ -108,8 +108,7 @@ func (pm *Manager) PrintRunningGoroutines(sortedModuleNames []string) {
 		result = "Module Goroutines:"
 		for _, moduleName := range sortedModuleNames {
 			running := pm.pools[moduleName].Running()
-			free := pm.pools[moduleName].Free()
-			result += fmt.Sprintf("[%s]- run: %d free: %d, ", moduleName, running, free)
+			result += fmt.Sprintf("[%s]- run: %d, ", moduleName, running)
 		}
 		// 去掉最后一个多余的逗号和空格
 		if len(result) > 0 {

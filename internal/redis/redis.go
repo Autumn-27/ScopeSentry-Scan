@@ -131,6 +131,14 @@ func (r *Client) SAdd(ctx context.Context, key string, members ...interface{}) (
 	return r.client.SAdd(ctx, key, members...).Result()
 }
 
+// LLen 获取列表的长度
+func (r *Client) LLen(ctx context.Context, key string) (int64, error) {
+	if r.client == nil {
+		return 0, errors.New("redis client nil")
+	}
+	return r.client.LLen(ctx, key).Result()
+}
+
 // LRange 获取列表中指定范围的元素
 func (r *Client) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
 	if r.client == nil {

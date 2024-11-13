@@ -42,7 +42,7 @@ type AssetHttp struct {
 	Host          string                 `bson:"host" csv:"host"`
 	IP            string                 `bson:"ip"`
 	Screenshot    string                 `bson:"screenshot"`
-	FavIconMMH3   string                 `bson:"favicon" csv:"favicon"`
+	FavIconMMH3   string                 `bson:"faviconmmh3" csv:"favicon"`
 	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
 	RawHeaders    string                 `bson:"rawheaders" csv:"raw_header"`
 	Jarm          string                 `bson:"jarm" csv:"jarm"`

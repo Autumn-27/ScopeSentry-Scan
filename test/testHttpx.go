@@ -9,15 +9,14 @@ package main
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/httpxMode"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 )
 
 func main() {
-	domainList := []string{"baidu.com:443"}
 	httpxResultsHandler := func(r types.AssetHttp) {
 		fmt.Printf("%v\n", r)
 	}
-	httpxMode.HttpxScan(domainList, httpxResultsHandler)
+	utils.Requests.Httpx("watchdocs.indriverapp.com", httpxResultsHandler, "false", true)
 	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{

@@ -218,11 +218,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		logger.SlogError(fmt.Sprintf("RustScan StderrPipe error: %v", err))
+		logger.SlogWarnLocal(fmt.Sprintf("RustScan StderrPipe error: %v", err))
 		return nil, err
 	}
 	if err := cmd.Start(); err != nil {
-		logger.SlogError(fmt.Sprintf("RustScan cmd.Start error： %v", err))
+		logger.SlogWarnLocal(fmt.Sprintf("RustScan cmd.Start error： %v", err))
 		return nil, err
 	}
 	scanner := bufio.NewScanner(stdout)

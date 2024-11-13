@@ -11,10 +11,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strings"
 	"sync"
 	"time"
 )
@@ -108,5 +111,47 @@ func (h *Handle) TaskEnd(target string, taskId string) {
 
 func (h *Handle) StopTask(id string) {
 	logger.SlogInfo(fmt.Sprintf("stop task: %v", id))
+	pebbledb.PebbleStore.Delete([]byte("task:" + id))
+	TaskNodeName := "NodeTask:" + global.AppConfig.NodeName
+	exists, err := redis.RedisClient.Exists(context.Background(), TaskNodeName)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("StopTask GetTask info error: %v", err))
+		contextmanager.GlobalContextManagers.CancelContext(id)
+		return
+	}
+	if exists {
+		// 获取列表中的所有元素
+		listLength, err := redis.RedisClient.LLen(context.Background(), TaskNodeName)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("Error getting list length: %v", err))
+			contextmanager.GlobalContextManagers.CancelContext(id)
+			return
+		}
+		if listLength == 0 {
+			logger.SlogInfo("StopTask list is empty.")
+			contextmanager.GlobalContextManagers.CancelContext(id)
+			return
+		}
+		// 使用 LRANGE 获取列表中的所有值
+		values, err := redis.RedisClient.LRange(context.Background(), TaskNodeName, 0, listLength-1)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("Error fetching list values: %v", err))
+			contextmanager.GlobalContextManagers.CancelContext(id)
+			return
+		}
+		// 遍历列表，检查是否包含目标字符串
+		for _, value := range values {
+			if strings.Contains(value, id) {
+				// 删除包含目标字符串的元素
+				err := redis.RedisClient.LRem(context.Background(), TaskNodeName, 0, value)
+				if err != nil {
+					logger.SlogError(fmt.Sprintf(" StopTaskError removing value: %v", err))
+					contextmanager.GlobalContextManagers.CancelContext(id)
+					return
+				} else {
+				}
+			}
+		}
+	}
 	contextmanager.GlobalContextManagers.CancelContext(id)
 }
