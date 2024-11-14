@@ -5,7 +5,7 @@
 // @time      : 2024/10/17 19:49
 // -------------------------------------------
 
-package myplugin
+package customplugin
 
 import (
 	"fmt"
@@ -15,34 +15,36 @@ import (
 )
 
 type Plugin struct {
-	Name        string
-	Module      string
-	Parameter   string
-	PluginId    string
-	Result      chan interface{}
-	Custom      interface{}
-	TaskId      string
-	InstallFunc func() bool
-	CheckFunc   func() bool
-	ExecuteFunc func(input interface{}, op options.PluginOption)
-	TaskName    string
+	Name          string
+	Module        string
+	Parameter     string
+	PluginId      string
+	Result        chan interface{}
+	Custom        interface{}
+	TaskId        string
+	InstallFunc   func() error
+	CheckFunc     func() error
+	UnInstallFunc func() error
+	ExecuteFunc   func(input interface{}, op options.PluginOption) (interface{}, error)
+	GetNameFunc   func() string
+	TaskName      string
 }
 
-func NewPlugin(name string, module string, plgId string, installFunc func() bool, checkFunc func() bool, executeFunc func(input interface{}, op options.PluginOption)) *Plugin {
+func NewPlugin(module string, plgId string, installFunc func() error, checkFunc func() error, executeFunc func(input interface{}, op options.PluginOption) (interface{}, error), unInstallFunc func() error, getNameFunc func() string) *Plugin {
 	return &Plugin{
-		Name:        name,
-		Module:      module,
-		PluginId:    plgId,
-		InstallFunc: installFunc,
-		CheckFunc:   checkFunc,
-		ExecuteFunc: executeFunc,
+		Module:        module,
+		PluginId:      plgId,
+		InstallFunc:   installFunc,
+		CheckFunc:     checkFunc,
+		ExecuteFunc:   executeFunc,
+		UnInstallFunc: unInstallFunc,
+		GetNameFunc:   getNameFunc,
 	}
 }
 
 func (p *Plugin) SetTaskName(name string) {
 	p.TaskName = name
 }
-
 func (p *Plugin) GetTaskName() string {
 	return p.TaskName
 }
@@ -78,7 +80,7 @@ func (p *Plugin) SetName(name string) {
 }
 
 func (p *Plugin) GetName() string {
-	return p.Name
+	return p.GetNameFunc()
 }
 
 func (p *Plugin) SetModule(module string) {
@@ -90,11 +92,13 @@ func (p *Plugin) GetModule() string {
 }
 
 func (p *Plugin) Install() error {
-	return nil
+	return p.InstallFunc()
 }
-
+func (p *Plugin) UnInstall() error {
+	return p.UnInstallFunc()
+}
 func (p *Plugin) Check() error {
-	return nil
+	return p.CheckFunc()
 }
 
 func (p *Plugin) SetParameter(args string) {
@@ -116,16 +120,29 @@ func (p *Plugin) Log(msg string, tp ...string) {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-
-	return nil, nil
+	op := options.PluginOption{
+		Name:      p.GetName(),
+		Module:    p.GetModule(),
+		Parameter: p.GetParameter(),
+		PluginId:  p.GetPluginId(),
+		Result:    p.Result,
+		Custom:    p.Custom,
+		TaskId:    p.TaskId,
+	}
+	return p.ExecuteFunc(input, op)
 }
 
 func (p *Plugin) Clone() interfaces.Plugin {
 	return &Plugin{
-		Name:     p.Name,
-		Module:   p.Module,
-		PluginId: p.PluginId,
-		Custom:   p.Custom,
-		TaskId:   p.TaskId,
+		Name:          p.Name,
+		Module:        p.Module,
+		PluginId:      p.PluginId,
+		Custom:        p.Custom,
+		TaskId:        p.TaskId,
+		InstallFunc:   p.InstallFunc,
+		CheckFunc:     p.CheckFunc,
+		ExecuteFunc:   p.ExecuteFunc,
+		UnInstallFunc: p.UnInstallFunc,
+		GetNameFunc:   p.GetNameFunc,
 	}
 }

@@ -53,7 +53,9 @@ func (p *Plugin) GetTaskName() string {
 func (p *Plugin) SetTaskId(id string) {
 	p.TaskId = id
 }
-
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }

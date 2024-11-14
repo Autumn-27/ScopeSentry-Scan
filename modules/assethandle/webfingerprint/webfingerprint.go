@@ -92,6 +92,9 @@ func (p *Plugin) GetModule() string {
 func (p *Plugin) Install() error {
 	return nil
 }
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 
 func (p *Plugin) Check() error {
 	return nil

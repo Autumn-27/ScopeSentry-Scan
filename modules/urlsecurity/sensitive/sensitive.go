@@ -108,7 +108,9 @@ func (p *Plugin) Install() error {
 func (p *Plugin) Check() error {
 	return nil
 }
-
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 func (p *Plugin) SetParameter(args string) {
 	p.Parameter = args
 }

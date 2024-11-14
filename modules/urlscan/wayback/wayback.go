@@ -55,7 +55,9 @@ func (p *Plugin) SetTaskId(id string) {
 func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
-
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 func (p *Plugin) Log(msg string, tp ...string) {
 	var logTp string
 	if len(tp) > 0 {

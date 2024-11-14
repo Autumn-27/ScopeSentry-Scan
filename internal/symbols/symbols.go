@@ -8,6 +8,7 @@
 //go:generate go install github.com/traefik/yaegi/cmd/yaegi@v0.15.0
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/pkg/logger
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/pkg/utils
+//go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/options
 package symbols
 
 import "reflect"

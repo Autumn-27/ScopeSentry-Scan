@@ -26,6 +26,7 @@ type Plugin interface {
 	Execute(input interface{}) (interface{}, error)
 	Install() error
 	Check() error
+	UnInstall() error
 	Clone() Plugin
 	Log(msg string, tp ...string)
 }

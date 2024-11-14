@@ -121,7 +121,9 @@ func (p *Plugin) SetModule(module string) {
 func (p *Plugin) GetModule() string {
 	return p.Module
 }
-
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 func (p *Plugin) Install() error {
 	rustscanPath := filepath.Join(global.ExtDir, "rustscan")
 	if err := os.MkdirAll(rustscanPath, os.ModePerm); err != nil {

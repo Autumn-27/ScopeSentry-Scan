@@ -13,7 +13,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	miekgdns "github.com/miekg/dns"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
 	"github.com/projectdiscovery/gologger"
@@ -173,7 +172,7 @@ func (d DnsTools) KsubdomainResultToStruct(input string) types.SubdomainResult {
 				_domain.IP = append(_domain.IP, Domains[i])
 			}
 		}
-		time := system.GetTimeNow()
+		time := Tools.GetTimeNow()
 		_domain.Time = time
 		return _domain
 	}

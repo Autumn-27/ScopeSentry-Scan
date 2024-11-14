@@ -43,7 +43,9 @@ func NewPlugin() *Plugin {
 func (p *Plugin) SetTaskName(name string) {
 	p.TaskName = name
 }
-
+func (p *Plugin) UnInstall() error {
+	return nil
+}
 func (p *Plugin) GetTaskName() string {
 	return p.TaskName
 }
