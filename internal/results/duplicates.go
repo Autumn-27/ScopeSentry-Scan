@@ -16,7 +16,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -54,7 +53,7 @@ func (d *duplicate) SubdomainInTask(taskId string, host string, isRestart bool) 
 
 func (d *duplicate) SubdomainInMongoDb(result *types.SubdomainResult) bool {
 	var resultDoc bson.M
-	err := system.MongoClient.FindOne("subdomain", bson.M{"host": result.Host}, bson.M{"_id": 1}, &resultDoc)
+	err := mongodb.MongodbClient.FindOne("subdomain", bson.M{"host": result.Host}, bson.M{"_id": 1}, &resultDoc)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			// 从mongodb中没有查到子域名，返回true表示开始该子域名的扫描
