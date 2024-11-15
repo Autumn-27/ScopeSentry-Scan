@@ -94,6 +94,10 @@ func CreateDir() {
 		filepath.Join(global.ExtDir, "rad"),
 		global.PocDir,
 		filepath.Join(global.AbsolutePath, "data"),
+		global.PluginDir,
+	}
+	for _, scanMopule := range global.ScanModule {
+		dirs = append(dirs, filepath.Join(global.PluginDir, scanMopule))
 	}
 
 	for _, dir := range dirs {
@@ -118,6 +122,7 @@ func Initialize() {
 	global.DictPath = filepath.Join(global.AbsolutePath, "dictionaries")
 	global.ExtDir = filepath.Join(global.AbsolutePath, "ext")
 	global.PocDir = filepath.Join(global.AbsolutePath, "poc")
+	global.PluginDir = filepath.Join(global.AbsolutePath, "poc")
 	CreateDir()
 	err := LoadConfig()
 	if err != nil {

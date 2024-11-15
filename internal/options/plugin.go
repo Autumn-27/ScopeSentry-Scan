@@ -15,4 +15,6 @@ type PluginOption struct {
 	Result    chan interface{}
 	Custom    interface{}
 	TaskId    string
+	TaskName  string
+	Log       func(msg string, tp ...string)
 }

@@ -16,5 +16,6 @@ builds:
       - amd64
     main: ./cmd/ScopeSentry/main.go
     binary: "ScopeSentry"
+    ldflags: "-s -w"
 
 dist: ./dist

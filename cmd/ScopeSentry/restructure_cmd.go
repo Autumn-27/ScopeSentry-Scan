@@ -27,13 +27,9 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"log"
-	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"os/signal"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -113,7 +109,7 @@ func main() {
 		return
 	}
 	// 性能监控
-	go pprof()
+	//go pprof()
 	//taskE := options.TaskOptions{
 	//	ID:       "1",
 	//	TaskName: "test",
@@ -218,18 +214,18 @@ func main() {
 	wg.Wait()
 }
 
-func pprof() {
-	if global.AppConfig.Debug {
-		go func() {
-			_ = http.ListenAndServe("0.0.0.0:6060", nil)
-		}()
-		//go DebugMem()
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		go func() {
-			sig := <-sigs
-			fmt.Println("收到终止信号:", sig)
-		}()
-	}
-}
+//func pprof() {
+//	if global.AppConfig.Debug {
+//		go func() {
+//			_ = http.ListenAndServe("0.0.0.0:6060", nil)
+//		}()
+//		//go DebugMem()
+//		sigs := make(chan os.Signal, 1)
+//		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+//
+//		go func() {
+//			sig := <-sigs
+//			fmt.Println("收到终止信号:", sig)
+//		}()
+//	}
+//}

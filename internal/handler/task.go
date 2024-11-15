@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pebbledb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"strings"
 	"sync"
@@ -95,7 +94,7 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int,
 
 func (h *Handle) TaskEnd(target string, taskId string) {
 	key := "TaskInfo:time:" + taskId
-	err := redis.RedisClient.Set(context.Background(), key, system.GetTimeNow())
+	err := redis.RedisClient.Set(context.Background(), key, utils.Tools.GetTimeNow())
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("TaskEnds push redis error: %s", err))
 		return

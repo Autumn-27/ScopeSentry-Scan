@@ -30,8 +30,24 @@ var (
 	NotificationApi       []types.NotificationApi
 	NotificationConfig    types.NotificationConfig
 	PocDir                string
+	PluginDir             string
 	SubdomainTakerFingers []types.SubdomainTakerFinger
-	TakeoverFinger        = []byte(`[
+	ScanModule            = []string{
+		"TargetHandler",
+		"SubdomainScan",
+		"SubdomainSecurity",
+		"AssetMapping",
+		"PortScanPreparation",
+		"PortScan",
+		"PortFingerprint",
+		"AssetHandle",
+		"URLScan",
+		"URLSecurity",
+		"WebCrawler",
+		"DirScan",
+		"VulnerabilityScan",
+	}
+	TakeoverFinger = []byte(`[
     {
         "name": "github",
         "cname": [

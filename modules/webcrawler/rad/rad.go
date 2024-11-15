@@ -18,7 +18,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
 	"path/filepath"
@@ -193,8 +192,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	var targetFileName string
 	if len(data) > 0 {
 		timeRandom := utils.Tools.GetTimeNow()
-		strRandom := util.GenerateRandomString(8)
-		targetFileName = util.CalculateMD5(timeRandom + strRandom)
+		strRandom := utils.Tools.GenerateRandomString(8)
+		targetFileName = utils.Tools.CalculateMD5(timeRandom + strRandom)
 		targetPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "target", targetFileName)
 		err := utils.Tools.WriteLinesToFile(targetPath, &data)
 		if err != nil {

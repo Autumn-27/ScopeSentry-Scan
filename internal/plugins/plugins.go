@@ -26,6 +26,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/vulnerabilityscan/nuclei"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
+	"github.com/cloudflare/cfssl/log"
 	"sync"
 )
 
@@ -131,7 +132,15 @@ func (pm *PluginManager) InitializePlugins() error {
 	// nuclei
 	nucleiPlugin := nuclei.NewPlugin()
 	pm.RegisterPlugin(nucleiPlugin.Module, nucleiPlugin.PluginId, nucleiPlugin)
-
+	customPlugins, err := GetCustomPlugin()
+	if err != nil {
+		log.Error(fmt.Sprintf("load custom plugin error: %v", err))
+	}
+	if len(customPlugins) != 0 {
+		for _, plg := range customPlugins {
+			pm.RegisterPlugin(plg.GetModule(), plg.GetPluginId(), plg)
+		}
+	}
 	// 执行插件的安装和check
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {

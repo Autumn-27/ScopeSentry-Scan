@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os"
 	"path/filepath"
@@ -274,9 +273,9 @@ func wildcardDNSRecords(domain string) []string {
 	targets := []string{}
 	for i := 0; i < 3; i++ {
 		dotIndex := strings.Index(domain, "*.")
-		subdomain := util.GenerateRandomString(6) + "." + domain
+		subdomain := utils.Tools.GenerateRandomString(6) + "." + domain
 		if dotIndex != -1 {
-			subdomain = strings.Replace(domain, "*", util.GenerateRandomString(6), -1)
+			subdomain = strings.Replace(domain, "*", utils.Tools.GenerateRandomString(6), -1)
 		}
 		targets = append(targets, subdomain)
 	}
