@@ -159,6 +159,10 @@ func (t *UtilTools) WriteContentFile(filPath string, fileContent string) error {
 // WriteByteContentFile 将byte写入指定文件
 func (t *UtilTools) WriteByteContentFile(filPath string, fileContent []byte) error {
 	// 将字符串写入文件
+	err := t.EnsureFilePathExists(filPath)
+	if err != nil {
+		return err
+	}
 	if err := ioutil.WriteFile(filPath, fileContent, 0666); err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("Failed to create filPath: %s - %s", filPath, err))
 		return err

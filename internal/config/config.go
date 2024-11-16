@@ -122,7 +122,7 @@ func Initialize() {
 	global.DictPath = filepath.Join(global.AbsolutePath, "dictionaries")
 	global.ExtDir = filepath.Join(global.AbsolutePath, "ext")
 	global.PocDir = filepath.Join(global.AbsolutePath, "poc")
-	global.PluginDir = filepath.Join(global.AbsolutePath, "poc")
+	global.PluginDir = filepath.Join(global.AbsolutePath, "plugin")
 	CreateDir()
 	err := LoadConfig()
 	if err != nil {

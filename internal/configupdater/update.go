@@ -207,7 +207,7 @@ func UpdateModuleConfig(content string) {
 }
 
 func Updatedictionary(content string) {
-	parts := strings.SplitN(content, "[*]", 2)
+	parts := strings.SplitN(content, ":", 2)
 	t := parts[0]
 	id := parts[1]
 	if t == "delete" {

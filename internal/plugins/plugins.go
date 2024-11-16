@@ -8,8 +8,11 @@
 package plugins
 
 import (
+	"context"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle/webfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping/httpx"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan/sentrydir"
@@ -26,6 +29,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/vulnerabilityscan/nuclei"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/cloudflare/cfssl/log"
 	"sync"
 )
@@ -141,17 +145,37 @@ func (pm *PluginManager) InitializePlugins() error {
 			pm.RegisterPlugin(plg.GetModule(), plg.GetPluginId(), plg)
 		}
 	}
+	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
 	// 执行插件的安装和check
+	// 0 代表未安装 1代表安装失败 2代表安装成功，未检查 3代表安装成功，检查失败 4代表安装检查都成功
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {
+			plgInfo := map[string]interface{}{
+				plugin.GetPluginId(): 0,
+			}
 			// 调用每个插件的 Install 函数
 			if err := plugin.Install(); err != nil {
+				plgInfo[plugin.GetPluginId()] = 1
+				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+				if plgInfoErr != nil {
+					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 1: %s", plgInfoErr))
+				}
 				return fmt.Errorf("failed to install plugin %s from module %s: %v", name, module, err)
 			}
-
+			plgInfo[plugin.GetPluginId()] = 2
 			// 调用每个插件的 Check 函数
 			if err := plugin.Check(); err != nil {
+				plgInfo[plugin.GetPluginId()] = 3
+				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+				if plgInfoErr != nil {
+					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 3: %s", plgInfoErr))
+				}
 				return fmt.Errorf("failed to check plugin %s from module %s: %v", name, module, err)
+			}
+			plgInfo[plugin.GetPluginId()] = 4
+			plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+			if plgInfoErr != nil {
+				logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))
 			}
 		}
 	}
