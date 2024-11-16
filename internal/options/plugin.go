@@ -8,13 +8,13 @@
 package options
 
 type PluginOption struct {
-	Name      string
-	Module    string
-	Parameter string
-	PluginId  string
-	Result    chan interface{}
-	Custom    interface{}
-	TaskId    string
-	TaskName  string
-	Log       func(msg string, tp ...string)
+	Name       string
+	Module     string
+	Parameter  string
+	PluginId   string
+	ResultFunc func(interface{})
+	Custom     interface{}
+	TaskId     string
+	TaskName   string
+	Log        func(msg string, tp ...string)
 }

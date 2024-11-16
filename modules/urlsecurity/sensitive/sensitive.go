@@ -10,7 +10,6 @@ package sensitive
 import (
 	"errors"
 	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/configupdater"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
@@ -128,7 +127,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	if len(global.SensitiveRules) == 0 {
-		configupdater.UpdateSensitive()
+		return nil, errors.New("SensitiveRules is null")
 	}
 	//var start time.Time
 	//var end time.Time

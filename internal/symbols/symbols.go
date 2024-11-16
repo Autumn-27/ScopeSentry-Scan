@@ -16,7 +16,6 @@
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/notification
-//go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/plugins
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/pool
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/redis
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/results

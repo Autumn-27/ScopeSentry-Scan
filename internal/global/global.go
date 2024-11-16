@@ -31,6 +31,7 @@ var (
 	NotificationConfig    types.NotificationConfig
 	PocDir                string
 	PluginDir             string
+	DatabaseEnabled       bool
 	SubdomainTakerFingers []types.SubdomainTakerFinger
 	ScanModule            = []string{
 		"TargetHandler",

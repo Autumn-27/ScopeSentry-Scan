@@ -105,6 +105,6 @@ func LoadCustomPlugin(path string, modlue string, plgId string) (interfaces.Plug
 		return nil, err
 	}
 	uninstallFunc := v.Interface().(func() error)
-	plg := customplugin.NewPlugin("test", "", installFunc, checkFunc, executeFunc, uninstallFunc, getNameFunc)
+	plg := customplugin.NewPlugin(modlue, plgId, installFunc, checkFunc, executeFunc, uninstallFunc, getNameFunc)
 	return plg, nil
 }

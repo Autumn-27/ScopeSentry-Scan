@@ -120,14 +120,17 @@ func (p *Plugin) Log(msg string, tp ...string) {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
+	resultFunc := func(res interface{}) {
+		p.Result <- res
+	}
 	op := options.PluginOption{
-		Name:      p.GetName(),
-		Module:    p.GetModule(),
-		Parameter: p.GetParameter(),
-		PluginId:  p.GetPluginId(),
-		Result:    p.Result,
-		Custom:    p.Custom,
-		TaskId:    p.TaskId,
+		Name:       p.GetName(),
+		Module:     p.GetModule(),
+		Parameter:  p.GetParameter(),
+		PluginId:   p.GetPluginId(),
+		ResultFunc: resultFunc,
+		Custom:     p.Custom,
+		TaskId:     p.TaskId,
 	}
 	return p.ExecuteFunc(input, op)
 }
