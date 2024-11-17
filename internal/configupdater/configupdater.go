@@ -293,6 +293,25 @@ func UpdateNotification() {
 	logger.SlogInfoLocal("Notification load end")
 }
 
+func LoadPlugin() {
+	logger.SlogInfoLocal("load plugin load begin")
+	var result []PluginInfo
+	err := mongodb.MongodbClient.FindAll("plugins", bson.M{"isSystem": false}, bson.M{"module": 1, "hash": 1, "source": 1}, &result)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("find plugin error: %v", err))
+		return
+	}
+	for _, r := range result {
+		plgPath := filepath.Join(global.PluginDir, r.Module, fmt.Sprintf("%v.go", r.Hash))
+		err = utils.Tools.WriteContentFile(plgPath, r.Source)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("WriteContentFile plugin %v error: %v", r.Hash, err))
+			continue
+		}
+	}
+	logger.SlogInfoLocal("load plugin load end")
+}
+
 func Initialize() {
 	UpdateSubfinderApiConfig()
 	UpdateRadConfig()
@@ -304,4 +323,5 @@ func Initialize() {
 	UpdateProject()
 	UpdateWebFinger()
 	UpdateNotification()
+	LoadPlugin()
 }

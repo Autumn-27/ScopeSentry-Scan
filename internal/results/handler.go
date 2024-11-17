@@ -59,6 +59,9 @@ func (h *handler) Subdomain(result *types.SubdomainResult) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Host, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	if global.NotificationConfig.SubdomainScan {
@@ -76,6 +79,9 @@ func (h *handler) SubdomainTakeover(result *types.SubTakeResult) {
 	}
 	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	interfaceSlice = &result
 	if global.NotificationConfig.SubdomainTakeoverNotification {
 		NotificationMsg := fmt.Sprintf("Subdomain Takeover:\n%v - %v\n", result.Input, result.Cname)
@@ -112,6 +118,9 @@ func (h *handler) AssetOtherInsert(result *types.AssetOther) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Host, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)
@@ -129,6 +138,9 @@ func (h *handler) AssetHttpInsert(result *types.AssetHttp) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Host, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)
@@ -146,6 +158,9 @@ func (h *handler) URL(result *types.UrlResult) {
 	}
 	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	// 创建result的副本，并将Body设置为空
 	// 创建一个新的result对象，但Body设为空
 	resultCopy := types.UrlResult{
@@ -173,6 +188,9 @@ func (h *handler) Crawler(result *types.CrawlerResult) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	ResultQueues["WebCrawler"].Queue <- interfaceSlice
@@ -185,6 +203,9 @@ func (h *handler) Sensitive(result *types.SensitiveResult) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	if global.NotificationConfig.SensitiveNotification {
@@ -261,6 +282,9 @@ func (h *handler) Vulnerability(result *types.VulnResult) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	if global.NotificationConfig.VulNotification {
@@ -292,6 +316,9 @@ func (h *handler) PageMonitoringInsert(result *types.PageMonit) {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
 	}
 	result.RootDomain = rootDomain
+	if result.Time == "" {
+		result.Time = utils.Tools.GetTimeNow()
+	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	ResultQueues["PageMonitoring"].Queue <- interfaceSlice

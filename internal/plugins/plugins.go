@@ -151,28 +151,27 @@ func (pm *PluginManager) InitializePlugins() error {
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {
 			plgInfo := map[string]interface{}{
-				plugin.GetPluginId(): 0,
+				plugin.GetPluginId() + "_install": 0,
+				plugin.GetPluginId() + "_check":   0,
 			}
 			// 调用每个插件的 Install 函数
 			if err := plugin.Install(); err != nil {
-				plgInfo[plugin.GetPluginId()] = 1
 				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 				if plgInfoErr != nil {
 					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 1: %s", plgInfoErr))
 				}
 				return fmt.Errorf("failed to install plugin %s from module %s: %v", name, module, err)
 			}
-			plgInfo[plugin.GetPluginId()] = 2
+			plgInfo[plugin.GetPluginId()+"_install"] = 1
 			// 调用每个插件的 Check 函数
 			if err := plugin.Check(); err != nil {
-				plgInfo[plugin.GetPluginId()] = 3
 				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 				if plgInfoErr != nil {
 					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 3: %s", plgInfoErr))
 				}
 				return fmt.Errorf("failed to check plugin %s from module %s: %v", name, module, err)
 			}
-			plgInfo[plugin.GetPluginId()] = 4
+			plgInfo[plugin.GetPluginId()+"_check"] = 1
 			plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 			if plgInfoErr != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))

@@ -19,14 +19,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"path/filepath"
+	"strings"
 )
 
 // PluginInfo 存储插件信息的结构体
-type PluginInfo struct {
-	Module string `bson:"module"`
-	Hash   string `bson:"hash"`
-	Source string `bson:"source"`
-}
 
 func InstallPlugin(id string) {
 	var result PluginInfo
@@ -56,11 +52,11 @@ func InstallPlugin(id string) {
 	plugins.GlobalPluginManager.RegisterPlugin(plugin.GetModule(), plugin.GetPluginId(), plugin)
 	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
 	plgInfo := map[string]interface{}{
-		plugin.GetPluginId(): 0,
+		plugin.GetPluginId() + "_install": 0,
+		plugin.GetPluginId() + "_check":   0,
 	}
 	err = plugin.Install()
 	if err != nil {
-		plgInfo[plugin.GetPluginId()] = 1
 		plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 		if plgInfoErr != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 1: %s", plgInfoErr))
@@ -68,9 +64,9 @@ func InstallPlugin(id string) {
 		logger.SlogErrorLocal(fmt.Sprintf("plugin install func error: %v", err))
 		return
 	}
+	plgInfo[plugin.GetPluginId()+"_install"] = 1
 	err = plugin.Check()
 	if err != nil {
-		plgInfo[plugin.GetPluginId()] = 3
 		plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 		if plgInfoErr != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 3: %s", plgInfoErr))
@@ -78,7 +74,7 @@ func InstallPlugin(id string) {
 		logger.SlogErrorLocal(fmt.Sprintf("plugin check func error: %v", err))
 		return
 	}
-	plgInfo[plugin.GetPluginId()] = 4
+	plgInfo[plugin.GetPluginId()+"_check"] = 1
 	plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 	if plgInfoErr != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))
@@ -87,25 +83,105 @@ func InstallPlugin(id string) {
 	logger.SlogInfoLocal(fmt.Sprintf("load plugin end:%v", id))
 }
 
-func DeletePlugin(hash string) {
-	var result PluginInfo
+func DeletePlugin(data string) {
+	parts := strings.Split(data, "_")
+	hash := parts[0]
+	module := parts[1]
 	logger.SlogInfoLocal(fmt.Sprintf("delete plugin:%v", hash))
-	err := mongodb.MongodbClient.FindOne("plugins", bson.M{"hash": hash}, bson.M{"module": 1, "hash": 1}, &result)
-	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("find plugin error: %v", err))
-		return
-	}
-	plg, flag := plugins.GlobalPluginManager.GetPlugin(result.Module, result.Hash)
+
+	plg, flag := plugins.GlobalPluginManager.GetPlugin(module, hash)
 	if !flag {
 		logger.SlogInfoLocal(fmt.Sprintf("plugin %v not found", hash))
 		return
 	}
-	err = plg.UnInstall()
+	err := plg.UnInstall()
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("plugin UnInstall func error: %v", err))
 		return
 	}
-	plgPath := filepath.Join(global.PluginDir, result.Module, fmt.Sprintf("%v.go", result.Hash))
+	plgPath := filepath.Join(global.PluginDir, module, fmt.Sprintf("%v.go", hash))
 	utils.Tools.DeleteFile(plgPath)
+	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
+	plgInfoErr := redis.RedisClient.HDel(context.Background(), nodePlgInfokey, hash+"_install", hash+"_check")
+	if plgInfoErr != nil {
+	}
 	logger.SlogInfoLocal(fmt.Sprintf("delete plugin end:%v", hash))
+}
+
+func ReInstall(data string) {
+	parts := strings.Split(data, "_")
+	hash := parts[0]
+	module := parts[1]
+	plgInfo := map[string]interface{}{
+		hash + "_install": 0,
+	}
+	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
+	plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+	if plgInfoErr != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("ReInstall send plginfo error 3: %s", plgInfoErr))
+	}
+	plg, flag := plugins.GlobalPluginManager.GetPlugin(module, hash)
+	if !flag {
+		logger.SlogWarnLocal(fmt.Sprintf("module %v hash %v not found", module, hash))
+		return
+	}
+	err := plg.Install()
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("module %v hash %v install error: %v", module, hash, err))
+		return
+	}
+	plgInfo[hash+"_install"] = 1
+	plgInfoErr = redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+	if plgInfoErr != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("ReInstall send plginfo error 3: %s", plgInfoErr))
+	}
+	logger.SlogInfoLocal(fmt.Sprintf("plugin reinstall success: %v", data))
+}
+
+func ReCheck(data string) {
+	parts := strings.Split(data, "_")
+	hash := parts[0]
+	module := parts[1]
+	plgInfo := map[string]interface{}{
+		hash + "_check": 0,
+	}
+	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
+	plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+	if plgInfoErr != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("ReCheck send plginfo error 3: %s", plgInfoErr))
+	}
+	plg, flag := plugins.GlobalPluginManager.GetPlugin(module, hash)
+	if !flag {
+		logger.SlogWarnLocal(fmt.Sprintf("module %v hash %v not found", module, hash))
+		return
+	}
+	err := plg.Check()
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("module %v hash %v check error: %v", module, hash, err))
+		return
+	}
+	plgInfo[hash+"_check"] = 1
+	plgInfoErr = redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+	if plgInfoErr != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("ReCheck send plginfo error 3: %s", plgInfoErr))
+	}
+
+	logger.SlogInfoLocal(fmt.Sprintf("plugin recheck success: %v", data))
+}
+
+func Uninstall(data string) {
+	parts := strings.Split(data, "_")
+	hash := parts[0]
+	module := parts[1]
+	plg, flag := plugins.GlobalPluginManager.GetPlugin(module, hash)
+	if !flag {
+		logger.SlogWarnLocal(fmt.Sprintf("module %v hash %v not found", module, hash))
+		return
+	}
+	err := plg.UnInstall()
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("module %v hash %v UnInstall error: %v", module, hash, err))
+		return
+	}
+	logger.SlogInfoLocal(fmt.Sprintf("plugin UnInstall success: %v", data))
 }

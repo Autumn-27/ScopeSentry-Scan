@@ -75,7 +75,12 @@ func RefreshConfig() {
 					InstallPlugin(jsonData.Content)
 				case "delete_plugin":
 					DeletePlugin(jsonData.Content)
-
+				case "re_install_plugin":
+					ReInstall(jsonData.Content)
+				case "re_check_plugin":
+					ReCheck(jsonData.Content)
+				case "uninstall_plugin":
+					Uninstall(jsonData.Content)
 				}
 			}
 		}
