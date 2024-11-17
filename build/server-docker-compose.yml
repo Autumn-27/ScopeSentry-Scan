@@ -1,0 +1,19 @@
+version: "3.5"
+
+services:
+  scope-sentry:
+    image: autumn27/scopesentry:latest
+    container_name: scope-sentry
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      TIMEZONE: Asia/Shanghai
+      MONGODB_IP: ${MONGODB_IP}
+      MONGODB_PORT: ${MONGODB_PORT}
+      DATABASE_NAME: ScopeSentry
+      DATABASE_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      DATABASE_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      REDIS_IP: ${REDIS_IP}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
