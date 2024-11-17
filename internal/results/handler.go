@@ -79,9 +79,6 @@ func (h *handler) SubdomainTakeover(result *types.SubTakeResult) {
 	}
 	result.RootDomain = rootDomain
 	result.Project = h.GetAssetProject(rootDomain)
-	if result.Time == "" {
-		result.Time = utils.Tools.GetTimeNow()
-	}
 	interfaceSlice = &result
 	if global.NotificationConfig.SubdomainTakeoverNotification {
 		NotificationMsg := fmt.Sprintf("Subdomain Takeover:\n%v - %v\n", result.Input, result.Cname)

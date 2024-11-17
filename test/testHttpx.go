@@ -16,7 +16,7 @@ func main() {
 	httpxResultsHandler := func(r types.AssetHttp) {
 		fmt.Printf("%v\n", r)
 	}
-	utils.Requests.Httpx("watchdocs.indriverapp.com", httpxResultsHandler, "false", true)
+	utils.Requests.Httpx("https://baidu.com", httpxResultsHandler, "false", true)
 	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{
