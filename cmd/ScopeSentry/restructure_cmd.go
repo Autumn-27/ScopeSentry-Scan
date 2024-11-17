@@ -37,7 +37,6 @@ func main() {
 	// 初始化系统信息
 	config.Initialize()
 	global.VERSION = "1.5"
-	global.AppConfig.Debug = true
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()
@@ -110,90 +109,6 @@ func main() {
 	}
 	// 性能监控
 	//go pprof()
-	//taskE := options.TaskOptions{
-	//	ID:       "1",
-	//	TaskName: "test",
-	//	//SubdomainScan:       []string{"subfinder", "ksubdomain"},
-	//	//SubdomainSecurity:   []string{"SubdomainTakeover"},
-	//	//PortScanPreparation: []string{"SkipCdn"},
-	//	PortScan: []string{"RustScan"},
-	//	//PortFingerprint:     []string{"fingerprintx"},
-	//	AssetMapping: []string{"httpx"},
-	//	//AssetHandle:         []string{"WebFingerprint"},
-	//	URLScan:     []string{"katana", "wayback"},
-	//	URLSecurity: []string{"sensitive"},
-	//	//WebCrawler:          []string{"rad"},
-	//	//DirScan:             []string{"SentryDir"},
-	//	//VulnerabilityScan: []string{"nuclei"},
-	//	SubdomainFilename: "66dda6ee3687eb004e6b3bda",
-	//	Parameters: map[string]map[string]string{
-	//		"SubdomainScan": {
-	//			"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
-	//		},
-	//		"DirScan": {
-	//			"SentryDir": "-d 6712604bcad762b691bf0d93",
-	//		},
-	//		"VulnerabilityScan": {
-	//			"nuclei": "-t *",
-	//		},
-	//	},
-	//}
-	//jsonStr, err := utils.Tools.StructToJSON(taskE)
-	//if err != nil {
-	//	return
-	//}
-	//pebbledb.PebbleStore.Put([]byte("task:1"), []byte(jsonStr))
-	//
-	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:83"), []byte("1"))
-
-	//taskE = options.TaskOptions{
-	//	ID:       "2",
-	//	TaskName: "test",
-	//	//SubdomainScan:       []string{"subfinder", "ksubdomain"},
-	//	//SubdomainSecurity:   []string{"SubdomainTakeover"},
-	//	//PortScanPreparation: []string{"SkipCdn"},
-	//	PortScan: []string{"RustScan"},
-	//	//PortFingerprint:     []string{"fingerprintx"},
-	//	//AssetMapping:        []string{"httpx"},
-	//	//AssetHandle:         []string{"WebFingerprint"},
-	//	//URLScan:             []string{"katana", "wayback"},
-	//	//URLSecurity:         []string{"sensitive"},
-	//	//WebCrawler:          []string{"rad"},
-	//	//DirScan:             []string{"SentryDir"},
-	//	VulnerabilityScan: []string{"nuclei"},
-	//	SubdomainFilename: "66dda6ee3687eb004e6b3bda",
-	//	Parameters: map[string]map[string]string{
-	//		"SubdomainScan": {
-	//			"ksubdomain": "-subfile 66dda6ee3687eb004e6b3bda",
-	//		},
-	//		"DirScan": {
-	//			"SentryDir": "-d 6712604bcad762b691bf0d93",
-	//		},
-	//		"VulnerabilityScan": {
-	//			"nuclei": "-t 66dd6b0edcf0ee4a4fef8bf7.yaml",
-	//		},
-	//	},
-	//}
-	//jsonStr, err = utils.Tools.StructToJSON(taskE)
-	//if err != nil {
-	//	return
-	//}
-	//pebbledb.PebbleStore.Put([]byte("task:2"), []byte(jsonStr))
-	//pebbledb.PebbleStore.Put([]byte("2:http://123.56.16.123"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:666"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:80"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("1:http://39.105.160.88:8081"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("1:https://baidu.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("1:https://hackerone.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:baidu.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:google.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes1t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes2t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes3t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes4t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes5t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes6t.com"), []byte("1"))
-	//pebbledb.PebbleStore.Put([]byte("2:tes7t.com"), []byte("1"))
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
