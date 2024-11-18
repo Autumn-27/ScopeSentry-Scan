@@ -219,7 +219,7 @@ func Updatedictionary(content string) {
 }
 
 func UpdatePoc(content string) {
-	parts := strings.SplitN(content, "[*]", 2)
+	parts := strings.SplitN(content, ":", 2)
 	t := parts[0]
 	if t == "delete" {
 		for _, id := range strings.Split(parts[1], ",") {
