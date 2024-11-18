@@ -159,7 +159,7 @@ func (p *Plugin) Check() error {
 	rawSubdomain := []string{"scope-sentry.top"}
 	subdomainVerificationResult := make(chan string, 1)
 	verificationCount := 0
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 5*time.Minute, context.Background())
+	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 3*time.Minute, context.Background())
 	for result := range subdomainVerificationResult {
 		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
 		if subdomainResult.Host != "" {
