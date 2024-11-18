@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     chromium \
     vim \
     tzdata \
-    python3.7 \
+    python3 \
     libpcap-dev \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
