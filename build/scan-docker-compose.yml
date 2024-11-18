@@ -8,10 +8,11 @@ services:
     environment:
       NodeName: node-test
       TimeZoneName: Asia/Shanghai
-      MONGODB_IP: 127.0.0.1
-      MONGODB_PORT: 27017
-      MONGODB_USER: root
-      MONGODB_PASSWORD: "yourpassword"
-      REDIS_IP: 127.0.0.1
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: "yourpassword"
+      MONGODB_IP: ${MONGODB_IP}
+      MONGODB_PORT: ${MONGODB_PORT}
+      MONGODB_DATABASE: ScopeSentry
+      MONGODB_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGODB_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      REDIS_IP: ${REDIS_IP}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}

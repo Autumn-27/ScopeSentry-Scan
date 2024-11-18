@@ -36,8 +36,6 @@ func main() {
 	Banner()
 	// 初始化系统信息
 	config.Initialize()
-	global.VERSION = "1.5"
-	fmt.Printf("version %v\n", global.VERSION)
 	var err error
 	// 初始化mongodb连接
 	mongodb.Initialize()

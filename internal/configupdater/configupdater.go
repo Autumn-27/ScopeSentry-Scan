@@ -64,6 +64,7 @@ func UpdateNodeModulesConfig() {
 
 // UpdateDictionary 更新字典文件
 func UpdateDictionary(id string) {
+	logger.SlogInfoLocal("UpdateDictionary load begin")
 	var results map[string][]byte // 根据实际数据结构定义类型
 	var err error
 	if id == "all" {
@@ -91,6 +92,7 @@ func UpdateDictionary(id string) {
 			logger.SlogErrorLocal(fmt.Sprintf("SubDomainDic writing file error: %v - %v", id, err))
 		}
 	}
+	logger.SlogInfoLocal("UpdateDictionary load end")
 }
 
 func UpdateSubfinderApiConfig() {
@@ -197,7 +199,7 @@ type tmpPoc struct {
 	Hash    string             `bson:"hash"`
 	Content string             `bson:"content"`
 	Name    string             `bson:"name"`
-	Level   int                `bson:"level"`
+	Level   string             `bson:"level"`
 }
 
 func LoadPoc(id []string) {
