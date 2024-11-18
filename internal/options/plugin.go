@@ -7,6 +7,8 @@
 
 package options
 
+import "context"
+
 type PluginOption struct {
 	Name       string
 	Module     string
@@ -17,4 +19,5 @@ type PluginOption struct {
 	TaskId     string
 	TaskName   string
 	Log        func(msg string, tp ...string)
+	Ctx        context.Context
 }

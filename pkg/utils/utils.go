@@ -465,6 +465,14 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 		return
 	}
 
+	// 获取命令错误输出管道（标准错误）
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		result <- fmt.Sprintf("Error getting stderr pipe: %v", err)
+		close(result)
+		return
+	}
+
 	// 启动命令
 	if err := cmd.Start(); err != nil {
 		result <- fmt.Sprintf("Error starting command: %v", err)
@@ -472,11 +480,10 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 		return
 	}
 
-	// 使用 goroutine 读取命令的标准输出，确保不会阻塞
+	// 使用 goroutine 读取命令的标准输出
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			// 将每行输出发送到 result 通道
 			select {
 			case result <- scanner.Text():
 			case <-ctxWithTimeout.Done():
@@ -486,24 +493,42 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 				return
 			}
 		}
-
-		// 等待命令执行完毕
-		if err := cmd.Wait(); err != nil {
-			result <- fmt.Sprintf("Error waiting for command: %v", err)
+		if err := scanner.Err(); err != nil {
+			result <- fmt.Sprintf("Error reading stdout: %v", err)
 		}
-
-		// 关闭 result 通道，表示数据发送完毕
-		close(result)
 	}()
 
-	// 监控上下文的取消或超时
+	// 使用 goroutine 读取命令的错误输出
 	go func() {
-		<-ctxWithTimeout.Done()
-		// 终止命令进程
-		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			select {
+			case result <- fmt.Sprintf("stderr: %s", scanner.Text()):
+			case <-ctxWithTimeout.Done():
+				// 如果上下文取消或超时，停止读取并返回
+				result <- "Command execution cancelled or timed out."
+				close(result)
+				return
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			result <- fmt.Sprintf("Error reading stderr: %v", err)
 		}
 	}()
+
+	// 等待命令执行完毕
+	err = cmd.Wait()
+	if err != nil {
+		select {
+		case result <- fmt.Sprintf("Error waiting for command: %v", err):
+		case <-ctxWithTimeout.Done():
+			// 如果上下文取消或超时，退出
+			result <- "Command execution cancelled or timed out."
+		}
+	}
+
+	// 关闭 result 通道，表示数据发送完毕
+	close(result)
 }
 
 // ExecuteCommandToChan 执行指定命令，命令的输出每一行会发送到result的通道中。

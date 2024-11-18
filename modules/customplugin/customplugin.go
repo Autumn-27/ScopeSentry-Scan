@@ -9,6 +9,7 @@ package customplugin
 
 import (
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -131,6 +132,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		ResultFunc: resultFunc,
 		Custom:     p.Custom,
 		TaskId:     p.TaskId,
+		TaskName:   p.GetTaskName(),
+		Log:        p.Log,
+		Ctx:        contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()),
 	}
 	return p.ExecuteFunc(input, op)
 }

@@ -44,11 +44,18 @@ func main() {
 	// 初始化日志模块
 	logger.NewLogger()
 	utils.InitializeDnsTools()
-	resultChan := make(chan string, 100)
-	go utils.Tools.ReadFileLineReader("C:\\Users\\autumn\\AppData\\Local\\JetBrains\\GoLand2023.3\\tmp\\GoLand\\ext\\katana\\result\\3MBJIanIesNNIFps", resultChan, context.Background())
-	time.Sleep(3 * time.Second)
-	for result := range resultChan {
-		fmt.Println(result)
+	//resultChan := make(chan string, 100)
+	//go utils.Tools.ReadFileLineReader("C:\\Users\\autumn\\AppData\\Local\\JetBrains\\GoLand2023.3\\tmp\\GoLand\\ext\\katana\\result\\3MBJIanIesNNIFps", resultChan, context.Background())
+	//time.Sleep(3 * time.Second)
+	//for result := range resultChan {
+	//	fmt.Println(result)
+	//}
+	result := make(chan string)
+	// 设置超时时间和任务上下文管理
+	go utils.Tools.ExecuteCommandToChanWithTimeout("whoami", []string{}, result, 20*time.Minute, context.Background())
+	//go utils.Tools.ExecuteCommandToChan("whoami", []string{}, result)
+	for i := range result {
+		fmt.Println(i)
 	}
 	//_, b, _ := utils.Tools.GenerateIgnore("*.baidu.com\nrainy-sautyu.top")
 	//for _, k := range b {

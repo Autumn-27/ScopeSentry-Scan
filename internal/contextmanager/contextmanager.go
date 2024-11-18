@@ -108,14 +108,19 @@ func (cm *ContextManager) DeleteContext(taskID string) {
 
 // GetContext 获取指定任务的上下文
 func (cm *ContextManager) GetContext(taskID string) context.Context {
+	// 获取锁保护上下文读取操作
 	cm.mu.Lock()
-	defer cm.mu.Unlock()
+	ctx, exists := cm.contexts[taskID]
+	cm.mu.Unlock()
 
-	// 获取任务ID对应的上下文
-	if ctx, ok := cm.contexts[taskID]; ok {
-		return ctx
-	} else {
+	// 如果上下文不存在，则需要创建
+	if !exists {
+		// 创建并添加上下文时，不要在锁住的状态下调用 AddContext
 		cm.AddContext(taskID)
-		return cm.contexts[taskID]
+		// 再次获取锁来获取新创建的上下文
+		cm.mu.Lock()
+		ctx = cm.contexts[taskID]
+		cm.mu.Unlock()
 	}
+	return ctx
 }
