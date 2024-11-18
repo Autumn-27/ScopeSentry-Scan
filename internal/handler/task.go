@@ -154,3 +154,21 @@ func (h *Handle) StopTask(id string) {
 	}
 	contextmanager.GlobalContextManagers.CancelContext(id)
 }
+
+func (h *Handle) DeleteTask(content string) {
+	for _, id := range strings.Split(content, ",") {
+		h.StopTask(id)
+		prefix := fmt.Sprintf("%s:", id)
+		targets, err := pebbledb.PebbleStore.GetKeysWithPrefix(prefix)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("DeleteTask get targets error: %v", err))
+			continue
+		}
+		for idTarget, _ := range targets {
+			err := pebbledb.PebbleStore.Delete([]byte(idTarget))
+			if err != nil {
+				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore DeleteTask %v error: %v", idTarget, err))
+			}
+		}
+	}
+}

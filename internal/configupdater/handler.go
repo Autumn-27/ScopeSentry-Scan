@@ -71,6 +71,8 @@ func RefreshConfig() {
 					UpdateNotification()
 				case "stop_task":
 					handler.TaskHandle.StopTask(jsonData.Content)
+				case "delete_task":
+					handler.TaskHandle.DeleteTask(jsonData.Content)
 				case "install_plugin":
 					InstallPlugin(jsonData.Content)
 				case "delete_plugin":
