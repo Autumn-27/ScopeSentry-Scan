@@ -166,6 +166,7 @@ func (h *Handle) DeleteTask(content string) {
 		}
 		for idTarget, _ := range targets {
 			err := pebbledb.PebbleStore.Delete([]byte(idTarget))
+			logger.SlogInfoLocal(fmt.Sprintf("DeleteTask target: %v", idTarget))
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore DeleteTask %v error: %v", idTarget, err))
 			}
