@@ -44,6 +44,8 @@ func Run(op options.TaskOptions) error {
 	duration := end.Sub(start)
 	select {
 	case <-contextmanager.GlobalContextManagers.GetContext(op.ID).Done():
+		// 增加完成计数
+		handler.TaskHandle.EndTask()
 		return fmt.Errorf("task Cancel")
 	default:
 		// 记录模块完成日志
