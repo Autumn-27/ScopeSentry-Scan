@@ -1,4 +1,4 @@
-FROM debian:12-slim
+FROM python:3.7-slim
 
 WORKDIR /apps
 
@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y \
     chromium \
     vim \
     tzdata \
-    python3.7 \
     libpcap-dev \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
