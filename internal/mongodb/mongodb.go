@@ -146,6 +146,13 @@ func (c *Client) Upsert(collectionName string, selector, update interface{}) (*m
 	return collection.UpdateOne(context.Background(), selector, update, opts)
 }
 
+// BulkWrite 批量写入或更新
+func (c *Client) BulkWrite(collectionName string, operations []mongo.WriteModel) (*mongo.BulkWriteResult, error) {
+	collection := c.GetCollection(collectionName)
+	opts := options.BulkWrite().SetOrdered(false) // 设置无序执行，避免单个操作失败影响整体
+	return collection.BulkWrite(context.Background(), operations, opts)
+}
+
 // UpdateAll 更新多个文档
 func (c *Client) UpdateAll(collectionName string, selector, update interface{}) (*mongo.UpdateResult, error) {
 	collection := c.GetCollection(collectionName)

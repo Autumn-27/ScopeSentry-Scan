@@ -29,7 +29,7 @@ func InitializeResultQueue() {
 		"SubdomainScan", "SubdomainSecurity",
 		"AssetChangeLog", "URLScan",
 		"WebCrawler", "VulnerabilityScan",
-		"SensitiveResult", "DirScan", "PageMonitoring", "PageMonitoringBody",
+		"SensitiveResult", "DirScan", "PageMonitoring", "PageMonitoringBody", "SensitiveBody",
 	}
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
@@ -46,6 +46,11 @@ func InitializeResultQueue() {
 		} else if module == "SensitiveResult" {
 			ResultQueues[module] = &ResultQueue{
 				Queue:   make(chan interface{}, 120),
+				CloseCh: make(chan struct{}),
+			}
+		} else if module == "SensitiveBody" {
+			ResultQueues[module] = &ResultQueue{
+				Queue:   make(chan interface{}, 15),
 				CloseCh: make(chan struct{}),
 			}
 		} else {
@@ -104,29 +109,33 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		return
 	}
 	var name string
-	switch module {
-	case "SubdomainScan":
-		name = "subdomain"
-	case "SubdomainSecurity":
-		name = "SubdoaminTakerResult"
-	case "AssetChangeLog":
-		name = "AssetChangeLog"
-	case "URLScan":
-		name = "UrlScan"
-	case "SensitiveResult":
-		name = "SensitiveResult"
-	case "WebCrawler":
-		name = "crawler"
-	case "VulnerabilityScan":
-		name = "vulnerability"
-	case "DirScan":
-		name = "DirScanResult"
-	case "PageMonitoring":
-		name = "PageMonitoring"
-	case "PageMonitoringBody":
-		name = "PageMonitoringBody"
+	if module == "SensitiveBody" {
+		Results.Update(buffer)
+	} else {
+		switch module {
+		case "SubdomainScan":
+			name = "subdomain"
+		case "SubdomainSecurity":
+			name = "SubdoaminTakerResult"
+		case "AssetChangeLog":
+			name = "AssetChangeLog"
+		case "URLScan":
+			name = "UrlScan"
+		case "SensitiveResult":
+			name = "SensitiveResult"
+		case "WebCrawler":
+			name = "crawler"
+		case "VulnerabilityScan":
+			name = "vulnerability"
+		case "DirScan":
+			name = "DirScanResult"
+		case "PageMonitoring":
+			name = "PageMonitoring"
+		case "PageMonitoringBody":
+			name = "PageMonitoringBody"
+		}
+		Results.Insert(name, buffer)
 	}
-	Results.Insert(name, buffer)
 	*buffer = nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
+	"go.mongodb.org/mongo-driver/bson"
 	"regexp"
 	"sync"
 	"time"
@@ -307,4 +308,9 @@ type PageMonit struct {
 type PageMonitBody struct {
 	Content []string `bson:"content"`
 	Md5     string   `bson:"md5"`
+}
+
+type BulkUpdateOperation struct {
+	Selector bson.M // 条件选择器数组
+	Update   bson.M // 更新内容数组
 }

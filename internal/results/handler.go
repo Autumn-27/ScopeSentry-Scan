@@ -214,7 +214,6 @@ func (h *handler) Sensitive(result *types.SensitiveResult) {
 }
 
 func (h *handler) SensitiveBody(body *string, md5 string) {
-	collectionName := "SensitiveBody"
 	selector := bson.M{"md5": md5}
 
 	update := bson.M{
@@ -223,11 +222,11 @@ func (h *handler) SensitiveBody(body *string, md5 string) {
 			"md5":  md5,
 		},
 	}
-	// 调用 Upsert 方法，执行插入或更新操作
-	_, err := mongodb.MongodbClient.Upsert(collectionName, selector, update)
-	if err != nil {
-		logger.SlogError(fmt.Sprintf("SensitiveBody insert mongodb error:%v", err))
+	op := types.BulkUpdateOperation{
+		Selector: selector,
+		Update:   update,
 	}
+	ResultQueues["SensitiveBody"].Queue <- op
 }
 
 func (h *handler) SensitiveUrl(url string, urlId string, bodyId string) {
