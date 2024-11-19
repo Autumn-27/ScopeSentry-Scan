@@ -206,7 +206,7 @@ func (h *handler) Sensitive(result *types.SensitiveResult) {
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
 	if global.NotificationConfig.SensitiveNotification {
-		NotificationMsg := fmt.Sprintf("Sensitive Scan:\n%v - %v\n", &result.Url, &result.SID)
+		NotificationMsg := fmt.Sprintf("Sensitive Scan:\n%v - %v\n", result.Url, result.SID)
 		notification.NotificationQueues["URLSecurity"].Queue <- NotificationMsg
 	}
 	ResultQueues["SensitiveResult"].Queue <- interfaceSlice

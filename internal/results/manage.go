@@ -38,6 +38,16 @@ func InitializeResultQueue() {
 				Queue:   make(chan interface{}, 100),
 				CloseCh: make(chan struct{}),
 			}
+		} else if module == "URLScan" {
+			ResultQueues[module] = &ResultQueue{
+				Queue:   make(chan interface{}, 250),
+				CloseCh: make(chan struct{}),
+			}
+		} else if module == "SensitiveResult" {
+			ResultQueues[module] = &ResultQueue{
+				Queue:   make(chan interface{}, 120),
+				CloseCh: make(chan struct{}),
+			}
 		} else {
 			ResultQueues[module] = &ResultQueue{
 				Queue:   make(chan interface{}, batchSize),
@@ -58,6 +68,9 @@ func InitializeResultQueue() {
 
 func processQueue(module string, mq *ResultQueue) {
 	ticker := time.NewTicker(flushInterval)
+	if module == "URLScan" {
+		ticker = time.NewTicker(60 * time.Second)
+	}
 	defer ticker.Stop()
 
 	var buffer []interface{}
