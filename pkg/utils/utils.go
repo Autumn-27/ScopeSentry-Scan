@@ -303,6 +303,9 @@ func (t *UtilTools) GetRootDomain(input string) (string, error) {
 		if len(hostParts) < 2 {
 			return "", fmt.Errorf("域名格式不正确")
 		}
+		if len(hostParts) == 2 {
+			return u.Hostname(), nil
+		}
 		// 检查是否为复合域名
 		if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
 			return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
