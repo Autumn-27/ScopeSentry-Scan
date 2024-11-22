@@ -123,6 +123,14 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
+				// 无论有没有选择端口扫描 将原始数据发送到结果处
+				domainSkip, _ := data.(types.DomainSkip)
+				result := types.PortAlive{
+					Host: domainSkip.Domain,
+					IP:   "",
+					Port: "",
+				}
+				resultChan <- result
 				//发送来的数据 只能是types.DomainSkip
 				if len(r.Option.PortScan) != 0 {
 					// 调用插件
@@ -164,15 +172,6 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 						}
 					}
-				} else {
-					// 如果没有开启端口扫描，则发送没有端口的
-					domainSkip, _ := data.(types.DomainSkip)
-					result := types.PortAlive{
-						Host: domainSkip.Domain,
-						IP:   "",
-						Port: "",
-					}
-					resultChan <- result
 				}
 			}(data)
 
