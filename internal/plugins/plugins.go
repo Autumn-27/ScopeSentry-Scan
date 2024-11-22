@@ -150,36 +150,34 @@ func (pm *PluginManager) InitializePlugins() error {
 	// 0 代表未安装 1代表安装失败 2代表安装成功，未检查 3代表安装成功，检查失败 4代表安装检查都成功
 	for module, plugins := range pm.plugins {
 		for name, plugin := range plugins {
-			go func(module, name string, plugin interfaces.Plugin) {
-				plgInfo := map[string]interface{}{
-					plugin.GetPluginId() + "_install": 0,
-					plugin.GetPluginId() + "_check":   0,
-				}
-				// 调用每个插件的 Install 函数
-				if err := plugin.Install(); err != nil {
-					plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
-					if plgInfoErr != nil {
-						logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 1: %s", plgInfoErr))
-					}
-					logger.SlogErrorLocal(fmt.Sprintf("failed to install plugin %s from module %s: %v", name, module, err))
-					return
-				}
-				plgInfo[plugin.GetPluginId()+"_install"] = 1
-				// 调用每个插件的 Check 函数
-				if err := plugin.Check(); err != nil {
-					plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
-					if plgInfoErr != nil {
-						logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 3: %s", plgInfoErr))
-					}
-					logger.SlogErrorLocal(fmt.Sprintf("failed to check plugin %s from module %s: %v", name, module, err))
-					return
-				}
-				plgInfo[plugin.GetPluginId()+"_check"] = 1
+			plgInfo := map[string]interface{}{
+				plugin.GetPluginId() + "_install": 0,
+				plugin.GetPluginId() + "_check":   0,
+			}
+			// 调用每个插件的 Install 函数
+			if err := plugin.Install(); err != nil {
 				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
 				if plgInfoErr != nil {
-					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))
+					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 1: %s", plgInfoErr))
 				}
-			}(module, name, plugin) // 使用匿名函数传递参数
+				logger.SlogErrorLocal(fmt.Sprintf("failed to install plugin %s from module %s: %v", name, module, err))
+				continue
+			}
+			plgInfo[plugin.GetPluginId()+"_install"] = 1
+			// 调用每个插件的 Check 函数
+			if err := plugin.Check(); err != nil {
+				plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+				if plgInfoErr != nil {
+					logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 3: %s", plgInfoErr))
+				}
+				logger.SlogErrorLocal(fmt.Sprintf("failed to check plugin %s from module %s: %v", name, module, err))
+				continue
+			}
+			plgInfo[plugin.GetPluginId()+"_check"] = 1
+			plgInfoErr := redis.RedisClient.HMSet(context.Background(), nodePlgInfokey, plgInfo)
+			if plgInfoErr != nil {
+				logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))
+			}
 		}
 	}
 	return nil
