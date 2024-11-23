@@ -8,6 +8,7 @@
 package utils
 
 import (
+	"archive/zip"
 	"bufio"
 	"context"
 	"crypto/md5"
@@ -999,4 +1000,49 @@ func (t *UtilTools) CompareContentSimilarity(content1, content2 string) (float64
 	percentage := similarity * 100
 	result := math.Round(float64(percentage*100)) / 100
 	return result, nil
+}
+
+// UnzipSrcToDest 将文件src解压到dest
+func (t *UtilTools) UnzipSrcToDest(src string, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		fpath := filepath.Join(dest, f.Name)
+
+		if f.FileInfo().IsDir() {
+			// Make Folder
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+
+		err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
+		if err != nil {
+			return err
+		}
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return err
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(outFile, rc)
+
+		// Close the file without defer to close before next iteration of loop
+		outFile.Close()
+		rc.Close()
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
