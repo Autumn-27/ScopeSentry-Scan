@@ -147,8 +147,13 @@ func (r *Runner) ModuleRun() error {
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
+									select {
+									case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+										return
+									default:
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
 									}
 								}
 							}(data)

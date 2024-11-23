@@ -100,6 +100,46 @@ func (pm *Manager) SubmitTask(moduleName string, task func()) error {
 	return pool.Submit(task)
 }
 
+func (pm *Manager) GetModulePoolSize(module string) (int, error) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	pool, exists := pm.pools[module]
+	if !exists {
+		return 0, errors.New("module not found")
+	}
+
+	// 获取池的大小
+	return pool.Running() + pool.Free(), nil
+}
+
+func (pm *Manager) CustomSubmitTask(name string, size int, task func()) error {
+	var err error
+	pm.mu.Lock()
+	lock, exists := pm.locks[name]
+	if !exists {
+		if size <= 0 {
+			size = 10
+		}
+		pm.pools[name], err = ants.NewPool(size)
+		if err != nil {
+			log.Fatalf("Failed to create pool for %s: %v", name, err)
+		}
+		pm.locks[name] = &sync.Mutex{}
+	}
+	pm.mu.Unlock()
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	pool, exists := pm.pools[name]
+	if !exists {
+		return errors.New("module not found")
+	}
+
+	return pool.Submit(task)
+}
+
 func (pm *Manager) PrintRunningGoroutines(sortedModuleNames []string) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()

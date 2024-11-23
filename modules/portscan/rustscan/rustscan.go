@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -174,6 +175,8 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
+var ipv6Regex = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\]:(\d+)$`)
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	domainSkip, ok := input.(types.DomainSkip)
 	if !ok {
@@ -250,14 +253,26 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if strings.Contains(r, "Open") {
 			// 端口开放
 			openIpPort := strings.SplitN(r, " ", 2)
-			openPort := strings.SplitN(openIpPort[1], ":", 2)
-			result := types.PortAlive{
-				Host: domainSkip.Domain,
-				IP:   openPort[0],
-				Port: openPort[1],
+			// 检查是否是IPv6地址
+			if match := ipv6Regex.FindStringSubmatch(openIpPort[1]); match != nil {
+				result := types.PortAlive{
+					Host: domainSkip.Domain,
+					IP:   match[1], // IPv6地址
+					Port: match[2], // 端口
+				}
+				p.Result <- result
+				continue
+			} else {
+				// 处理IPv4地址的情况
+				openPort := strings.SplitN(openIpPort[1], ":", 2)
+				result := types.PortAlive{
+					Host: domainSkip.Domain,
+					IP:   openPort[0], // IPv4地址
+					Port: openPort[1], // 端口
+				}
+				p.Result <- result
+				continue
 			}
-			p.Result <- result
-			continue
 		}
 		if strings.Contains(r, "->") {
 			p.Log(fmt.Sprintf("%v Port alive: %v", domainSkip.Domain, r))

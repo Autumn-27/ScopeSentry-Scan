@@ -8,6 +8,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -65,7 +66,15 @@ func (r *request) HttpGet(uri string) (types.HttpResponse, error) {
 	}
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
-	tmp.Body = string(resp.Body())
+	// 定义最大响应体大小 (100KB)
+	const maxBodySize = 100 * 1024
+
+	// 截断 Body
+	body := resp.Body()
+	if len(body) > maxBodySize {
+		body = body[:maxBodySize]
+	}
+	tmp.Body = string(body)
 	tmp.StatusCode = resp.StatusCode()
 	if location := resp.Header.Peek("location"); len(location) > 0 {
 		tmp.Redirect = string(location)
@@ -145,13 +154,13 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool) {
+func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal) // increase the verbosity (optional)
 
 	options := runner.Options{
 		Methods:                   "GET",
 		JSONOutput:                true,
-		TLSProbe:                  true,
+		TLSProbe:                  tLSProbe,
 		Threads:                   30,
 		RateLimit:                 100,
 		InputTargetHost:           []string{Host},
@@ -168,7 +177,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 		Jarm:                      true,
 		OutputCDN:                 cdncheck,
 		Location:                  false,
-		HostMaxErrors:             -1,
+		HostMaxErrors:             30,
 		StoreResponse:             false,
 		StoreChain:                false,
 		MaxResponseBodySizeToRead: 100000,
@@ -196,5 +205,24 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 	}
 	defer httpxRunner.Close()
 
-	httpxRunner.RunEnumeration()
+	// 设置超时上下文
+	timeout := 10 * time.Minute // 设置超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	// 创建一个通道，用于通知任务完成
+	done := make(chan struct{})
+
+	// 启动一个 goroutine 执行 httpxRunner，并在执行完后通知主程序
+	go func() {
+		httpxRunner.RunEnumeration() // 执行 httpx 扫描
+		close(done)                  // 扫描完成后关闭通道，通知主程序
+	}()
+
+	select {
+	case <-ctx.Done(): // 超时后返回
+		logger.SlogWarnLocal(fmt.Sprintf("HttpxScan for %s timed out after %v", Host, timeout))
+		return
+	case <-done: // 扫描完成后继续执行
+		logger.SlogDebugLocal(fmt.Sprintf("HttpxScan for %s completed successfully", Host))
+	}
 }

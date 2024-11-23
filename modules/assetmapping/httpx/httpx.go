@@ -125,8 +125,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		parameter := p.GetParameter()
 		cdncheck := "false"
 		screenshot := false
+		tlsprobe := true
 		if parameter != "" {
-			args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot")
+			args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "tlsprobe")
 			if err != nil {
 			} else {
 				for key, value := range args {
@@ -137,6 +138,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						case "screenshot":
 							if value == "true" {
 								screenshot = true
+							}
+						case "tlsprobe":
+							if value == "false" {
+								tlsprobe = false
 							}
 						default:
 							continue
@@ -150,11 +155,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 		var url string
 		if asset.Port != "" {
-			url = asset.Host + ":" + asset.Port
+			url = asset.Host + ":" + asset.Port + asset.UrlPath
 		} else {
-			url = asset.Host
+			url = asset.Host + asset.UrlPath
 		}
-		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck, screenshot)
+		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck, screenshot, tlsprobe)
 	}
 	return nil, nil
 }

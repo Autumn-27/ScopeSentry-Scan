@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"golang.org/x/net/idna"
 	"net"
@@ -130,6 +131,8 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
+var ipv6Regex = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\]:(\d+)$`)
+
 // Execute
 //
 //  1. IP 地址
@@ -143,7 +146,7 @@ func (p *Plugin) GetParameter() string {
 //  3. 带协议的 URL（带端口号）
 //     输入: "http://example.com:8080"
 //     输出: "example.com"
-//     输出: "example.com:8080" //暂时不处理
+//     输出: "example.com:8080"
 //
 //  4. 带通配符的域名
 //     输入: "*.example.com"
@@ -179,12 +182,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	parsedURL, err := url.Parse(target)
 	if err == nil && parsedURL.Host != "" {
 		host := parsedURL.Host
+		rawHost := parsedURL.Host
 		// 检查是否有端口号
 		if strings.Contains(host, ":") {
 			// 分割主机名和端口号
 			hostParts := strings.Split(host, ":")
 			ipOrDomain := hostParts[0]
 			//port := hostParts[1]
+			rawHost = hostParts[0]
 			p.Result <- ipOrDomain
 			//// 判断主机部分是否为 IP 地址
 			//if net.ParseIP(ipOrDomain) != nil {
@@ -196,6 +201,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			//	p.Result <- ipOrDomain
 			//	//p.Result <- host
 			//}
+			hostPort := types.PortAlive{
+				Host: ipOrDomain,
+				IP:   "",
+				Port: hostParts[1],
+			}
+			p.Result <- hostPort
 		} else {
 			// 检查主机部分是否是 IP 地址
 			//if net.ParseIP(host) != nil {
@@ -207,6 +218,18 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			//}
 			p.Result <- host
 		}
+		path := parsedURL.Path
+		// 检查路径是否全部由 `/` 组成
+		if strings.Trim(path, "/") == "" {
+		} else {
+			tmp := types.AssetOther{
+				Host:    rawHost,
+				Port:    parsedURL.Port(),
+				UrlPath: path,
+				Type:    "http",
+			}
+			p.Result <- tmp
+		}
 		return nil, nil
 	}
 
@@ -214,6 +237,32 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if strings.HasPrefix(target, "*.") || strings.Contains(target, ".*.") {
 		p.Result <- target
 		return nil, nil
+	}
+	// 处理ipv6
+	if match := ipv6Regex.FindStringSubmatch(target); match != nil {
+		result := types.PortAlive{
+			Host: match[1],
+			IP:   match[1], // IPv6地址
+			Port: match[2], // 端口
+		}
+		p.Result <- match[1]
+		p.Result <- result
+		return nil, nil
+	}
+
+	// 处理 127.0.0.1:666
+	if strings.Contains(target, ":") {
+		data := strings.Split(target, ":")
+		if len(data) == 2 {
+			result := types.PortAlive{
+				Host: data[0],
+				IP:   "",
+				Port: data[1], // 端口
+			}
+			p.Result <- data[0]
+			p.Result <- result
+			return nil, nil
+		}
 	}
 
 	// 处理不包含协议的域名

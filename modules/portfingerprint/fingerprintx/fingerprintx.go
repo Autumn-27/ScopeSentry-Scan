@@ -16,6 +16,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
 	"github.com/praetorian-inc/fingerprintx/pkg/scan"
+	"net"
 	"net/netip"
 	"strconv"
 	"strings"
@@ -135,10 +136,23 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		Verbose:        false,
 		UDP:            false,
 	}
+	var err error
+	if asset.IP == "" {
+		ip := net.ParseIP(asset.Host)
+		if ip == nil {
+			var addrs []net.IP
+			addrs, err = net.LookupIP(asset.Host)
+			if err != nil {
+				p.Log(fmt.Sprintf("target %v get ip error: %v", asset.Host, err), "w")
+				return nil, err
+			}
+			ip = addrs[0]
+		}
+		asset.IP = string(ip)
+	}
 	ip, _ := netip.ParseAddr(asset.IP)
 	portUint64, err := strconv.ParseUint(asset.Port, 10, 16)
 	if err != nil {
-		fmt.Println("转换错误:", err)
 		logger.SlogError(fmt.Sprintf("%v 端口转换错误: %v ", p.GetName(), err))
 		return nil, err
 	}

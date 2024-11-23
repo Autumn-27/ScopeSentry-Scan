@@ -90,6 +90,7 @@ type AssetOther struct {
 	Tags         []string        `bson:"tags"`
 	TaskName     []string        `bson:"taskName"`
 	RootDomain   string          `bson:"rootDomain"`
+	UrlPath      string          `bson:"urlPath"`
 }
 
 type ChangeLog struct {

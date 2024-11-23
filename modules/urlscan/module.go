@@ -148,12 +148,17 @@ func (r *Runner) ModuleRun() error {
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
-									urlS, err := plg.Execute(data)
-									if err == nil {
-										urls, ok := urlS.([]string)
-										if ok {
-											if len(urls) > 0 {
-												urlList = append(urlList, urls...)
+									select {
+									case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+										return
+									default:
+										urlS, err := plg.Execute(data)
+										if err == nil {
+											urls, ok := urlS.([]string)
+											if ok {
+												if len(urls) > 0 {
+													urlList = append(urlList, urls...)
+												}
 											}
 										}
 									}

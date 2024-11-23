@@ -69,13 +69,17 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 处理每个插件的结果
 				// 对目标的输出进行去重，防止多个插件返回相同的结果
-				target, _ := result.(string)
-				key := "duplicates:" + r.Option.ID + ":target:" + target
-				flag := results.Duplicate.DuplicateLocalCache(key)
-				if flag {
-					// 本地缓存中不存在，则没有重复，发到下个模块
-					logger.SlogInfoLocal(fmt.Sprintf("%v module target %v result: %v", r.GetName(), r.Option.Target, result))
+				target, ok := result.(string)
+				if !ok {
 					r.NextModule.GetInput() <- result
+				} else {
+					key := "duplicates:" + r.Option.ID + ":target:" + target
+					flag := results.Duplicate.DuplicateLocalCache(key)
+					if flag {
+						// 本地缓存中不存在，则没有重复，发到下个模块
+						logger.SlogInfoLocal(fmt.Sprintf("%v module target %v result: %v", r.GetName(), r.Option.Target, result))
+						r.NextModule.GetInput() <- result
+					}
 				}
 			}
 		}
@@ -146,8 +150,13 @@ func (r *Runner) ModuleRun() error {
 						pluginFunc := func(data interface{}) func() {
 							return func() {
 								defer plgWg.Done()
-								_, err := plg.Execute(data)
-								if err != nil {
+								select {
+								case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+									return
+								default:
+									_, err := plg.Execute(data)
+									if err != nil {
+									}
 								}
 							}
 						}(data)

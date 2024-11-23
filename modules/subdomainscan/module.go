@@ -86,26 +86,31 @@ func (r *Runner) ModuleRun() error {
 					}
 				} else {
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，或者是没有开启此模块的扫描，直接发送到下个模块
-					target, _ := result.(string)
-					// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
-					flag := results.Duplicate.SubdomainInTask(r.Option.ID, target, r.Option.IsRestart)
-					if flag {
-						if net.ParseIP(target) != nil {
-							tmp := types.SubdomainResult{
-								Host: target,
-								IP:   []string{target},
-							}
-							r.NextModule.GetInput() <- tmp
-						} else {
-							resultDns := utils.DNS.QueryOne(result.(string))
-							tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
-							if len(tmp.IP) != 0 || len(tmp.Value) != 0 {
-								tmp.TaskName = r.Option.TaskName
-								go results.Handler.Subdomain(&tmp)
+					target, ok := result.(string)
+					if !ok {
+						r.NextModule.GetInput() <- result
+					} else {
+						// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
+						flag := results.Duplicate.SubdomainInTask(r.Option.ID, target, r.Option.IsRestart)
+						if flag {
+							if net.ParseIP(target) != nil {
+								tmp := types.SubdomainResult{
+									Host: target,
+									IP:   []string{target},
+								}
 								r.NextModule.GetInput() <- tmp
+							} else {
+								resultDns := utils.DNS.QueryOne(result.(string))
+								tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
+								if len(tmp.IP) != 0 || len(tmp.Value) != 0 {
+									tmp.TaskName = r.Option.TaskName
+									go results.Handler.Subdomain(&tmp)
+									r.NextModule.GetInput() <- tmp
+								}
 							}
 						}
 					}
+
 				}
 			}
 		}
@@ -196,8 +201,13 @@ func (r *Runner) ModuleRun() error {
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
+									select {
+									case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+										return
+									default:
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
 									}
 								}
 							}(data)

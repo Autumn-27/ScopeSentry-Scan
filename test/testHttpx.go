@@ -9,14 +9,16 @@ package main
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 )
 
 func main() {
+	logger.NewLogger()
 	httpxResultsHandler := func(r types.AssetHttp) {
-		fmt.Printf("%v\n", r)
+		fmt.Printf("%v\n", r.URL)
 	}
-	utils.Requests.Httpx("https://plugin.scope-sentry.top", httpxResultsHandler, "true", true)
+	utils.Requests.Httpx("120.26.109.133:8848/nacos/", httpxResultsHandler, "true", true, true)
 	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{
