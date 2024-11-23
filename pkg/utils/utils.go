@@ -38,6 +38,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -457,66 +458,60 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 	// 使用超时时间包装上下文
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-
+	defer close(result)
 	// 创建命令
 	cmd := exec.CommandContext(ctxWithTimeout, cmdName, args...)
-
+	var wg sync.WaitGroup
 	// 获取命令输出管道（标准输出）
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		result <- fmt.Sprintf("Error getting stdout pipe: %v", err)
-		close(result)
+		logger.SlogWarnLocal(fmt.Sprintf("Error getting stdout pipe: %v", err))
 		return
 	}
 
 	// 获取命令错误输出管道（标准错误）
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		result <- fmt.Sprintf("Error getting stderr pipe: %v", err)
-		close(result)
+		logger.SlogWarnLocal(fmt.Sprintf("Error getting stderr pipe: %v", err))
 		return
 	}
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		result <- fmt.Sprintf("Error starting command: %v", err)
-		close(result)
+		logger.SlogWarnLocal(fmt.Sprintf("Error getting starting command: %v", err))
 		return
 	}
-
+	wg.Add(1)
 	// 使用 goroutine 读取命令的标准输出
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
 			select {
 			case result <- scanner.Text():
 			case <-ctxWithTimeout.Done():
-				// 如果上下文取消或超时，停止读取并返回
-				result <- "Command execution cancelled or timed out."
-				close(result)
 				return
 			}
 		}
 		if err := scanner.Err(); err != nil {
-			result <- fmt.Sprintf("Error reading stdout: %v", err)
+			logger.SlogWarnLocal(fmt.Sprintf("Error getting reading stdout: %v", err))
 		}
 	}()
-
+	wg.Add(1)
 	// 使用 goroutine 读取命令的错误输出
 	go func() {
+		wg.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			select {
-			case result <- fmt.Sprintf("stderr: %s", scanner.Text()):
 			case <-ctxWithTimeout.Done():
-				// 如果上下文取消或超时，停止读取并返回
-				result <- "Command execution cancelled or timed out."
-				close(result)
 				return
+			default:
+				logger.SlogWarnLocal(fmt.Sprintf("Error getting stderr: %s", scanner.Text()))
 			}
 		}
 		if err := scanner.Err(); err != nil {
-			result <- fmt.Sprintf("Error reading stderr: %v", err)
+			logger.SlogWarnLocal(fmt.Sprintf("Error reading stderr: %v", err))
 		}
 	}()
 
@@ -524,15 +519,13 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 	err = cmd.Wait()
 	if err != nil {
 		select {
-		case result <- fmt.Sprintf("Error waiting for command: %v", err):
 		case <-ctxWithTimeout.Done():
-			// 如果上下文取消或超时，退出
-			result <- "Command execution cancelled or timed out."
+			return
+		default:
+			logger.SlogWarnLocal(fmt.Sprintf("Error waiting for command: %v", err))
 		}
 	}
-
-	// 关闭 result 通道，表示数据发送完毕
-	close(result)
+	wg.Wait()
 }
 
 // ExecuteCommandToChan 执行指定命令，命令的输出每一行会发送到result的通道中。

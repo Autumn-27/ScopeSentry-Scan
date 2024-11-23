@@ -52,6 +52,9 @@ func (r *Runner) ModuleRun() error {
 		defer resultWg.Done()
 		for {
 			select {
+			case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+				r.NextModule.CloseInput()
+				return
 			case result, ok := <-resultChan:
 				if !ok {
 					// 如果 resultChan 关闭了，退出循环
@@ -154,8 +157,13 @@ func (r *Runner) ModuleRun() error {
 							pluginFunc := func(data interface{}) func() {
 								return func() {
 									defer plgWg.Done()
-									_, err := plg.Execute(data)
-									if err != nil {
+									select {
+									case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+										return
+									default:
+										_, err := plg.Execute(data)
+										if err != nil {
+										}
 									}
 								}
 							}(data)

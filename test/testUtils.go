@@ -8,7 +8,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
@@ -16,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"time"
 )
 
 func ToBase62(num int64) string {
@@ -50,13 +48,13 @@ func main() {
 	//for result := range resultChan {
 	//	fmt.Println(result)
 	//}
-	result := make(chan string)
-	// 设置超时时间和任务上下文管理
-	go utils.Tools.ExecuteCommandToChanWithTimeout("whoami", []string{}, result, 20*time.Minute, context.Background())
-	//go utils.Tools.ExecuteCommandToChan("whoami", []string{}, result)
-	for i := range result {
-		fmt.Println(i)
-	}
+	//result := make(chan string)
+	//// 设置超时时间和任务上下文管理
+	//go utils.Tools.ExecuteCommandToChanWithTimeout("whoami", []string{}, result, 20*time.Minute, context.Background())
+	////go utils.Tools.ExecuteCommandToChan("whoami", []string{}, result)
+	//for i := range result {
+	//	fmt.Println(i)
+	//}
 	//_, b, _ := utils.Tools.GenerateIgnore("*.baidu.com\nrainy-sautyu.top")
 	//for _, k := range b {
 	//	flag := k.MatchString("baidu.com")
@@ -67,8 +65,8 @@ func main() {
 	//	return
 	//}
 	//fmt.Println(similarity)
-	//a := utils.DNS.QueryOne("dwas.dwadwasdwa")
-	//fmt.Println(a)
+	a := utils.DNS.QueryOne("baidu.com")
+	fmt.Println(a)
 	// 获取当前时间戳（秒）
 	//now := time.Now().Unix()
 	//fmt.Println(now)
