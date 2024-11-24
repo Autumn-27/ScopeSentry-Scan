@@ -9,6 +9,7 @@ package rustscan
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
@@ -22,7 +23,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Plugin struct {
@@ -192,9 +195,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	PortBatchSize := "600"
 	PortTimeout := "3000"
 	// 如果没有找到端口 默认扫描top1000
+	executionTimeout := 60
 	PortRange := ""
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port")
+		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port", "et")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -206,6 +210,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						PortTimeout = value
 					case "port":
 						PortRange = value
+					case "et":
+						executionTimeout, _ = strconv.Atoi(value)
 					default:
 						continue
 					}
@@ -219,7 +225,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
 	rustScanExecPath := filepath.Join(filepath.Join(global.ExtDir, "rustscan"), p.RustFileName)
-	cmd := exec.CommandContext(contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()), rustScanExecPath, args...)
+	// 假设你已经有获取 TaskID 的逻辑
+	taskContext := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+
+	// 为命令设置一个超时时间
+	timeout := time.Duration(executionTimeout) * time.Minute // 例如，设置为30秒超时
+	ctx, cancel := context.WithTimeout(taskContext, timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("RustScan StdoutPipe error： %v", err))
