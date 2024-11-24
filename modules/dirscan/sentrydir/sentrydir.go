@@ -128,13 +128,25 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	start := time.Now()
 	p.Log(fmt.Sprintf("scan terget begin: %v", data.URL))
+
+	// 获取上下文
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+
 	resultHandle := func(response types.HttpResponse) {
-		var result types.DirResult
-		result.Url = response.Url
-		result.Length = response.ContentLength
-		result.Status = response.StatusCode
-		result.Msg = response.Redirect
-		p.Result <- result
+		// 检查上下文是否已取消
+		select {
+		case <-ctx.Done():
+			// 上下文已取消，直接返回
+			return
+		default:
+			// 上下文未取消，继续执行后续逻辑
+			var result types.DirResult
+			result.Url = response.Url
+			result.Length = response.ContentLength
+			result.Status = response.StatusCode
+			result.Msg = response.Redirect
+			p.Result <- result
+		}
 	}
 	parameter := p.GetParameter()
 	dictFile := ""
@@ -164,7 +176,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		Extensions:    []string{"php", "aspx", "jsp", "html", "js"},
 		Thread:        Thread,
 		MatchCallback: resultHandle,
-		Ct:            contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()),
+		Ct:            ctx,
 	}
 	controller.Run(op)
 	end := time.Now()
