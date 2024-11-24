@@ -9,18 +9,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/projectdiscovery/dnsx/libs/dnsx"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"time"
 )
 
 func main() {
 	start := time.Now()
 	// Create DNS Resolver with default options
-	dnsClient, err := dnsx.New(dnsx.DefaultOptions)
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return
-	}
+	//dnsClient, err := dnsx.New(dnsx.DefaultOptions)
+	//if err != nil {
+	//	fmt.Printf("err: %v\n", err)
+	//	return
+	//}
 
 	//DNS A question and returns corresponding IPs
 	//result, err := dnsClient.Lookup("att-globys.idp.blogin.att.com")
@@ -31,21 +31,21 @@ func main() {
 	//for idx, msg := range result {
 	//	fmt.Printf("%d: %s\n", idx+1, msg)
 	//}
-
+	utils.InitializeDnsTools()
 	// Query
-	rawResp, err := dnsClient.QueryOne("dwassentrydwasdweqewqe.dwas")
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return
+	// 定义一个数组存储域名
+	domains := []string{
+		"dwassentrydwasdweqewqe.dwas",
+		"example.com",
+		"anotherdomain.test",
 	}
-	//fmt.Printf("rawResp: %v\n", rawResp)
 
-	jsonStr, err := rawResp.JSON()
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return
+	// 循环遍历域名数组
+	for _, domain := range domains {
+		resultDns := utils.DNS.QueryOne(domain)
+		tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
+		fmt.Printf("Domain: %s, Response: %s\n", domain, tmp)
 	}
-	fmt.Println(jsonStr)
 	// 记录程序结束时间
 	end := time.Now()
 
