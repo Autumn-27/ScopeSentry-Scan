@@ -163,6 +163,10 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 }
 
 func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
+	// 设置超时上下文
+	timeout := 10 * time.Minute // 设置超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	options := runner.Options{
 		Methods:                   "GET",
@@ -195,13 +199,21 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 		DisableStdout:             true,
 		//InputFile: "./targetDomains.txt", // path to file containing the target domains list
 		OnResult: func(r runner.Result) {
-			// handle error
-			if r.Err != nil {
-				logger.SlogDebugLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
-			} else {
-				ah := Tools.HttpxResultToAssetHttp(r)
-				//fmt.Printf("%s %s %d\n", r.Input, r.Host, r.StatusCode)
-				resultCallback(ah)
+			// 检查上下文是否已关闭
+			select {
+			case <-ctx.Done():
+				// 如果上下文关闭，直接返回
+				logger.SlogWarnLocal(fmt.Sprintf("Context closed before processing result for %s", r.Input))
+				return
+			default:
+				// 继续处理结果
+				if r.Err != nil {
+					logger.SlogDebugLocal(fmt.Sprintf("HttpxScan error %s: %s", r.Input, r.Err))
+				} else {
+					ah := Tools.HttpxResultToAssetHttp(r)
+					//fmt.Printf("%s %s %d\n", r.Input, r.Host, r.StatusCode)
+					resultCallback(ah)
+				}
 			}
 		},
 	}
@@ -215,10 +227,6 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 	}
 	defer httpxRunner.Close()
 
-	// 设置超时上下文
-	timeout := 10 * time.Minute // 设置超时时间
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 	// 创建一个通道，用于通知任务完成
 	done := make(chan struct{})
 
