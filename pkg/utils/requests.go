@@ -162,7 +162,7 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
+func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
 
 	options := runner.Options{
 		Methods:                   "GET",
@@ -170,7 +170,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 		TLSProbe:                  tLSProbe,
 		Threads:                   30,
 		RateLimit:                 100,
-		InputTargetHost:           []string{Host},
+		InputTargetHost:           targets,
 		Favicon:                   true,
 		ExtractTitle:              true,
 		TechDetect:                true,
@@ -211,7 +211,7 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 
 	httpxRunner, err := runner.New(&options)
 	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("%v get error: %v", Host, err))
+		logger.SlogErrorLocal(fmt.Sprintf("%v get error: %v", targets, err))
 	}
 	defer httpxRunner.Close()
 
@@ -230,9 +230,9 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 
 	select {
 	case <-ctx.Done(): // 超时后返回
-		logger.SlogWarnLocal(fmt.Sprintf("HttpxScan for %s timed out after %v", Host, timeout))
+		logger.SlogWarnLocal(fmt.Sprintf("HttpxScan for %s timed out after %v", targets, timeout))
 		return
 	case <-done: // 扫描完成后继续执行
-		logger.SlogDebugLocal(fmt.Sprintf("HttpxScan for %s completed successfully", Host))
+		logger.SlogDebugLocal(fmt.Sprintf("HttpxScan for %s completed successfully", targets))
 	}
 }

@@ -114,53 +114,63 @@ func (p *Plugin) Log(msg string, tp ...string) {
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
-	asset, ok := input.(types.AssetOther)
+	data, ok := input.([]interface{})
 	if !ok {
 		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
 		return nil, errors.New("input is not types.AssetOther")
 	}
-	if asset.Type != "http" {
-		p.Result <- asset
-	} else {
-		parameter := p.GetParameter()
-		cdncheck := "false"
-		screenshot := false
-		tlsprobe := true
-		if parameter != "" {
-			args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "tlsprobe")
-			if err != nil {
+	var targetList []string
+	for _, assetinterface := range data {
+		asset, ok := assetinterface.(types.AssetOther)
+		if !ok {
+			p.Log(fmt.Sprintf("assetinterface not types.AssetOther: %v", assetinterface), "w")
+			continue
+		}
+		if asset.Type != "http" {
+			p.Result <- asset
+		} else {
+			var url string
+			if asset.Port != "" {
+				url = asset.Host + ":" + asset.Port + asset.UrlPath
 			} else {
-				for key, value := range args {
-					if value != "" {
-						switch key {
-						case "cdncheck":
-							cdncheck = value
-						case "screenshot":
-							if value == "true" {
-								screenshot = true
-							}
-						case "tlsprobe":
-							if value == "false" {
-								tlsprobe = false
-							}
-						default:
-							continue
+				url = asset.Host + asset.UrlPath
+			}
+			targetList = append(targetList, url)
+		}
+	}
+	parameter := p.GetParameter()
+	cdncheck := "false"
+	screenshot := false
+	tlsprobe := true
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "tlsprobe")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				if value != "" {
+					switch key {
+					case "cdncheck":
+						cdncheck = value
+					case "screenshot":
+						if value == "true" {
+							screenshot = true
 						}
+					case "tlsprobe":
+						if value == "false" {
+							tlsprobe = false
+						}
+					default:
+						continue
 					}
 				}
 			}
 		}
-		httpxResultsHandler := func(r types.AssetHttp) {
-			p.Result <- r
-		}
-		var url string
-		if asset.Port != "" {
-			url = asset.Host + ":" + asset.Port + asset.UrlPath
-		} else {
-			url = asset.Host + asset.UrlPath
-		}
-		utils.Requests.Httpx(url, httpxResultsHandler, cdncheck, screenshot, tlsprobe)
 	}
+	httpxResultsHandler := func(r types.AssetHttp) {
+		p.Result <- r
+	}
+
+	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, tlsprobe)
 	return nil, nil
 }
 

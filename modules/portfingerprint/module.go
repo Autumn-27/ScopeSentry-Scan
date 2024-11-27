@@ -52,16 +52,27 @@ func (r *Runner) ModuleRun() error {
 	resultWg.Add(1)
 	go func() {
 		defer resultWg.Done()
+		var resultArray []interface{}
 		for {
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
+					if len(resultArray) > 0 {
+						r.NextModule.GetInput() <- resultArray
+					}
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
 					r.NextModule.CloseInput()
 					return
 				}
-				r.NextModule.GetInput() <- result
+				// 将 result 加入数组
+				resultArray = append(resultArray, result)
+
+				// 如果数组长度超过 20，发送到下个模块并清空数组
+				if len(resultArray) > 20 {
+					r.NextModule.GetInput() <- resultArray
+					resultArray = nil // 清空数组
+				}
 			}
 		}
 	}()
