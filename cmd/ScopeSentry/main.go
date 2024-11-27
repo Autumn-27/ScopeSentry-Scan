@@ -31,6 +31,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -112,6 +113,7 @@ func main() {
 	}
 	// 性能监控
 	go pprof()
+	//go printMemStats(5 * time.Second)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -150,5 +152,29 @@ func pprof() {
 			sig := <-sigs
 			fmt.Println("收到终止信号:", sig)
 		}()
+	}
+}
+
+func printMemStats(interval time.Duration) {
+	if global.AppConfig.Debug {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			var memStats runtime.MemStats
+			runtime.ReadMemStats(&memStats)
+
+			fmt.Printf("\n==== Memory Stats ====\n")
+			fmt.Printf("Allocated:\t%.2f MB\n", float64(memStats.Alloc)/1024/1024)
+			fmt.Printf("Total Alloc:\t%.2f MB\n", float64(memStats.TotalAlloc)/1024/1024)
+			fmt.Printf("Sys:\t\t%.2f MB\n", float64(memStats.Sys)/1024/1024)
+			fmt.Printf("Heap Alloc:\t%.2f MB\n", float64(memStats.HeapAlloc)/1024/1024)
+			fmt.Printf("Heap Sys:\t%.2f MB\n", float64(memStats.HeapSys)/1024/1024)
+			fmt.Printf("Heap Idle:\t%.2f MB\n", float64(memStats.HeapIdle)/1024/1024)
+			fmt.Printf("Heap Inuse:\t%.2f MB\n", float64(memStats.HeapInuse)/1024/1024)
+			fmt.Printf("Heap Released:\t%.2f MB\n", float64(memStats.HeapReleased)/1024/1024)
+			fmt.Printf("Stack Sys:\t%.2f MB\n", float64(memStats.StackSys)/1024/1024)
+			fmt.Printf("======================\n")
+		}
 	}
 }

@@ -18,7 +18,7 @@ func main() {
 	httpxResultsHandler := func(r types.AssetHttp) {
 		fmt.Printf("%v\n", r.URL)
 	}
-	utils.Requests.Httpx("120.26.109.133:8848/nacos/", httpxResultsHandler, "true", true, true)
+	utils.Requests.Httpx("", httpxResultsHandler, "true", false, true)
 	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{

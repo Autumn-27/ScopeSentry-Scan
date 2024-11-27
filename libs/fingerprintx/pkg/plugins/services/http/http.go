@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"syscall"
@@ -40,12 +39,12 @@ const HTTP = "http"
 const HTTPS = "https"
 
 func init() {
-	wappalyzerClient, err := wappalyzer.New()
-	if err != nil {
-		panic("unable to initialize wappalyzer library")
-	}
-	plugins.RegisterPlugin(&HTTPPlugin{analyzer: wappalyzerClient})
-	plugins.RegisterPlugin(&HTTPSPlugin{analyzer: wappalyzerClient})
+	//wappalyzerClient, err := wappalyzer.New()
+	//if err != nil {
+	//	panic("unable to initialize wappalyzer library")
+	//}
+	plugins.RegisterPlugin(&HTTPPlugin{})
+	plugins.RegisterPlugin(&HTTPSPlugin{})
 }
 
 var (
@@ -164,16 +163,16 @@ func (p *HTTPSPlugin) Run(
 	}
 	defer resp.Body.Close()
 
-	technologies, _ := p.FingerprintResponse(resp)
+	//technologies, _ := p.FingerprintResponse(resp)
 
 	payload := plugins.ServiceHTTPS{
 		Status:          resp.Status,
 		StatusCode:      resp.StatusCode,
 		ResponseHeaders: resp.Header,
 	}
-	if len(technologies) > 0 {
-		payload.Technologies = technologies
-	}
+	//if len(technologies) > 0 {
+	//	payload.Technologies = technologies
+	//}
 
 	return plugins.CreateServiceFrom(target, payload, true, resp.Header.Get("Server"), plugins.TCP), nil
 }
@@ -211,15 +210,15 @@ func (p *HTTPSPlugin) FingerprintResponse(resp *http.Response) ([]string, error)
 }
 
 func fingerprint(resp *http.Response, analyzer *wappalyzer.Wappalyze) ([]string, error) {
-	var technologies []string
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	fingerprint := analyzer.Fingerprint(resp.Header, data)
-	for tech := range fingerprint {
-		technologies = append(technologies, tech)
-	}
+	//var technologies []string
+	//data, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//fingerprint := analyzer.Fingerprint(resp.Header, data)
+	//for tech := range fingerprint {
+	//	technologies = append(technologies, tech)
+	//}
 
-	return technologies, nil
+	return []string{}, nil
 }

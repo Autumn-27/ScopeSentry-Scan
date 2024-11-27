@@ -17,6 +17,7 @@ import (
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
 	"github.com/projectdiscovery/httpx/runner"
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/valyala/fasthttp"
 	"net"
 	"syscall"
@@ -29,8 +30,10 @@ type request struct {
 var Requests *request
 
 var HttpClient *fasthttp.Client
+var Wappalyzer *wappalyzer.Wappalyze
 
 func InitializeRequests() {
+	gologger.DefaultLogger.SetMaxLevel(levels.LevelWarning) // increase the verbosity (optional)
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -49,6 +52,11 @@ func InitializeRequests() {
 		}).Dial,
 	}
 	Requests = &request{}
+	paralyze, err := wappalyzer.New()
+	if err != nil {
+		fmt.Printf("init wappalyzer error: %v", err)
+	}
+	Wappalyzer = paralyze
 }
 
 func (r *request) HttpGet(uri string) (types.HttpResponse, error) {
@@ -155,11 +163,10 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 }
 
 func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
-	gologger.DefaultLogger.SetMaxLevel(levels.LevelFatal) // increase the verbosity (optional)
 
 	options := runner.Options{
 		Methods:                   "GET",
-		JSONOutput:                true,
+		JSONOutput:                false,
 		TLSProbe:                  tLSProbe,
 		Threads:                   30,
 		RateLimit:                 100,
@@ -182,7 +189,10 @@ func (r *request) Httpx(Host string, resultCallback func(r types.AssetHttp), cdn
 		StoreChain:                false,
 		MaxResponseBodySizeToRead: 100000,
 		Screenshot:                screenshot,
-		ScreenshotTimeout:         5,
+		ScreenshotTimeout:         10,
+		Timeout:                   8,
+		Wappalyzer:                Wappalyzer,
+		DisableStdout:             true,
 		//InputFile: "./targetDomains.txt", // path to file containing the target domains list
 		OnResult: func(r runner.Result) {
 			// handle error

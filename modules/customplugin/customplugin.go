@@ -13,6 +13,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"os"
 )
 
 type Plugin struct {
@@ -135,6 +136,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		TaskName:   p.GetTaskName(),
 		Log:        p.Log,
 		Ctx:        contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()),
+	}
+	if p.ExecuteFunc == nil {
+		p.Log("error exec is nil")
+		os.Exit(1)
 	}
 	return p.ExecuteFunc(input, op)
 }
