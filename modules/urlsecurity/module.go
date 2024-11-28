@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
@@ -99,13 +98,15 @@ func (r *Runner) ModuleRun() error {
 			}
 			// 该模块接收的数据为types.CrawlerResult、types.UrlResult、types.AssetOther 、 types.AssetHttp
 			// 该模块处理types.CrawlerResult、types.UrlResult， 其余类型数据直接发送到下个模块
-			switch data.(type) {
-			case types.UrlResult:
-			case types.CrawlerResult:
-			default:
-				r.NextModule.GetInput() <- data
-				continue
-			}
+			//switch data.(type) {
+			//case types.UrlResult:
+			//case types.CrawlerResult:
+			//default:
+			//	r.NextModule.GetInput() <- data
+			//	continue
+			//}
+			// 将数据发送给下个模块
+			r.NextModule.GetInput() <- data
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLSecurity))

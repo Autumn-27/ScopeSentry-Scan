@@ -52,12 +52,22 @@ func (r *Runner) ModuleRun() error {
 	resultWg.Add(1)
 	go func() {
 		defer resultWg.Done()
+		var assetOtherArray []types.AssetOther
+		var assetHttpArray []types.AssetHttp
 		for {
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
+					if len(assetOtherArray) > 0 {
+						r.NextModule.GetInput() <- assetOtherArray
+					}
+
+					if len(assetHttpArray) > 0 {
+						r.NextModule.GetInput() <- assetHttpArray
+					}
+
 					r.NextModule.CloseInput()
 					return
 				}
@@ -90,6 +100,11 @@ func (r *Runner) ModuleRun() error {
 						assetResult.LastScanTime = assetResult.Time
 						go results.Handler.AssetOtherInsert(&assetResult)
 					}
+					assetOtherArray = append(assetOtherArray, assetResult)
+					if len(assetOtherArray) > 20 {
+						r.NextModule.GetInput() <- assetOtherArray
+						assetOtherArray = nil
+					}
 				} else {
 					assetHttpResult, okh := result.(types.AssetHttp)
 					if okh {
@@ -118,9 +133,14 @@ func (r *Runner) ModuleRun() error {
 							// 数据库中不存在该资产，直接插入。
 							go results.Handler.AssetHttpInsert(&assetHttpResult)
 						}
+
+						assetHttpArray = append(assetHttpArray, assetHttpResult)
+						if len(assetHttpArray) > 20 {
+							r.NextModule.GetInput() <- assetHttpArray
+							assetHttpArray = nil
+						}
 					}
 				}
-
 			}
 		}
 	}()
