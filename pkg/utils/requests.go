@@ -164,7 +164,7 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 
 func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
 	// 设置超时上下文
-	timeout := 10 * time.Minute // 设置超时时间
+	timeout := 30 * time.Minute // 设置超时时间
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
