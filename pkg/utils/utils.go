@@ -1046,3 +1046,18 @@ func (t *UtilTools) UnzipSrcToDest(src string, dest string) error {
 	}
 	return nil
 }
+
+// RemoveStringDuplicates 数组去重
+func (t *UtilTools) RemoveStringDuplicates(arr []string) []string {
+	unique := make(map[string]bool)
+	result := []string{}
+
+	for _, value := range arr {
+		if !unique[value] {
+			unique[value] = true
+			result = append(result, value)
+		}
+	}
+
+	return result
+}

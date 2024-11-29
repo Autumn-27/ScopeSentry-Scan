@@ -12,23 +12,28 @@ import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
+	"github.com/projectdiscovery/nuclei/v3/pkg/templates"
 	"sync"
 )
 
 var NucleiEngines []*nuclei.ThreadSafeNucleiEngine
 var NucleiEngineWg sync.WaitGroup
 var mu sync.Mutex
+var Parser *templates.Parser
 
 func NewNucleiEngine() *nuclei.ThreadSafeNucleiEngine {
+	mu.Lock()
+	defer mu.Unlock()
+	if Parser == nil {
+		Parser = templates.NewParser()
+	}
 	ctx := context.Background()
-	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx, nuclei.DisableUpdateCheck())
+	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx, Parser, nuclei.DisableUpdateCheck())
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("NewNucleiEngine error: %v", err))
 		return nil
 	}
-	mu.Lock()
 	NucleiEngines = append(NucleiEngines, ne)
-	mu.Unlock()
 	return ne
 }
 
@@ -39,4 +44,5 @@ func CloseNucleiEngine() {
 			ne.Close()
 		}
 	}
+	Parser = nil
 }
