@@ -7,13 +7,8 @@
 
 package main
 
-import (
-	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
-)
-
 func main() {
-	util.InitHttpClient()
-	resp, _ := util.HttpGet("https://www.hackerone.com/")
-	fmt.Println(resp)
+	//util.InitHttpClient()
+	//resp, _ := util.HttpGet("https://www.hackerone.com/")
+	//fmt.Println(resp)
 }
