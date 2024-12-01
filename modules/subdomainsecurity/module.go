@@ -111,11 +111,12 @@ func (r *Runner) ModuleRun() error {
 				}
 				return nil
 			}
-			_, ok = data.(types.SubdomainResult)
-			if !ok {
-				r.NextModule.GetInput() <- data
-				continue
-			}
+			//_, ok = data.(types.SubdomainResult)
+			//if !ok {
+			//	r.NextModule.GetInput() <- data
+			//	continue
+			//}
+			r.NextModule.GetInput() <- data
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))

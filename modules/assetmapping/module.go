@@ -127,7 +127,7 @@ func (r *Runner) ModuleRun() error {
 				r.NextModule.GetInput() <- data
 				continue
 			}
-			logger.SlogInfoLocal(fmt.Sprintf("target %v run httpx number %v", len(assets)))
+			logger.SlogInfoLocal(fmt.Sprintf("target run httpx number %v", len(assets)))
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.AssetMapping))

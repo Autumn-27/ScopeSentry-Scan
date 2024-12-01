@@ -90,7 +90,7 @@ func flushBuffer(module string, buffer *string) {
 			}
 		} else {
 			data := strings.Replace(api.Data, "*msg*", *buffer, -1)
-			err := utils.Requests.HttpPost(uri, []byte(data), api.ContentType)
+			err, _ := utils.Requests.HttpPost(uri, []byte(data), api.ContentType)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("SendNotification HTTP Post Error: %s", uri))
 			}

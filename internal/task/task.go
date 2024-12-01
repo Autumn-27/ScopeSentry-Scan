@@ -114,22 +114,24 @@ func RunRedisTask() {
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
 			if runnerOption.Type == "page_monitoring" {
 				// 运行页面监控程序
-				for {
-					targets, err := redis.RedisClient.BatchGetAndDelete(context.Background(), "TaskInfo:"+runnerOption.ID, 50)
-					if len(targets) == 0 {
-						break
-					}
-					if err != nil {
-						// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
-						if !errors.Is(err, goRedis.Nil) {
-							logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
-							// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-							os.Exit(0)
+				go func() {
+					for {
+						targets, err := redis.RedisClient.BatchGetAndDelete(context.Background(), "TaskInfo:"+runnerOption.ID, 50)
+						if len(targets) == 0 {
+							break
 						}
-						break
+						if err != nil {
+							// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
+							if !errors.Is(err, goRedis.Nil) {
+								logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
+								// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
+								os.Exit(0)
+							}
+							break
+						}
+						runner.PageMonitoringRunner(targets)
 					}
-					runner.PageMonitoringRunner(targets)
-				}
+				}()
 			} else {
 				// 任务增加全局上下文
 				contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
@@ -215,6 +217,14 @@ func RunRedisTask() {
 			if err != nil {
 				logger.SlogWarnLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
 			}
+			// 清除全局变量
+			CleanGlobal()
 		}
 	}
+}
+
+func CleanGlobal() {
+	global.TmpCustomStringParameter = nil
+	global.TmpCustomStringListParameter = nil
+	global.TmpCustomParameter = nil
 }

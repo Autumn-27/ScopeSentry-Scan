@@ -116,7 +116,47 @@ func (r *request) HttpGetByte(uri string) ([]byte, error) {
 	return tmp, nil
 }
 
-func (r *request) HttpPost(uri string, requestBody []byte, ct string) error {
+func (r *request) HttpPost(uri string, requestBody []byte, ct string) (error, *fasthttp.Response) {
+	req, resp := fasthttp.AcquireRequest(), fasthttp.AcquireResponse()
+	defer func() {
+		fasthttp.ReleaseRequest(req)
+		fasthttp.ReleaseResponse(resp)
+	}()
+	req.Header.SetMethod(fasthttp.MethodPost)
+	req.SetRequestURI(uri)
+	if ct == "json" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	req.SetBody(requestBody)
+
+	if err := HttpClient.Do(req, resp); err != nil {
+		return err, nil
+	}
+	return nil, resp
+}
+
+func (r *request) HttpGetNoRes(uri string) error {
+	req, resp := fasthttp.AcquireRequest(), fasthttp.AcquireResponse()
+	defer func() {
+		fasthttp.ReleaseRequest(req)
+		fasthttp.ReleaseResponse(resp)
+	}()
+
+	// 设置请求 URI
+	req.SetRequestURI(uri)
+
+	req.Header.SetMethod(fasthttp.MethodGet)
+
+	// 发送请求
+	if err := HttpClient.Do(req, resp); err != nil {
+		return err
+	}
+	// 直接丢弃响应体（或者关闭它）
+	resp.Reset()
+	return nil
+}
+
+func (r *request) HttpPostNoRes(uri string, requestBody []byte, ct string) error {
 	req, resp := fasthttp.AcquireRequest(), fasthttp.AcquireResponse()
 	defer func() {
 		fasthttp.ReleaseRequest(req)
@@ -132,11 +172,12 @@ func (r *request) HttpPost(uri string, requestBody []byte, ct string) error {
 	if err := HttpClient.Do(req, resp); err != nil {
 		return err
 	}
+	resp.Reset()
 	return nil
 }
 
 var dialer = &net.Dialer{
-	Timeout: 2 * time.Second,
+	Timeout: 3 * time.Second,
 }
 
 func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
@@ -169,6 +210,7 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 	defer cancel()
 
 	options := runner.Options{
+		RandomAgent:               true,
 		Methods:                   "GET",
 		JSONOutput:                false,
 		TLSProbe:                  tLSProbe,
