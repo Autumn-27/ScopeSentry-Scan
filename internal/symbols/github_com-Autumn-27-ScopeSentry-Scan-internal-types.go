@@ -13,6 +13,7 @@ func init() {
 		"AssetChangeLog":       reflect.ValueOf((*types.AssetChangeLog)(nil)),
 		"AssetHttp":            reflect.ValueOf((*types.AssetHttp)(nil)),
 		"AssetOther":           reflect.ValueOf((*types.AssetOther)(nil)),
+		"BulkUpdateOperation":  reflect.ValueOf((*types.BulkUpdateOperation)(nil)),
 		"ChangeLog":            reflect.ValueOf((*types.ChangeLog)(nil)),
 		"CrawlerResult":        reflect.ValueOf((*types.CrawlerResult)(nil)),
 		"CrawlerTask":          reflect.ValueOf((*types.CrawlerTask)(nil)),

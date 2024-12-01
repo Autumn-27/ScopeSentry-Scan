@@ -20,6 +20,7 @@ func init() {
 		"Requests":           reflect.ValueOf(&utils.Requests).Elem(),
 		"Results":            reflect.ValueOf(&utils.Results).Elem(),
 		"Tools":              reflect.ValueOf(&utils.Tools).Elem(),
+		"Wappalyzer":         reflect.ValueOf(&utils.Wappalyzer).Elem(),
 
 		// type definitions
 		"DnsTools":  reflect.ValueOf((*utils.DnsTools)(nil)),
