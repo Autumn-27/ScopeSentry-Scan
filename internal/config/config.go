@@ -137,4 +137,8 @@ func Initialize() {
 		log.Fatalf("子域名接管规则初始化失败: %v", err)
 	}
 	InitFilterUrlRe()
+	global.CustomStringParameter = make(map[string]string)
+	global.CustomStringListParameter = make(map[string][]string)
+	global.TmpCustomStringParameter = make(map[string]string)
+	global.TmpCustomStringListParameter = make(map[string][]string)
 }
