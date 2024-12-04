@@ -183,7 +183,7 @@ var ipv6Regex = regexp.MustCompile(`^\[([0-9a-fA-F:]+)\]:(\d+)$`)
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	domainSkip, ok := input.(types.DomainSkip)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.DomainSkip\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not types.DomainSkip\n", p.Name, input))
 		return nil, errors.New("input is not types.DomainSkip")
 	}
 	// 判断skipcdn

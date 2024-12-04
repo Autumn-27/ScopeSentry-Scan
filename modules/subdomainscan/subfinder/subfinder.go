@@ -123,7 +123,7 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	target, ok := input.(string)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not a string\n", p.Name, input))
 		return nil, errors.New("input is not a string")
 	}
 	parameter := p.GetParameter()

@@ -116,14 +116,14 @@ func (p *Plugin) Log(msg string, tp ...string) {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.([]interface{})
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
 		return nil, errors.New("input is not types.AssetOther")
 	}
 	var targetList []string
 	for _, assetinterface := range data {
 		asset, ok := assetinterface.(types.AssetOther)
 		if !ok {
-			p.Log(fmt.Sprintf("assetinterface not types.AssetOther: %v", assetinterface), "w")
+			//p.Log(fmt.Sprintf("assetinterface not types.AssetOther: %v", assetinterface), "w")
 			continue
 		}
 		if asset.Type != "http" {

@@ -118,7 +118,7 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	subdomain, ok := input.(types.SubdomainResult)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not a SubdomainResult\n", p.Name, input))
 		return nil, errors.New("input is not a SubdomainResult")
 	}
 	if subdomain.Type == "CNAME" {

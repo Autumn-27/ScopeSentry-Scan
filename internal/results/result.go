@@ -41,11 +41,11 @@ func (r *result) Insert(name string, result *[]interface{}) bool {
 		if errors.As(err, &writeException) {
 			if name == "PageMonitoring" || name == "PageMonitoringBody" {
 				for _, wErr := range writeException.WriteErrors {
-					logger.SlogErrorLocal(fmt.Sprintf("插入失败的文档: %v, 错误: %v\n", wErr))
+					logger.SlogWarnLocal(fmt.Sprintf("插入失败的文档: %v, 错误: %v\n", wErr))
 				}
 			}
 		}
-		logger.SlogError(fmt.Sprintf("insert %v error: %s", name, err))
+		logger.SlogWarnLocal(fmt.Sprintf("insert %v error: %s", name, err))
 		return false
 	}
 	return true

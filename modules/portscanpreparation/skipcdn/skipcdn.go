@@ -115,7 +115,7 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	domainSkip, ok := input.(*types.DomainSkip)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.DomainSkip\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not types.DomainSkip\n", p.Name, input))
 		return nil, errors.New("input is not types.DomainSkip")
 	}
 	if domainSkip.Skip {

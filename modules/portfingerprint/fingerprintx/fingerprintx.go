@@ -123,7 +123,7 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	asset, ok := input.(*types.AssetOther)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not types.AssetOther\n", p.Name, input))
 		return nil, errors.New("input is not types.AssetOther")
 	}
 	if asset.Service != "" {
