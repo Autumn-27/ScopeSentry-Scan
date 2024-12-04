@@ -35,7 +35,7 @@ func CommoncrawlRun(rootUrl string, result chan Result, ctx context.Context) int
 
 	var indexes []IndexResponse
 	if err := json.Unmarshal(bodyBytes, &indexes); err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("commoncrawl jsondecode error: %v data: %v", err, string(bodyBytes)))
+		logger.SlogWarnLocal(fmt.Sprintf("commoncrawl jsondecode error: %v data: %v", err, string(bodyBytes)))
 		return 0
 	}
 

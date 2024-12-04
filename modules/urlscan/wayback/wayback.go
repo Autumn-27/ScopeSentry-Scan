@@ -122,7 +122,7 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.AssetHttp)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
+		//logger.SlogError(fmt.Sprintf("%v error: %v input is not AssetHttp\n", p.Name, input))
 		return nil, errors.New("input is not AssetHttp")
 	}
 	p.Log(fmt.Sprintf("target %v running", data.URL))

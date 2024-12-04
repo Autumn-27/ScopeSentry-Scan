@@ -32,7 +32,7 @@ func AlienvaultRun(rootUrl string, result chan Result, ctx context.Context) int 
 			var response AlienvaultResponse
 			// Get the response body and decode
 			if err := json.Unmarshal(bodyBytes, &response); err != nil {
-				logger.SlogErrorLocal(fmt.Sprintf("Alienvault jsondecode error: %v", err))
+				logger.SlogWarnLocal(fmt.Sprintf("Alienvault jsondecode error: %v", err))
 				return lineCount
 			}
 
