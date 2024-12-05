@@ -74,7 +74,7 @@ func (r *Runner) ModuleRun() error {
 						} else {
 							url = assetResult.Host
 						}
-						utils.Requests.Httpx([]string{url}, httpxResultsHandler, "false", true, 10, false)
+						utils.Requests.Httpx([]string{url}, httpxResultsHandler, "false", true, 10, false, true)
 					} else {
 						// 如果是other类型的资产，直接发送到下个模块
 						r.NextModule.GetInput() <- result

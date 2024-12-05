@@ -203,13 +203,14 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool) {
+func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool) {
 	// 设置超时上下文
 	timeout := 30 * time.Minute // 设置超时时间
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	options := runner.Options{
+		FollowRedirects:           followRedirects,
 		RandomAgent:               true,
 		Methods:                   "GET",
 		JSONOutput:                false,
