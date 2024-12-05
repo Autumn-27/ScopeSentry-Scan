@@ -203,7 +203,7 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, tLSProbe bool) {
+func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool) {
 	// 设置超时上下文
 	timeout := 30 * time.Minute // 设置超时时间
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -235,8 +235,8 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 		StoreChain:                false,
 		MaxResponseBodySizeToRead: 100000,
 		Screenshot:                screenshot,
-		ScreenshotTimeout:         10,
-		Timeout:                   8,
+		ScreenshotTimeout:         time.Duration(screenshotTimeout) * time.Second,
+		Timeout:                   10,
 		Wappalyzer:                Wappalyzer,
 		DisableStdout:             true,
 		//InputFile: "./targetDomains.txt", // path to file containing the target domains list

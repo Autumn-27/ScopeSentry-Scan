@@ -11,14 +11,17 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/gologger/levels"
 )
 
 func main() {
 	logger.NewLogger()
+	gologger.DefaultLogger.SetMaxLevel(levels.LevelWarning)
 	httpxResultsHandler := func(r types.AssetHttp) {
-		fmt.Printf("%v\n", r.URL)
+		fmt.Printf("%v %v\n", r.URL, r.Screenshot)
 	}
-	utils.Requests.Httpx([]string{""}, httpxResultsHandler, "true", false, true)
+	utils.Requests.Httpx([]string{""}, httpxResultsHandler, "true", true, 10, true)
 	//StatusCode, ContentLength, err := httpxMode.HttpSurvival("https://b31dadwaaidu.com")
 	//fmt.Println(StatusCode, ContentLength, err)
 	//options := runner.Options{

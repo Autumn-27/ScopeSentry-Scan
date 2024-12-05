@@ -153,11 +153,11 @@ func (r *Runner) ModuleRun() error {
 				}
 				return nil
 			}
-			_, ok = data.(string)
-			if !ok {
-				r.NextModule.GetInput() <- data
-				continue
-			}
+			//_, ok = data.(string)
+			//if !ok {
+			//	r.NextModule.GetInput() <- data
+			//	continue
+			//}
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan))

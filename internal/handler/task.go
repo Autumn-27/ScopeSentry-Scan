@@ -40,16 +40,15 @@ func (h *Handle) StartTask() {
 	h.mu.Lock()         // 锁定互斥锁
 	defer h.mu.Unlock() // 确保在函数结束时解锁
 	h.RunningNum = h.RunningNum + 1
-	logger.SlogDebugLocal(fmt.Sprintf("Running start value: %d", h.RunningNum))
+	logger.SlogInfo(fmt.Sprintf("Running start value: %d", h.RunningNum))
 }
 
 func (h *Handle) EndTask() {
 	h.mu.Lock()         // 锁定互斥锁
 	defer h.mu.Unlock() // 确保在函数结束时解锁
 	h.RunningNum = h.RunningNum - 1
-	logger.SlogDebugLocal(fmt.Sprintf("Running start value: %d", h.RunningNum))
 	h.FinNum = h.FinNum + 1
-	logger.SlogDebugLocal(fmt.Sprintf("Running end value: %d", h.FinNum))
+	logger.SlogInfo(fmt.Sprintf("Running start value: %d Running end value: %d", h.RunningNum, h.FinNum))
 }
 
 func (h *Handle) GetRunFin() (int, int) {
@@ -62,7 +61,7 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 	if flag == 0 {
 		return
 	}
-	logger.SlogInfoLocal(fmt.Sprintf("%v module start scanning the target: %v", typ, target))
+	logger.SlogInfo(fmt.Sprintf("%v module start scanning the target: %v", typ, target))
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_start"
 	ProgressInfo := map[string]interface{}{
@@ -79,7 +78,7 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int,
 	if flag == 0 {
 		return
 	}
-	logger.SlogInfoLocal(fmt.Sprintf("%v module end scanning the target: %v running time: %v", typ, target, time))
+	logger.SlogInfo(fmt.Sprintf("%v module end scanning the target: %v running time: %v", typ, target, time))
 	key := "TaskInfo:progress:" + taskId + ":" + target
 	ty := typ + "_end"
 	ProgressInfo := map[string]interface{}{

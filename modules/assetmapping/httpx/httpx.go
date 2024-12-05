@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strconv"
 )
 
 type Plugin struct {
@@ -142,8 +143,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	cdncheck := "false"
 	screenshot := false
 	tlsprobe := true
+	screenshotTimeout := 10
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "tlsprobe")
+		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -159,6 +161,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						if value == "false" {
 							tlsprobe = false
 						}
+					case "st":
+						screenshotTimeout, _ = strconv.Atoi(value)
 					default:
 						continue
 					}
@@ -170,7 +174,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- r
 	}
 
-	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, tlsprobe)
+	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, screenshotTimeout, tlsprobe)
 	return nil, nil
 }
 

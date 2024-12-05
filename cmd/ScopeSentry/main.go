@@ -118,17 +118,23 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done() // 减少计数器，表示任务完成
-		task.GetTask()
+		for {
+			task.GetTask()
+		}
 	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		node.Register()
+		for {
+			node.Register()
+		}
 	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		go configupdater.RefreshConfig()
+		for {
+			go configupdater.RefreshConfig()
+		}
 	}()
 	time.Sleep(10 * time.Second)
 	wg.Wait()

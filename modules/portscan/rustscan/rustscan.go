@@ -229,7 +229,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	taskContext := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 
 	// 为命令设置一个超时时间
-	timeout := time.Duration(executionTimeout) * time.Minute // 例如，设置为30秒超时
+	timeout := time.Duration(executionTimeout) * time.Minute // 例如，设置为30分钟超时
 	ctx, cancel := context.WithTimeout(taskContext, timeout)
 	defer cancel()
 

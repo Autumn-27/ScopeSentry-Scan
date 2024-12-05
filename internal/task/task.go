@@ -212,10 +212,14 @@ func RunRedisTask() {
 			if err != nil {
 				logger.SlogErrorLocal(fmt.Sprintf("bigcache Initialize error: %v", err))
 			}
-			// 删除redis信息
-			_, err = redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
-			if err != nil {
-				logger.SlogWarnLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
+			select {
+			case <-contextmanager.GlobalContextManagers.GetContext(runnerOption.ID).Done():
+			default:
+				// 删除redis信息
+				_, err = redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
+				if err != nil {
+					logger.SlogWarnLocal(fmt.Sprintf("RemoveFirstFromList Delete %v error: %v", taskKey, err))
+				}
 			}
 			// 清除全局变量
 			CleanGlobal()
@@ -224,7 +228,6 @@ func RunRedisTask() {
 }
 
 func CleanGlobal() {
-	global.TmpCustomStringParameter = nil
-	global.TmpCustomStringListParameter = nil
+	global.TmpCustomMapParameter = sync.Map{}
 	global.TmpCustomParameter = nil
 }

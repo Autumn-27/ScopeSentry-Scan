@@ -10,6 +10,7 @@ package global
 import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"regexp"
+	"sync"
 )
 
 var (
@@ -18,28 +19,26 @@ var (
 	ConfigPath   string
 	ConfigDir    string
 	// AppConfig Global variable to hold the loaded configuration
-	AppConfig                    Config
-	DisallowedURLFilters         []*regexp.Regexp
-	VERSION                      string
-	FirstRun                     bool
-	DictPath                     string
-	ExtDir                       string
-	SensitiveRules               []types.SensitiveRule
-	Projects                     []types.Project
-	WebFingers                   []types.WebFinger
-	NotificationApi              []types.NotificationApi
-	NotificationConfig           types.NotificationConfig
-	PocDir                       string
-	PluginDir                    string
-	DatabaseEnabled              bool
-	CustomParameter              interface{}
-	CustomStringParameter        map[string]string
-	CustomStringListParameter    map[string][]string
-	TmpCustomParameter           interface{}
-	TmpCustomStringParameter     map[string]string
-	TmpCustomStringListParameter map[string][]string
-	SubdomainTakerFingers        []types.SubdomainTakerFinger
-	ScanModule                   = []string{
+	AppConfig             Config
+	DisallowedURLFilters  []*regexp.Regexp
+	VERSION               string
+	FirstRun              bool
+	DictPath              string
+	ExtDir                string
+	SensitiveRules        []types.SensitiveRule
+	Projects              []types.Project
+	WebFingers            []types.WebFinger
+	NotificationApi       []types.NotificationApi
+	NotificationConfig    types.NotificationConfig
+	PocDir                string
+	PluginDir             string
+	DatabaseEnabled       bool
+	CustomParameter       interface{}
+	CustomMapParameter    sync.Map
+	TmpCustomParameter    interface{}
+	TmpCustomMapParameter sync.Map
+	SubdomainTakerFingers []types.SubdomainTakerFinger
+	ScanModule            = []string{
 		"TargetHandler",
 		"SubdomainScan",
 		"SubdomainSecurity",
