@@ -828,7 +828,7 @@ func removeDefaultPort(rawURL string) string {
 }
 
 func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
-	defer Tools.DeleteFile(r.ScreenshotPath)
+	//defer Tools.DeleteFile(r.ScreenshotPath)
 	Screenshot := ""
 	if r.ScreenshotBytes != nil {
 		Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)

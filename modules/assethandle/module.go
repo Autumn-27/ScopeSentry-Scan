@@ -73,6 +73,9 @@ func (r *Runner) ModuleRun() error {
 				}
 				r.NextModule.GetInput() <- result
 				if assetResult, ok := result.(types.AssetOther); ok {
+					if assetResult.Type == "http" {
+						continue
+					}
 					assetResult.TaskName = []string{r.Option.TaskName}
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
@@ -101,7 +104,7 @@ func (r *Runner) ModuleRun() error {
 						go results.Handler.AssetOtherInsert(&assetResult)
 					}
 					assetOtherArray = append(assetOtherArray, assetResult)
-					if len(assetOtherArray) > 20 {
+					if len(assetOtherArray) > 10 {
 						r.NextModule.GetInput() <- assetOtherArray
 						assetOtherArray = nil
 					}
@@ -135,7 +138,7 @@ func (r *Runner) ModuleRun() error {
 						}
 
 						assetHttpArray = append(assetHttpArray, assetHttpResult)
-						if len(assetHttpArray) > 20 {
+						if len(assetHttpArray) > 10 {
 							r.NextModule.GetInput() <- assetHttpArray
 							assetHttpArray = nil
 						}

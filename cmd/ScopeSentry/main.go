@@ -133,7 +133,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		for {
-			go configupdater.RefreshConfig()
+			configupdater.RefreshConfig()
 		}
 	}()
 	time.Sleep(10 * time.Second)

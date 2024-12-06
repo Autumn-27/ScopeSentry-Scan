@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"os/exec"
-	"os/user"
 	"runtime"
 	"sync"
 	"time"
@@ -66,48 +65,46 @@ func Run(op options.TaskOptions) error {
 
 func CleanTmp() {
 	osType := runtime.GOOS
-	fmt.Printf("当前操作系统: %s\n", osType)
-
 	if osType == "windows" {
 		// Windows 系统处理
-		handleWindowsTemp()
+		//handleWindowsTemp()
 	} else if osType == "linux" {
 		// Linux 系统处理
 		handleLinuxTemp()
 	}
 }
 
-func handleWindowsTemp() {
-	// 获取当前用户名
-	currentUser, err := user.Current()
-	if err != nil {
-		return
-	}
-	tempDir := fmt.Sprintf(`C:\Users\%s\AppData\Local\Temp`, currentUser.Username)
-
-	// 定义 PowerShell 命令
-	psCmd := fmt.Sprintf(`
-Get-ChildItem -Path "%s" -Directory |
-Where-Object {
-    ($_.Name -match '^\d{9}$') -or 
-    ($_.Name -like 'ScopeSentry*') -or 
-    ($_.Name -like '.org.chromium.Chromium*') -or 
-    ($_.Name -like '*_badger') -or
-	($_.Name -like 'nuclei*') -or
-	($_.Name -like 'rod*')
-} |
-Remove-Item -Recurse -Force
-`, tempDir)
-
-	// 执行 PowerShell 命令
-	cmd := exec.Command("powershell", "-Command", psCmd)
-	_, err = cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("执行 PowerShell 命令时出错: %v\n", err)
-		logger.SlogWarn("清空临时文件C:\\Users\\{username}\\AppData\\Local\\Temp\\[^\\d{9}$、ScopeSentry*、.org.chromium.Chromium*、*_badger]失败，请手动清空，防止占用磁盘过大，")
-		return
-	}
-}
+//func handleWindowsTemp() {
+//	// 获取当前用户名
+//	currentUser, err := user.Current()
+//	if err != nil {
+//		return
+//	}
+//	tempDir := fmt.Sprintf(`C:\Users\%s\AppData\Local\Temp`, currentUser.Username)
+//
+//	// 定义 PowerShell 命令
+//	psCmd := fmt.Sprintf(`
+//Get-ChildItem -Path "%s" -Directory |
+//Where-Object {
+//    ($_.Name -match '^\d{9}$') -or
+//    ($_.Name -like 'ScopeSentry*') -or
+//    ($_.Name -like '.org.chromium.Chromium*') -or
+//    ($_.Name -like '*_badger') -or
+//	($_.Name -like 'nuclei*') -or
+//	($_.Name -like 'rod*')
+//} |
+//Remove-Item -Recurse -Force
+//`, tempDir)
+//
+//	// 执行 PowerShell 命令
+//	cmd := exec.Command("powershell", "-Command", psCmd)
+//	_, err = cmd.CombinedOutput()
+//	if err != nil {
+//		fmt.Printf("执行 PowerShell 命令时出错: %v\n", err)
+//		logger.SlogWarn("清空临时文件C:\\Users\\{username}\\AppData\\Local\\Temp\\[^\\d{9}$、ScopeSentry*、.org.chromium.Chromium*、*_badger]失败，请手动清空，防止占用磁盘过大，")
+//		return
+//	}
+//}
 
 func handleLinuxTemp() {
 	tempDir := "/tmp"

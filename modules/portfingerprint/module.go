@@ -69,7 +69,7 @@ func (r *Runner) ModuleRun() error {
 				resultArray = append(resultArray, result)
 
 				// 如果数组长度超过 20，发送到下个模块并清空数组
-				if len(resultArray) > 20 {
+				if len(resultArray) > 10 {
 					r.NextModule.GetInput() <- resultArray
 					resultArray = nil // 清空数组
 				}
@@ -83,7 +83,6 @@ func (r *Runner) ModuleRun() error {
 	var end time.Time
 	doneCalled := false
 	for {
-		//
 		select {
 		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 			allPluginWg.Wait()

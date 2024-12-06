@@ -70,9 +70,9 @@ func (r *Runner) ModuleRun() error {
 						}
 						var url string
 						if assetResult.Port != "" {
-							url = assetResult.Host + ":" + assetResult.Port
+							url = assetResult.Host + ":" + assetResult.Port + assetResult.UrlPath
 						} else {
-							url = assetResult.Host
+							url = assetResult.Host + assetResult.UrlPath
 						}
 						utils.Requests.Httpx([]string{url}, httpxResultsHandler, "false", true, 10, false, true)
 					} else {

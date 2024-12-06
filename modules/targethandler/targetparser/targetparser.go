@@ -228,7 +228,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				UrlPath: path,
 				Type:    "http",
 			}
-			p.Result <- tmp
+			// 转换为 []interface{}
+			var interfaceList []interface{}
+			interfaceList = append(interfaceList, tmp)
+			p.Result <- interfaceList
 		}
 		return nil, nil
 	}
