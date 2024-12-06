@@ -137,6 +137,10 @@ func (p *Plugin) Install() error {
 		return err
 	}
 	resultPath := filepath.Join(katanaPath, "result")
+	if err := os.RemoveAll(resultPath); err != nil {
+		logger.SlogError(fmt.Sprintf("Failed to clear resultPath folder: %v", err))
+		return err
+	}
 	if err := os.MkdirAll(resultPath, os.ModePerm); err != nil {
 		logger.SlogError(fmt.Sprintf("Failed to create resultPath folder:", err))
 		return err
