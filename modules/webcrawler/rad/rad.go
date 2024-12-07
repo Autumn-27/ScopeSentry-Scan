@@ -290,6 +290,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	end := time.Now()
 	duration := end.Sub(start)
+	osType := runtime.GOOS
+	if osType == "windows" {
+		// Windows 系统处理
+		//handleWindowsTemp()
+	} else if osType == "linux" {
+		// Linux 系统处理
+		utils.Tools.HandleLinuxTemp()
+	}
 	p.Log(fmt.Sprintf("target file %v target number %v get result %v time %v", targetFileName, len(data), resultNumber, duration))
 	return nil, nil
 }

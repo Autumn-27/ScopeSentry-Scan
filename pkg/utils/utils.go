@@ -1061,3 +1061,22 @@ func (t *UtilTools) RemoveStringDuplicates(arr []string) []string {
 
 	return result
 }
+
+func (t *UtilTools) HandleLinuxTemp() {
+	tempDir := "/tmp"
+
+	// 定义 Linux 下的 find 命令
+	findCmd := fmt.Sprintf(
+		`find %s -type d \( -regex '.*/[0-9]\{9\}' -o -name 'ScopeSentry*' -o -name 'nuclei*' -o -name '.org.chromium.Chromium*' -o -name '*_badger' -o -name 'rod' \) -exec rm -rf {} +`,
+		tempDir,
+	)
+
+	// 执行命令
+	cmd := exec.Command("bash", "-c", findCmd)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("执行 Linux find 命令时出错: %v\n", err)
+		logger.SlogWarn("清空临时文件出错，请手动清空/tmp目录，防止磁盘占用过大")
+		return
+	}
+}
