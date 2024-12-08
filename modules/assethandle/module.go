@@ -76,6 +76,12 @@ func (r *Runner) ModuleRun() error {
 					if assetResult.Type == "http" {
 						continue
 					}
+					// 过滤unknown
+					if assetResult.Service == "unknown" {
+						if len(assetResult.Raw) == 0 {
+							continue
+						}
+					}
 					assetResult.TaskName = []string{r.Option.TaskName}
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
@@ -89,14 +95,14 @@ func (r *Runner) ModuleRun() error {
 							changeData.AssetId = id
 							go results.Handler.AssetChangeLog(&changeData)
 							// 对资产进行更新,设置最新的扫描时间
-							assetResult.LastScanTime = assetResult.Time
-							assetResult.Time = oldAsset.Time
-							assetResult.Project = oldAsset.Project
-							assetResult.RootDomain = oldAsset.RootDomain
-							assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
-							assetResult.Tags = append(assetResult.Tags, oldAsset.Tags...)
-							go results.Handler.AssetUpdate(id, assetResult)
 						}
+						assetResult.LastScanTime = assetResult.Time
+						assetResult.Time = oldAsset.Time
+						assetResult.Project = oldAsset.Project
+						assetResult.RootDomain = oldAsset.RootDomain
+						assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
+						assetResult.Tags = append(assetResult.Tags, oldAsset.Tags...)
+						go results.Handler.AssetUpdate(id, assetResult)
 						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
@@ -122,15 +128,15 @@ func (r *Runner) ModuleRun() error {
 								// 说明资产存在变化，将结果发送到changelog中
 								changeData.AssetId = id
 								go results.Handler.AssetChangeLog(&changeData)
-								// 对资产进行更新,设置最新的扫描时间
-								assetHttpResult.LastScanTime = assetHttpResult.Time
-								assetHttpResult.Time = oldAssetHttp.Time
-								assetHttpResult.Project = oldAssetHttp.Project
-								assetHttpResult.RootDomain = oldAssetHttp.RootDomain
-								assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
-								assetHttpResult.Tags = append(assetHttpResult.Tags, oldAssetHttp.Tags...)
-								go results.Handler.AssetUpdate(id, assetHttpResult)
 							}
+							// 对资产进行更新,设置最新的扫描时间
+							assetHttpResult.LastScanTime = assetHttpResult.Time
+							assetHttpResult.Time = oldAssetHttp.Time
+							assetHttpResult.Project = oldAssetHttp.Project
+							assetHttpResult.RootDomain = oldAssetHttp.RootDomain
+							assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
+							assetHttpResult.Tags = append(assetHttpResult.Tags, oldAssetHttp.Tags...)
+							go results.Handler.AssetUpdate(id, assetHttpResult)
 							// 资产没有变化，不进行操作
 						} else {
 							// 数据库中不存在该资产，直接插入。
