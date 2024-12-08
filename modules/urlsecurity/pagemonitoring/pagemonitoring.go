@@ -121,7 +121,33 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("input is not types.UrlResult")
 	}
+
+	parameter := p.GetParameter()
+	tp := "js"
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "type")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				if value != "" {
+					switch key {
+					case "type":
+						tp = value
+					default:
+						continue
+					}
+				}
+
+			}
+		}
+	}
+
 	flag := utils.Tools.IsSuffixURL(data.Output, ".js")
+	if tp == "js" {
+		if !flag {
+			return nil, nil
+		}
+	}
 	if flag {
 		if strings.Contains(data.Body, "<!DOCTYPE html>") {
 			data.Body = ""
