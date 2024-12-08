@@ -108,7 +108,7 @@ func (r *Runner) ModuleRun() error {
 				if firstData {
 					end = time.Now()
 					duration := end.Sub(start)
-					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser), duration)
+					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetHandler), duration)
 				}
 				if !doneCalled {
 					close(resultChan)
@@ -125,14 +125,14 @@ func (r *Runner) ModuleRun() error {
 			}
 			if !firstData {
 				start = time.Now()
-				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetParser))
+				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.TargetHandler))
 				firstData = true
 			}
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
 				// 处理输入数据
-				for _, pluginId := range r.Option.TargetParser {
+				for _, pluginId := range r.Option.TargetHandler {
 					var plgWg sync.WaitGroup
 					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 					if flag {

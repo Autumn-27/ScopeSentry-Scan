@@ -14,7 +14,7 @@ type TaskOptions struct {
 	TaskName            string                       // 任务名称
 	Target              string                       //目标
 	Type                string                       //任务类型
-	TargetParser        []string                     // 目标解析模块
+	TargetHandler       []string                     // 目标解析模块
 	SubdomainScan       []string                     // 子域名扫描模块
 	SubdomainSecurity   []string                     // 子域名安全检测模块
 	AssetMapping        []string                     // 资产测绘模块

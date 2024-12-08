@@ -8,7 +8,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
@@ -31,6 +30,17 @@ func ToBase62(num int64) string {
 	return result
 }
 
+type Response struct {
+	Error           bool       `json:"error"`
+	ConsumedFPoint  int        `json:"consumed_fpoint"`
+	RequiredFPoints int        `json:"required_fpoints"`
+	Size            int        `json:"size"`
+	Page            int        `json:"page"`
+	Mode            string     `json:"mode"`
+	Query           string     `json:"query"`
+	Results         [][]string `json:"results"` // results 是一个包含数组的二维数组
+}
+
 func main() {
 	config.Initialize()
 	global.VERSION = "1.5"
@@ -42,6 +52,7 @@ func main() {
 	// 初始化日志模块
 	logger.NewLogger()
 	utils.InitializeDnsTools()
+	utils.InitializeRequests()
 	//resultChan := make(chan string, 100)
 	//go utils.Tools.ReadFileLineReader("C:\\Users\\autumn\\AppData\\Local\\JetBrains\\GoLand2023.3\\tmp\\GoLand\\ext\\katana\\result\\3MBJIanIesNNIFps", resultChan, context.Background())
 	//time.Sleep(3 * time.Second)
@@ -65,8 +76,8 @@ func main() {
 	//	return
 	//}
 	//fmt.Println(similarity)
-	a := utils.DNS.QueryOne("baidu.com")
-	fmt.Println(a)
+	//a := utils.DNS.QueryOne("baidu.com")
+	//fmt.Println(a)
 	// 获取当前时间戳（秒）
 	//now := time.Now().Unix()
 	//fmt.Println(now)
@@ -81,4 +92,17 @@ func main() {
 	//fmt.Println(secondsSince2000)
 	//base62Timestamp := ToBase62(secondsSince2000)
 	//fmt.Println(base62Timestamp)
+	//encoded := base64.StdEncoding.EncodeToString([]byte("host=\"baidu.com\"&&port!=\"80\"&&port!=\"443\""))
+	//url := fmt.Sprintf("https://fofa.info/api/v1/search/all?&key=%v&qbase64=%v&size=%v&fields=ip,port,domain,host,protocol,icp,title,", "", encoded, 10)
+	//
+	//res, _ := utils.Requests.HttpGetByte(url)
+	//reader := bytes.NewReader(res)
+	//decoder := json.NewDecoder(reader)
+	//var result Response
+	//if err := decoder.Decode(&result); err != nil {
+	//}
+	//if result.Error {
+	//
+	//}
+	//fmt.Printf("%v", result.Results)
 }

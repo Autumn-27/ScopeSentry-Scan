@@ -29,7 +29,7 @@ func Run(op options.TaskOptions) error {
 	handler.TaskHandle.StartTask()
 	handler.TaskHandle.ProgressStart("scan", op.Target, op.ID, 1)
 	op.ModuleRunWg = &wg
-	op.TargetParser = append(op.TargetParser, "7bbaec6487f51a9aafeff4720c7643f0")
+	op.TargetHandler = append(op.TargetHandler, "7bbaec6487f51a9aafeff4720c7643f0")
 	process := modules.CreateScanProcess(&op)
 	ch := make(chan interface{})
 	process.SetInput(ch)

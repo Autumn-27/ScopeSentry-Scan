@@ -101,7 +101,9 @@ func (r *Runner) ModuleRun() error {
 						assetResult.Project = oldAsset.Project
 						assetResult.RootDomain = oldAsset.RootDomain
 						assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
+						assetResult.TaskName = utils.Tools.RemoveStringDuplicates(assetResult.TaskName)
 						assetResult.Tags = append(assetResult.Tags, oldAsset.Tags...)
+						assetResult.Tags = utils.Tools.RemoveStringDuplicates(assetResult.Tags)
 						go results.Handler.AssetUpdate(id, assetResult)
 						// 资产没有变化，不进行操作
 					} else {
@@ -135,7 +137,9 @@ func (r *Runner) ModuleRun() error {
 							assetHttpResult.Project = oldAssetHttp.Project
 							assetHttpResult.RootDomain = oldAssetHttp.RootDomain
 							assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
+							assetHttpResult.TaskName = utils.Tools.RemoveStringDuplicates(assetHttpResult.TaskName)
 							assetHttpResult.Tags = append(assetHttpResult.Tags, oldAssetHttp.Tags...)
+							assetHttpResult.Tags = utils.Tools.RemoveStringDuplicates(assetHttpResult.Tags)
 							go results.Handler.AssetUpdate(id, assetHttpResult)
 							// 资产没有变化，不进行操作
 						} else {
