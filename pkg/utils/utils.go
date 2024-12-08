@@ -224,7 +224,6 @@ func (t *UtilTools) ParseArgs(args string, keys ...string) (map[string]string, e
 	originalStderr := os.Stderr
 	_, w, _ := os.Pipe()
 	os.Stderr = w
-
 	// 解析参数
 	err := fs.Parse(argsSlice)
 
