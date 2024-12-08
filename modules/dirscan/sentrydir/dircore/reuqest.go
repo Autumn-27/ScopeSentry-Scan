@@ -11,7 +11,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"net/url"
 )
 
 type Request struct {
@@ -19,7 +18,10 @@ type Request struct {
 }
 
 func (r *Request) Request(path string) (types.HttpResponse, error) {
-	uri := r.Url + url.QueryEscape(path)
+	if len(path) > 0 && path[0] == '/' {
+		path = path[1:] // 去掉前边的"/"
+	}
+	uri := r.Url + path
 	response, err := utils.Requests.HttpGet(uri)
 	if err != nil {
 		for i := 0; i < MaxRetries-5; i++ {
