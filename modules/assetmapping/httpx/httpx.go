@@ -10,6 +10,7 @@ package httpx
 import (
 	"errors"
 	"fmt"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -180,7 +181,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- r
 	}
 
-	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects)
+	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	return nil, nil
 }
 

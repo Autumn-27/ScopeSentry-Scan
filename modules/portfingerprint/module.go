@@ -60,6 +60,7 @@ func (r *Runner) ModuleRun() error {
 					if len(resultArray) > 0 {
 						r.NextModule.GetInput() <- resultArray
 					}
+					time.Sleep(3 * time.Second)
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
 					r.NextModule.CloseInput()
