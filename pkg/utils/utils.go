@@ -1066,7 +1066,7 @@ func (t *UtilTools) HandleLinuxTemp() {
 
 	// 定义 Linux 下的 find 命令
 	findCmd := fmt.Sprintf(
-		`find %s -type d \( -regex '.*/[0-9]\{9\}' -o -name 'ScopeSentry*' -o -name 'nuclei*' -o -name '.org.chromium.Chromium*' -o -name '*_badger' -o -name 'rod' \) -exec rm -rf {} +`,
+		`find %s -type d \( -regex '.*/[0-9]\{9\}' -o -name 'nuclei*' -o -name '.org.chromium.Chromium*' -o -name '*_badger' -o -name 'rod' \) -exec rm -rf {} +`,
 		tempDir,
 	)
 
