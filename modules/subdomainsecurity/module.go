@@ -111,12 +111,18 @@ func (r *Runner) ModuleRun() error {
 				}
 				return nil
 			}
-			//_, ok = data.(types.SubdomainResult)
-			//if !ok {
-			//	r.NextModule.GetInput() <- data
-			//	continue
-			//}
-			r.NextModule.GetInput() <- data
+			subdomain, ok := data.(types.SubdomainResult)
+			if !ok {
+				r.NextModule.GetInput() <- data
+				continue
+			}
+			// 转换为DomainResolve发送到下个模块
+			tmp := types.DomainResolve{
+				Domain: subdomain.Host,
+				IP:     subdomain.IP,
+			}
+			r.NextModule.GetInput() <- tmp
+
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainSecurity))
@@ -177,15 +183,15 @@ func (r *Runner) ModuleRun() error {
 					}
 				} else {
 					// 没有开启子域名安全检查扫描，将数据转换一下发送到结果
-					subdomain, ok := data.(types.SubdomainResult)
-					if ok {
-						tmp := types.DomainResolve{
-							Domain: subdomain.Host,
-							IP:     subdomain.IP,
-						}
-						resultChan <- tmp
-					}
-
+					// 前边已经发送了
+					//subdomain, ok = data.(types.SubdomainResult)
+					//if ok {
+					//	tmp := types.DomainResolve{
+					//		Domain: subdomain.Host,
+					//		IP:     subdomain.IP,
+					//	}
+					//	resultChan <- tmp
+					//}
 				}
 			}(data)
 

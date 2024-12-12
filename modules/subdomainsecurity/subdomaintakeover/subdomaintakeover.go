@@ -150,11 +150,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 	}
 	// 无论是不是CNAME解析，都需要将host发送到
-	result := types.DomainResolve{
-		Domain: subdomain.Host,
-		IP:     subdomain.IP,
-	}
-	p.Result <- result
+	// 模块中已经发送了
+	//result := types.DomainResolve{
+	//	Domain: subdomain.Host,
+	//	IP:     subdomain.IP,
+	//}
+	//p.Result <- result
 	return nil, nil
 }
 

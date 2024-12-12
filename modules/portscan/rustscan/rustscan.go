@@ -186,11 +186,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		//logger.SlogError(fmt.Sprintf("%v error: %v input is not types.DomainSkip\n", p.Name, input))
 		return nil, errors.New("input is not types.DomainSkip")
 	}
-	// 判断skipcdn
-	if domainSkip.Skip {
-		logger.SlogDebugLocal(fmt.Sprintf("%v %v skip cdn", domainSkip.Domain, domainSkip.IP))
-		return nil, nil
-	}
 	parameter := p.GetParameter()
 	PortBatchSize := "600"
 	PortTimeout := "3000"
@@ -209,7 +204,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					case "t":
 						PortTimeout = value
 					case "port":
-						PortRange = value
+						if domainSkip.Skip {
+							PortRange = "80,443"
+						} else {
+							PortRange = value
+						}
 					case "et":
 						executionTimeout, _ = strconv.Atoi(value)
 					default:
