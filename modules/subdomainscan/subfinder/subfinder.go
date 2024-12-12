@@ -21,7 +21,6 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
-	"time"
 )
 
 type Plugin struct {
@@ -152,10 +151,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 
 	rawCount := 1
-	verificationCount := 0
-	rawSubdomain := []string{}
 	// 将原始域名增加到子域名列表
-	rawSubdomain = append(rawSubdomain, target)
 	subfinderOpts := &runner.Options{
 		Threads:            threads,            // Thread controls the number of threads to use for active enumerations
 		Timeout:            timeout,            // Timeout is the seconds to wait for sources to respond
@@ -164,7 +160,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		// and other system related options
 		ResultCallback: func(s *resolve.HostEntry) {
 			rawCount += 1
-			rawSubdomain = append(rawSubdomain, s.Host)
+			p.Result <- s.Host
 		},
 		Domain: []string{target},
 		Output: &bytes.Buffer{},
@@ -181,20 +177,20 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
 		return nil, err
 	}
-	subdomainVerificationResult := make(chan string, 100)
-	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
-
-	// 读取结果
-	for result := range subdomainVerificationResult {
-		subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
-		if subdomainResult.Host != "" {
-			verificationCount += 1
-			p.Result <- subdomainResult
-		} else {
-			logger.SlogDebugLocal(result)
-		}
-	}
-	p.Log(fmt.Sprintf("%v plugin result: %v original quantity: %v verification quantity: %v", p.GetName(), target, rawCount, verificationCount))
+	//subdomainVerificationResult := make(chan string, 100)
+	//go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
+	//
+	//// 读取结果
+	//for result := range subdomainVerificationResult {
+	//	subdomainResult := utils.DNS.KsubdomainResultToStruct(result)
+	//	if subdomainResult.Host != "" {
+	//		verificationCount += 1
+	//		p.Result <- subdomainResult
+	//	} else {
+	//		logger.SlogDebugLocal(result)
+	//	}
+	//}
+	p.Log(fmt.Sprintf("%v plugin result: %v original quantity: %v", p.GetName(), target, rawCount))
 	return nil, nil
 }
 

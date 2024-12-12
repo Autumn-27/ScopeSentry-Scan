@@ -102,11 +102,10 @@ func (r *Runner) ModuleRun() error {
 							} else {
 								resultDns := utils.DNS.QueryOne(result.(string))
 								tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
-								if len(tmp.IP) != 0 || len(tmp.Value) != 0 {
-									tmp.TaskName = r.Option.TaskName
-									go results.Handler.Subdomain(&tmp)
-									r.NextModule.GetInput() <- tmp
-								}
+								// 无论是否有解析ip都发送到后边
+								tmp.TaskName = r.Option.TaskName
+								go results.Handler.Subdomain(&tmp)
+								r.NextModule.GetInput() <- tmp
 							}
 						}
 					}
