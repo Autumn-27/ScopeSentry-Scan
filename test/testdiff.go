@@ -7,13 +7,13 @@
 
 package main
 
-import (
-	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode/utils"
-)
-
-func main() {
-	sm := utils.NewSequenceMatcher("dfhiaulkdbgvywighdvwuqiadhiuwa", "ed3qwdawefcv3QR3WTN5REYN45EA4W")
-	ration := sm.Ratio()
-	fmt.Println(ration)
-}
+//import (
+//	"fmt"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/dirScanMode/utils"
+//)
+//
+//func main() {
+//	sm := utils.NewSequenceMatcher("dfhiaulkdbgvywighdvwuqiadhiuwa", "ed3qwdawefcv3QR3WTN5REYN45EA4W")
+//	ration := sm.Ratio()
+//	fmt.Println(ration)
+//}

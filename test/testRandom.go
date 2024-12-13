@@ -6,14 +6,14 @@
 // -------------------------------------------
 package main
 
-import (
-	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
-)
-
-func main() {
-	for i := 0; i < 2; i++ {
-		subdomain := util.GenerateRandomString(6)
-		fmt.Println(subdomain)
-	}
-}
+//import (
+//	"fmt"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
+//)
+//
+//func main() {
+//	for i := 0; i < 2; i++ {
+//		subdomain := util.GenerateRandomString(6)
+//		fmt.Println(subdomain)
+//	}
+//}

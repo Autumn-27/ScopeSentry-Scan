@@ -6,24 +6,24 @@
 // -------------------------------------------
 package main
 
-import (
-	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/portScanMode"
-)
-
-func main() {
-
-	var PortAlives []types.PortAlive
-	CallBack := func(alive []types.PortAlive) {
-		PortAlives = alive
-	}
-	err := portScanMode.NaabuScan([]string{"127.0.0.1"}, "80,443,1555,666", CallBack)
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
-
-	for _, value := range PortAlives {
-		fmt.Printf(value.Host)
-	}
-}
+//import (
+//	"fmt"
+//	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/portScanMode"
+//)
+//
+//func main() {
+//
+//	var PortAlives []types.PortAlive
+//	CallBack := func(alive []types.PortAlive) {
+//		PortAlives = alive
+//	}
+//	err := portScanMode.NaabuScan([]string{"127.0.0.1"}, "80,443,1555,666", CallBack)
+//	if err != nil {
+//		fmt.Printf(err.Error())
+//	}
+//
+//	for _, value := range PortAlives {
+//		fmt.Printf(value.Host)
+//	}
+//}

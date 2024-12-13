@@ -7,10 +7,10 @@
 
 package main
 
-import (
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-)
-
-func main() {
-	system.SetUp()
-}
+//import (
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+//)
+//
+//func main() {
+//	system.SetUp()
+//}

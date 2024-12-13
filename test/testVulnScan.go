@@ -7,12 +7,13 @@
 
 package main
 
-import (
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/vulnMode"
-)
-
-func main() {
-	system.SetUp()
-	vulnMode.Scan([]string{"http://test:666/"}, []string{"*"})
-}
+//
+//import (
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/vulnMode"
+//)
+//
+//func main() {
+//	system.SetUp()
+//	vulnMode.Scan([]string{"http://test:666/"}, []string{"*"})
+//}

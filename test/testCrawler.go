@@ -6,8 +6,8 @@
 // -------------------------------------------
 package main
 
-import "github.com/Autumn-27/ScopeSentry-Scan/pkg/crawlerMode"
-
-func main() {
-	crawlerMode.CrawlerScan([]string{"http://127.0.0.1/"})
-}
+//import "github.com/Autumn-27/ScopeSentry-Scan/pkg/crawlerMode"
+//
+//func main() {
+//	crawlerMode.CrawlerScan([]string{"http://127.0.0.1/"})
+//}

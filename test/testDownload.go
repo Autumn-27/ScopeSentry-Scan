@@ -7,9 +7,9 @@
 
 package main
 
-import "github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-
-func main() {
-	system.Test()
-	system.CheckCrawler()
-}
+//import "github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+//
+//func main() {
+//	system.Test()
+//	system.CheckCrawler()
+//}

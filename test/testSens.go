@@ -7,17 +7,17 @@
 
 package main
 
-import (
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-)
-
-func main() {
-	system.Test()
-	system.UpdateSensitive()
-	scanResult.UrlResult([]types.UrlResult{types.UrlResult{
-		Input:  "https://promo.indrive.com/10ridestogetprize_ru/random",
-		Output: "https://promo.indrive.com/10ridestogetprize_ru/random",
-	}}, "xxxxx", true)
-}
+//import (
+//	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+//)
+//
+//func main() {
+//	system.Test()
+//	system.UpdateSensitive()
+//	scanResult.UrlResult([]types.UrlResult{types.UrlResult{
+//		Input:  "https://promo.indrive.com/10ridestogetprize_ru/random",
+//		Output: "https://promo.indrive.com/10ridestogetprize_ru/random",
+//	}}, "xxxxx", true)
+//}

@@ -6,16 +6,16 @@
 // -------------------------------------------
 package main
 
-import (
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/urlScanMode"
-)
-
-func main() {
-	//system.SetUp()
-	op := urlScanMode.Option{
-		Headers: []string{},
-		Cookie:  "",
-	}
-	domainList := []string{"https://baidu.com"}
-	urlScanMode.Run(op, domainList, false, "None", "dwads")
-}
+//import (
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/urlScanMode"
+//)
+//
+//func main() {
+//	//system.SetUp()
+//	op := urlScanMode.Option{
+//		Headers: []string{},
+//		Cookie:  "",
+//	}
+//	domainList := []string{"https://baidu.com"}
+//	urlScanMode.Run(op, domainList, false, "None", "dwads")
+//}

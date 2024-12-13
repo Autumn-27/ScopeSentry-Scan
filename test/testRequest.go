@@ -7,19 +7,20 @@
 
 package main
 
-import (
-	"fmt"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
-	"strings"
-)
-
-func main() {
-	util.InitHttpClient()
-	_, err := util.HttpGet("http://test:666/")
-	if err != nil {
-		if strings.Contains(fmt.Sprintf("%v", err), "timed out") {
-			fmt.Println("dddd")
-		}
-	}
-
-}
+//
+//import (
+//	"fmt"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/util"
+//	"strings"
+//)
+//
+//func main() {
+//	util.InitHttpClient()
+//	_, err := util.HttpGet("http://test:666/")
+//	if err != nil {
+//		if strings.Contains(fmt.Sprintf("%v", err), "timed out") {
+//			fmt.Println("dddd")
+//		}
+//	}
+//
+//}

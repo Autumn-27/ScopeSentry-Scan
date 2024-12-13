@@ -7,12 +7,12 @@
 
 package main
 
-import (
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
-	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
-)
-
-func main() {
-	system.Test()
-	scanResult.GetPortByHost("test.top")
-}
+//import (
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/scanResult"
+//	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
+//)
+//
+//func main() {
+//	system.Test()
+//	scanResult.GetPortByHost("test.top")
+//}
