@@ -73,12 +73,17 @@ func (r *Runner) ModuleRun() error {
 				if !ok {
 					r.NextModule.GetInput() <- result
 				} else {
-					key := "duplicates:" + r.Option.ID + ":target:" + target
-					flag := results.Duplicate.DuplicateLocalCache(key)
-					if flag {
-						// 本地缓存中不存在，则没有重复，发到下个模块
-						logger.SlogInfoLocal(fmt.Sprintf("%v module target %v result: %v", r.GetName(), r.Option.Target, result))
+					if r.Option.IsRestart {
+						// 如果是重启的不进行去重
 						r.NextModule.GetInput() <- result
+					} else {
+						key := "duplicates:" + r.Option.ID + ":target:" + target
+						flag := results.Duplicate.DuplicateLocalCache(key)
+						if flag {
+							// 本地缓存中不存在，则没有重复，发到下个模块
+							logger.SlogInfoLocal(fmt.Sprintf("%v module target %v result: %v", r.GetName(), r.Option.Target, result))
+							r.NextModule.GetInput() <- result
+						}
 					}
 				}
 			}
