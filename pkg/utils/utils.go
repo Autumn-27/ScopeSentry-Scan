@@ -10,6 +10,7 @@ package utils
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/base64"
@@ -22,11 +23,15 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/hbollon/go-edlib"
+	"github.com/nfnt/resize"
 	"github.com/projectdiscovery/cdncheck"
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	"gopkg.in/yaml.v3"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"math"
@@ -1078,4 +1083,55 @@ func (t *UtilTools) HandleLinuxTemp() {
 		logger.SlogWarn("清空临时文件出错，请手动清空/tmp目录，防止磁盘占用过大")
 		return
 	}
+}
+
+// CompressAndEncodeScreenshot 压缩图片并返回 Base64 编码的字符串。
+// 它接收原始图片字节流 r.ScreenshotBytes，返回 Base64 编码的图片字符串。
+// 该函数会无损压缩 PNG 图像并缩小为原尺寸的 scaleFactor。 0.5 = 50%
+func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFactor float64) (string, string) {
+	if screenshotBytes == nil {
+		logger.SlogWarn("No screenshot data provided.")
+		return "", ""
+	}
+
+	// 解码原始图片数据
+	img, imgType, err := image.Decode(bytes.NewReader(screenshotBytes))
+	if err != nil {
+		logger.SlogWarn(fmt.Sprintf("Error decoding image:", err))
+		return "", ""
+	}
+
+	// 计算新的图片尺寸（通过缩放比例）
+	newWidth := uint(float64(img.Bounds().Dx()) * scaleFactor)
+	newHeight := uint(float64(img.Bounds().Dy()) * scaleFactor)
+
+	// 压缩图片（无损或有损方式，调整尺寸）
+	compressedImg := resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+
+	// 创建字节缓冲区存放压缩后的图片数据
+	var buf bytes.Buffer
+
+	// 根据图片格式进行不同的编码
+	switch imgType {
+	case "jpeg":
+		// JPEG 格式使用有损压缩
+		err = jpeg.Encode(&buf, compressedImg, nil)
+		if err != nil {
+
+			logger.SlogWarn(fmt.Sprintf("Error encoding JPEG image:", err))
+			return "", ""
+		}
+	case "png":
+		// PNG 格式使用无损压缩
+		err = png.Encode(&buf, compressedImg)
+		if err != nil {
+			logger.SlogWarn(fmt.Sprintf("Error encoding PNG image:", err))
+			return "", ""
+		}
+	default:
+		logger.SlogWarn(fmt.Sprintf("Unsupported image format:", imgType))
+		return "", ""
+	}
+
+	return imgType, base64.StdEncoding.EncodeToString(buf.Bytes())
 }
