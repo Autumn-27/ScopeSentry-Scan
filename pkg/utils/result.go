@@ -166,6 +166,13 @@ func (r *Result) CompareAssetHttp(old, new types.AssetHttp) types.AssetChangeLog
 			New:       fmt.Sprintf("%t", new.CDN),
 		})
 	}
+	if old.Screenshot != new.Screenshot {
+		Change.Change = append(Change.Change, types.ChangeLog{
+			FieldName: "Screenshot",
+			Old:       fmt.Sprintf("%v", old.Screenshot),
+			New:       fmt.Sprintf("%v", new.Screenshot),
+		})
+	}
 	bodyMd5, exists := old.Hashes["body_md5"].(string)
 	oldBodyMd5 := ""
 	if exists {

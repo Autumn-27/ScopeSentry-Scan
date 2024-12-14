@@ -366,22 +366,23 @@ func (r *request) TcpRecv(ip string, port uint16) ([]byte, error) {
 	return response[:length], nil
 }
 
-func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, ctx context.Context, executionTimeout int) {
+func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, ctx context.Context, executionTimeout int, bypassHeader bool) {
 	// 设置超时上下文
 	timeout := time.Duration(executionTimeout) * time.Minute // 设置超时时间
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	rootDomain := ""
-	if len(targets) != 0 {
-		domain, err := Tools.GetRootDomain(targets[0])
-		if err != nil {
-			rootDomain = targets[0]
-		} else {
-			rootDomain = domain
+	customHeaders := []string{}
+	if bypassHeader {
+		if len(targets) != 0 {
+			domain, err := Tools.GetRootDomain(targets[0])
+			if err != nil {
+				rootDomain = targets[0]
+			} else {
+				rootDomain = domain
+			}
 		}
-	}
-	options := runner.Options{
-		CustomHeaders: []string{
+		customHeaders = []string{
 			"X-Forwarded-For-Original:127.0.0.1",
 			"X-Forwarded-For:127.0.0.1",
 			"X-Real-IP:127.0.0.1",
@@ -394,7 +395,11 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 			"X-Originating-IP:127.0.0.1",
 			"X-Client-IP:127.0.0.1",
 			"Referer:" + rootDomain,
-		},
+		}
+	}
+	
+	options := runner.Options{
+		CustomHeaders:             customHeaders,
 		FollowRedirects:           followRedirects,
 		RandomAgent:               true,
 		Methods:                   "GET",
