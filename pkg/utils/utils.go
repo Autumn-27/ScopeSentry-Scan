@@ -831,11 +831,17 @@ func removeDefaultPort(rawURL string) string {
 	return parsedURL.String()
 }
 
+var SizeThreshold = 500 * 1024 // 500 KB
+
 func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	//defer Tools.DeleteFile(r.ScreenshotPath)
 	Screenshot := ""
 	if r.ScreenshotBytes != nil {
-		Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
+		if len(r.ScreenshotBytes) <= SizeThreshold {
+			Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
+		} else {
+			Screenshot = "data:image/png;base64," + Tools.CompressAndEncodeScreenshot(r.ScreenshotBytes, 0.5)
+		}
 	}
 	var ah = types.AssetHttp{
 		Time:         Tools.GetTimeNow(),
@@ -1088,17 +1094,17 @@ func (t *UtilTools) HandleLinuxTemp() {
 // CompressAndEncodeScreenshot 压缩图片并返回 Base64 编码的字符串。
 // 它接收原始图片字节流 r.ScreenshotBytes，返回 Base64 编码的图片字符串。
 // 该函数会无损压缩 PNG 图像并缩小为原尺寸的 scaleFactor。 0.5 = 50%
-func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFactor float64) (string, string) {
+func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFactor float64) string {
 	if screenshotBytes == nil {
 		logger.SlogWarn("No screenshot data provided.")
-		return "", ""
+		return ""
 	}
 
 	// 解码原始图片数据
 	img, imgType, err := image.Decode(bytes.NewReader(screenshotBytes))
 	if err != nil {
 		logger.SlogWarn(fmt.Sprintf("Error decoding image:", err))
-		return "", ""
+		return base64.StdEncoding.EncodeToString(screenshotBytes)
 	}
 
 	// 计算新的图片尺寸（通过缩放比例）
@@ -1117,21 +1123,20 @@ func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFac
 		// JPEG 格式使用有损压缩
 		err = jpeg.Encode(&buf, compressedImg, nil)
 		if err != nil {
-
 			logger.SlogWarn(fmt.Sprintf("Error encoding JPEG image:", err))
-			return "", ""
+			return base64.StdEncoding.EncodeToString(buf.Bytes())
 		}
 	case "png":
 		// PNG 格式使用无损压缩
 		err = png.Encode(&buf, compressedImg)
 		if err != nil {
 			logger.SlogWarn(fmt.Sprintf("Error encoding PNG image:", err))
-			return "", ""
+			return base64.StdEncoding.EncodeToString(buf.Bytes())
 		}
 	default:
 		logger.SlogWarn(fmt.Sprintf("Unsupported image format:", imgType))
-		return "", ""
+		return base64.StdEncoding.EncodeToString(buf.Bytes())
 	}
 
-	return imgType, base64.StdEncoding.EncodeToString(buf.Bytes())
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

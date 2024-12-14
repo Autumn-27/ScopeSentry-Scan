@@ -170,7 +170,6 @@ func (r *Runner) ModuleRun() error {
 					resultChan <- domainSkip
 				}
 			}(data)
-
 		}
 	}
 }

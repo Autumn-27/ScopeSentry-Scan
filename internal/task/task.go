@@ -136,11 +136,13 @@ func RunRedisTask() {
 				// 任务增加全局上下文
 				contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
 				if runnerOption.Type == "start" {
-					// 如果任务是暂停后开始的，则先运行本地缓存的目标
-					logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task start run pebbledb: %v", runnerOption.ID))
 					runnerOption.IsRestart = false
-					RunPebbleTarget(runnerOption)
-					logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task end run pebbledb: %v", runnerOption.ID))
+					// 如果任务是暂停后开始的，则先运行本地缓存的目标
+					go func() {
+						logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task start run pebbledb: %v", runnerOption.ID))
+						RunPebbleTarget(runnerOption)
+						logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task end run pebbledb: %v", runnerOption.ID))
+					}()
 				}
 			loop:
 				for {
