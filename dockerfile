@@ -10,7 +10,22 @@ RUN apt-get update && apt-get install -y \
     vim \
     tzdata \
     libpcap-dev \
+    fonts-noto-cjk \          # 安装中文字体
+    fonts-wqy-microhei \
+    fonts-arphic-ukai \
+    fonts-arphic-uming \
+    locales \                 # 安装支持语言环境包
     && rm -rf /var/lib/apt/lists/*
+
+# 设置时区为上海
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN echo 'Asia/Shanghai' >/etc/timezone
+
+# 配置语言环境为中文
+RUN locale-gen zh_CN.UTF-8
+ENV LANG zh_CN.UTF-8
+ENV LC_ALL zh_CN.UTF-8
+
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
 RUN chmod +x /apps/ScopeSentry
@@ -29,9 +44,6 @@ RUN chmod +x /apps/ext/rustscan/rustscan
 
 COPY tools/linux/katana /apps/ext/katana/katana
 RUN chmod +x /apps/ext/katana/katana
-# 设置时区为上海
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN echo 'Asia/Shanghai' >/etc/timezone
 
 # 设置编码
 ENV LANG C.UTF-8
