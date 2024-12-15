@@ -10,13 +10,13 @@ RUN apt-get update && apt-get install -y \
     vim \
     tzdata \
     libpcap-dev \
-    fonts-noto-cjk \          # 安装中文字体
+    fonts-noto-cjk \
     fonts-wqy-microhei \
     fonts-arphic-ukai \
     fonts-arphic-uming \
-    curl \                    # 安装 curl
-    unzip \                   # 安装 unzip
-    locales \                 # 安装支持语言环境包
+    curl \
+    unzip \
+    locales \
     && rm -rf /var/lib/apt/lists/*
 
 # 设置时区为上海
