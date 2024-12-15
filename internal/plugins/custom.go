@@ -61,7 +61,6 @@ func LoadCustomPlugin(path string, modlue string, plgId string) (interfaces.Plug
 	logger.SlogInfoLocal(fmt.Sprintf("Load custom plugin: %v", path))
 	// 初始化 yaegi 解释器
 	interp := interp.New(interp.Options{})
-
 	// 加载标准库和符号
 	err := interp.Use(stdlib.Symbols)
 	if err != nil {

@@ -19,6 +19,7 @@ func init() {
 		"InitializeTools":    reflect.ValueOf(utils.InitializeTools),
 		"Requests":           reflect.ValueOf(&utils.Requests).Elem(),
 		"Results":            reflect.ValueOf(&utils.Results).Elem(),
+		"SizeThreshold":      reflect.ValueOf(&utils.SizeThreshold).Elem(),
 		"Tools":              reflect.ValueOf(&utils.Tools).Elem(),
 		"Wappalyzer":         reflect.ValueOf(&utils.Wappalyzer).Elem(),
 

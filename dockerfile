@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
     fonts-wqy-microhei \
     fonts-arphic-ukai \
     fonts-arphic-uming \
+    curl \                    # 安装 curl
+    unzip \                   # 安装 unzip
     locales \                 # 安装支持语言环境包
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,4 +51,13 @@ RUN chmod +x /apps/ext/katana/katana
 ENV LANG C.UTF-8
 
 # 运行golang程序的命令
-ENTRYPOINT ["/apps/ScopeSentry"]
+# ENTRYPOINT ["/apps/ScopeSentry"]
+
+# 复制 start.sh 脚本到容器
+COPY start.sh /usr/local/bin/start.sh
+
+# 给 start.sh 脚本赋予执行权限
+RUN chmod +x /usr/local/bin/start.sh
+
+# 设置容器启动命令
+ENTRYPOINT ["/usr/local/bin/start.sh"]

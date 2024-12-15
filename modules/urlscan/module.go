@@ -69,6 +69,10 @@ func (r *Runner) ModuleRun() error {
 					urlResult.ResultId = hash
 					go results.Handler.URL(&urlResult)
 					r.NextModule.GetInput() <- urlResult
+				} else if urlList, ok := result.([]string); ok {
+					r.NextModule.GetInput() <- urlList
+				} else {
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}

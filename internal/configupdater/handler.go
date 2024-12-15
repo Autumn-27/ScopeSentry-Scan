@@ -83,6 +83,9 @@ func RefreshConfig() {
 					ReCheck(jsonData.Content)
 				case "uninstall_plugin":
 					Uninstall(jsonData.Content)
+				case "UpdateSystem":
+					SystemUpdate(jsonData.Content)
+
 				}
 			}
 		}

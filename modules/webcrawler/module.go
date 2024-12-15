@@ -51,12 +51,16 @@ func (r *Runner) ModuleRun() error {
 	resultWg.Add(1)
 	go func() {
 		defer resultWg.Done()
+		var crawlerResultArray []types.CrawlerResult
 		for {
 			select {
 			case result, ok := <-resultChan:
 				if !ok {
 					// 如果 resultChan 关闭了，退出循环
 					// 此模块运行完毕，关闭下个模块的输入
+					if len(crawlerResultArray) > 0 {
+						r.NextModule.GetInput() <- crawlerResultArray
+					}
 					r.NextModule.CloseInput()
 					return
 				}
@@ -68,6 +72,13 @@ func (r *Runner) ModuleRun() error {
 					crawlerResult.Time = utils.Tools.GetTimeNow()
 					go results.Handler.Crawler(&crawlerResult)
 					r.NextModule.GetInput() <- crawlerResult
+					crawlerResultArray = append(crawlerResultArray, crawlerResult)
+					if len(crawlerResultArray) > 500 {
+						r.NextModule.GetInput() <- crawlerResultArray
+						crawlerResultArray = nil
+					}
+				} else {
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}

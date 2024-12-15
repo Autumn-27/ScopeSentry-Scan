@@ -17,6 +17,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"gopkg.in/yaml.v3"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -233,5 +234,19 @@ func UpdatePoc(content string) {
 			LoadPoc(ids)
 		}
 	}
+}
 
+func SystemUpdate(content string) {
+	filePath := filepath.Join("/apps", "UPDATE")
+	err := utils.Tools.WriteContentFile(filePath, content)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("Error write update file: %s", err))
+		return
+	}
+	Exit()
+}
+
+func Exit() {
+	logger.SlogInfo(fmt.Sprintf("system exit"))
+	os.Exit(0)
 }

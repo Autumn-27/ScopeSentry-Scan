@@ -118,7 +118,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// 将 JSON 数据解析到结构体
 	err = json.Unmarshal(byteValue, &assetsList)
 	if err != nil {

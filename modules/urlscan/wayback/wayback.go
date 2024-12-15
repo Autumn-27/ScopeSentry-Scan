@@ -131,6 +131,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		var urllist []string
+		defer func() {
+			if len(urllist) > 0 {
+				p.Result <- urllist
+			}
+		}()
 		for result := range waybackResults {
 			isMatch := utils.Tools.IsMatchingFilter(global.DisallowedURLFilters, []byte(result.URL))
 			if isMatch {
@@ -157,6 +163,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				}
 				r.Time = utils.Tools.GetTimeNow()
 				p.Result <- r
+				urllist = append(urllist, result.URL)
+				if len(urllist) > 1000 {
+					p.Result <- urllist
+					urllist = []string{}
+				}
 			}
 		}
 	}()
