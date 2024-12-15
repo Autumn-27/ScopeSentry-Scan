@@ -79,15 +79,20 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 		recordType = "CNAME"
 	case len(dnsData.MX) > 0:
 		recordType = "MX"
+	case len(dnsData.PTR) > 0:
+		recordType = "PTR"
+	case len(dnsData.SOA) > 0:
+		recordType = "SOA"
 	case len(dnsData.NS) > 0:
 		recordType = "NS"
 	case len(dnsData.TXT) > 0:
 		recordType = "TXT"
+	case len(dnsData.SRV) > 0:
+		recordType = "SRV"
+	case len(dnsData.CAA) > 0:
+		recordType = "CAA"
 	default:
 		recordType = "UNKNOWN"
-	}
-	if recordType == "UNKNOWN" {
-		return types.SubdomainResult{}
 	}
 	var value []string
 	value = append(value, dnsData.CNAME...)
