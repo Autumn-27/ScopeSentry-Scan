@@ -1,6 +1,7 @@
 FROM python:3.7-slim
 
 WORKDIR /apps
+COPY msyh.ttc /usr/share/fonts/
 
 # 更新软件包列表并安装必要的软件包
 RUN apt-get update && apt-get install -y \
@@ -10,15 +11,10 @@ RUN apt-get update && apt-get install -y \
     vim \
     tzdata \
     libpcap-dev \
-    fonts-noto-cjk \
-    fonts-wqy-microhei \
-    fontconfig \
     && rm -rf /var/lib/apt/lists/*
-
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
 RUN chmod +x /apps/ScopeSentry
-
 RUN mkdir /apps/ext
 RUN mkdir /apps/ext/rad
 RUN mkdir /apps/ext/ksubdomain
@@ -34,17 +30,12 @@ RUN chmod +x /apps/ext/rustscan/rustscan
 
 COPY tools/linux/katana /apps/ext/katana/katana
 RUN chmod +x /apps/ext/katana/katana
-
 # 设置时区为上海
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
 
 # 设置编码
-ENV LANG=zh_CN.UTF-8
-ENV LANGUAGE=zh_CN:zh
-
-# 更新字体缓存
-RUN fc-cache -f -v
+ENV LANG C.UTF-8
 
 # 运行golang程序的命令
 ENTRYPOINT ["/apps/ScopeSentry"]
