@@ -100,7 +100,8 @@ func (r *Runner) ModuleRun() error {
 								}
 								r.NextModule.GetInput() <- tmp
 							} else {
-								resultDns := utils.DNS.QueryOne(result.(string))
+								resultDns := utils.DNS.QueryOne(target)
+								resultDns.Host = target
 								tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
 								// 无论是否有解析ip都发送到后边
 								tmp.TaskName = r.Option.TaskName
