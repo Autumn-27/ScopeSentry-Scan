@@ -121,6 +121,10 @@ type UrlResult struct {
 	Tags       []string `bson:"tags"`
 }
 
+type UrlFile struct {
+	Filepath string
+}
+
 type SecretResults struct {
 	Url   string
 	Kind  string
