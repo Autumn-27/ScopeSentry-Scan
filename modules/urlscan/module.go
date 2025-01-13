@@ -138,7 +138,10 @@ func (r *Runner) ModuleRun() error {
 				// 将原始url写入文件中
 				filename := utils.Tools.CalculateMD5(httpData.URL)
 				urlFilePath := filepath.Join(global.TmpDir, filename)
-				utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
+				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
+				if err != nil {
+
+				}
 
 				if len(r.Option.URLScan) != 0 {
 					var urlList []string

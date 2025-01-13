@@ -174,3 +174,14 @@ func (d *duplicate) SensitiveBody(md5 string, taskId string) bool {
 	key := "duplicates:" + taskId + ":SensitiveBody:" + md5
 	return d.DuplicateLocalCache(key)
 }
+
+func (d *duplicate) DuplicateUrlFileKey(filename string, taskId string) bool {
+	key := "duplicates:" + taskId + ":urlfile:" + filename
+	if d.DuplicateLocalCache(key) {
+		keyRedis := "duplicates:" + taskId + ":urlfile"
+		valueRedis := filename
+		return d.DuplicateRedisCache(keyRedis, valueRedis)
+	} else {
+		return false
+	}
+}
