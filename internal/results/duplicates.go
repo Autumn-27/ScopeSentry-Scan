@@ -83,6 +83,7 @@ func (d *duplicate) PortIntask(taskId string, host string, port string, isRestar
 	return false
 }
 
+// 返回true 表示 内存中不存在  返回false 表示存在 重复
 func (d *duplicate) DuplicateLocalCache(key string) bool {
 	_, err := bigcache.BigCache.Get(key)
 	if err != nil {
@@ -97,7 +98,7 @@ func (d *duplicate) DuplicateLocalCache(key string) bool {
 	return false
 }
 
-// DuplicateRedisCache 在key中查找是否存在value来进行去重
+// DuplicateRedisCache 在key中查找是否存在value来进行去重，返回true 表示不存在 不重复 返回false 表示已经存在了 重复
 func (d *duplicate) DuplicateRedisCache(key string, value string) bool {
 	ctx := context.Background()
 	exists, err := redis.RedisClient.SIsMember(ctx, key, value)

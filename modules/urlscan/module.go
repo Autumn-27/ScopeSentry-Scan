@@ -135,8 +135,13 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 对http资产在当前任务进行去重判断
 
-				// 将原始url写入文件中
 				filename := utils.Tools.CalculateMD5(httpData.URL)
+				flag := results.Duplicate.DuplicateUrlFileKey(filename, r.Option.ID)
+				if !flag {
+					// 已经扫过了
+					return
+				}
+				// 将原始url写入文件中
 				urlFilePath := filepath.Join(global.TmpDir, filename)
 				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
 				if err != nil {
