@@ -218,6 +218,8 @@ func RunRedisTask() {
 			_ = handler.TaskHandle.PopTaskId(runnerOption.ID)
 			// 清除全局变量
 			CleanGlobal()
+			// 清空文件锁
+			utils.Tools.ClearAllLocks()
 		}
 	}
 }

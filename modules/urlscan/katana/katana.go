@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -242,8 +241,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 	}()
 	var katanaResult types.KatanaResult
-	var urllist []string
-	var mu sync.Mutex
+	filename := utils.Tools.CalculateMD5(data.URL)
+	urlFilePath := filepath.Join(global.TmpDir, filename)
+	urlNumber := 0
 	for result := range resultChan {
 		err = json.Unmarshal([]byte(result), &katanaResult)
 		if err != nil {
@@ -253,6 +253,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		// 去重
 		flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
 		if flag {
+			urlNumber += 1
 			var r types.UrlResult
 			r.Input = data.URL
 			r.Source = katanaResult.Request.Source
@@ -262,9 +263,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			r.Length = len(katanaResult.Response.Body)
 			r.Body = katanaResult.Response.Body
 			r.Time = utils.Tools.GetTimeNow()
-			mu.Lock()
-			urllist = append(urllist, katanaResult.Request.URL)
-			mu.Unlock()
+			err := utils.Tools.WriteContentFile(urlFilePath, katanaResult.Request.URL)
+			if err != nil {
+			}
 			p.Result <- r
 		}
 	}
@@ -279,8 +280,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		// Linux 系统处理
 		utils.Tools.HandleLinuxTemp()
 	}
-	p.Log(fmt.Sprintf("target %v all url number %v running time:%v", data.URL, len(urllist), duration))
-	return urllist, nil
+	p.Log(fmt.Sprintf("target %v all url number %v running time:%v", data.URL, urlNumber, duration))
+	return nil, nil
 }
 
 //func (p *Plugin) Execute(input interface{}) (interface{}, error) {

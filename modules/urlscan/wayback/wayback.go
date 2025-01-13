@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback/source"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -128,6 +129,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	p.Log(fmt.Sprintf("target %v running", data.URL))
 	waybackResults := make(chan source.Result, 100)
 	var wg sync.WaitGroup
+	filename := utils.Tools.CalculateMD5(data.URL)
+	urlFilePath := filepath.Join(global.TmpDir, filename)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -163,10 +166,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				}
 				r.Time = utils.Tools.GetTimeNow()
 				p.Result <- r
-				urllist = append(urllist, result.URL)
-				if len(urllist) > 1000 {
-					p.Result <- urllist
-					urllist = []string{}
+				err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL)
+				if err != nil {
 				}
 			}
 		}

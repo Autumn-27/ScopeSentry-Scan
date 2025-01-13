@@ -71,8 +71,6 @@ func (r *Runner) ModuleRun() error {
 					urlResult.ResultId = hash
 					go results.Handler.URL(&urlResult)
 					r.NextModule.GetInput() <- urlResult
-				} else if urlList, ok := result.([]string); ok {
-					r.NextModule.GetInput() <- urlList
 				} else {
 					r.NextModule.GetInput() <- result
 				}
@@ -138,14 +136,13 @@ func (r *Runner) ModuleRun() error {
 				filename := utils.Tools.CalculateMD5(httpData.URL)
 				flag := results.Duplicate.DuplicateUrlFileKey(filename, r.Option.ID)
 				if !flag {
-					// 已经扫过了
+					// 重复 已经扫过了
 					return
 				}
 				// 将原始url写入文件中
 				urlFilePath := filepath.Join(global.TmpDir, filename)
 				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
 				if err != nil {
-
 				}
 
 				if len(r.Option.URLScan) != 0 {
@@ -197,15 +194,11 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 						}
 					}
-					if len(urlList) > 0 {
-						// 如果urlList不为空，则发送到爬虫模块，将这些url作为输入进行爬虫
-						r.NextModule.GetInput() <- urlList
-					} else {
-						// 如果为空，则将http资产的url作为数组传递到爬虫模块进行爬虫
-						if httpData, ok := data.(types.AssetHttp); ok {
-							r.NextModule.GetInput() <- []string{httpData.URL}
-						}
+					// 发送urlfile
+					urlFile := types.UrlFile{
+						Filepath: urlFilePath,
 					}
+					r.NextModule.GetInput() <- urlFile
 				} else {
 					// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
 					r.NextModule.GetInput() <- types.UrlResult{
@@ -215,7 +208,11 @@ func (r *Runner) ModuleRun() error {
 						ResultId:   utils.Tools.GenerateHash(),
 						Body:       httpData.ResponseBody,
 					}
-					r.NextModule.GetInput() <- []string{httpData.URL}
+					// 发送urlfile
+					urlFile := types.UrlFile{
+						Filepath: urlFilePath,
+					}
+					r.NextModule.GetInput() <- urlFile
 				}
 
 			}(data)

@@ -50,6 +50,8 @@ import (
 
 type UtilTools struct {
 	CdnCheckClient *cdncheck.Client
+	fileLocks      map[string]*sync.Mutex
+	fileMu         sync.Mutex
 }
 
 var Tools *UtilTools
@@ -58,6 +60,7 @@ func InitializeTools() {
 	client := cdncheck.New()
 	Tools = &UtilTools{
 		CdnCheckClient: client,
+		fileLocks:      make(map[string]*sync.Mutex),
 	}
 }
 
@@ -183,8 +186,31 @@ func (t *UtilTools) WriteContentFileAppend(filPath string, fileContent string) e
 	return t.AppendOrCreateFile(filPath, []byte(fileContent))
 }
 
+// getFileLock 获取文件锁
+func (t *UtilTools) GetFileLock(filePath string) *sync.Mutex {
+	t.fileMu.Lock()
+	defer t.fileMu.Unlock()
+
+	if _, exists := t.fileLocks[filePath]; !exists {
+		t.fileLocks[filePath] = &sync.Mutex{}
+	}
+	return t.fileLocks[filePath]
+}
+
+// ClearAllLocks 清空所有文件锁
+func (t *UtilTools) ClearAllLocks() {
+	t.fileMu.Lock()
+	defer t.fileMu.Unlock()
+
+	t.fileLocks = make(map[string]*sync.Mutex) // 创建新的空 map，旧的会被垃圾回收
+}
+
 // AppendOrCreateFile 追加写入文件，如果文件不存在则创建
 func (t *UtilTools) AppendOrCreateFile(filePath string, fileContent []byte) error {
+	lock := t.GetFileLock(filePath)
+	lock.Lock()
+	defer lock.Unlock()
+
 	// 确保文件路径存在
 	err := t.EnsureFilePathExists(filePath)
 	if err != nil {
