@@ -10,6 +10,7 @@ package urlscan
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
@@ -19,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -116,10 +118,7 @@ func (r *Runner) ModuleRun() error {
 			}
 			// 将原始数据发送到下个模块，这里的输入为 types.AssetOther 、 types.AssetHttp
 			r.NextModule.GetInput() <- data
-			// 如果是AssetOther，不运行该模块，只运行http资产
-			if _, ok := data.(types.AssetOther); ok {
-				continue
-			}
+
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLScan))
@@ -129,6 +128,17 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
+				// 如果是AssetOther，不运行该模块，只运行http资产
+				httpData, ok := data.(types.AssetHttp)
+				if !ok {
+					return
+				}
+				// 对http资产在当前任务进行去重判断
+
+				// 将原始url写入文件中
+				filename := utils.Tools.CalculateMD5(httpData.URL)
+				urlFilePath := filepath.Join(global.TmpDir, filename)
+				utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
 
 				if len(r.Option.URLScan) != 0 {
 					var urlList []string
@@ -189,18 +199,15 @@ func (r *Runner) ModuleRun() error {
 						}
 					}
 				} else {
-					// 如果没有开启url扫描，则将爬虫的目标发到下个模块
-					if httpData, ok := data.(types.AssetHttp); ok {
-						// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
-						r.NextModule.GetInput() <- types.UrlResult{
-							Input:      httpData.URL,
-							Output:     httpData.URL,
-							OutputType: "httpx",
-							ResultId:   utils.Tools.GenerateHash(),
-							Body:       httpData.ResponseBody,
-						}
-						r.NextModule.GetInput() <- []string{httpData.URL}
+					// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
+					r.NextModule.GetInput() <- types.UrlResult{
+						Input:      httpData.URL,
+						Output:     httpData.URL,
+						OutputType: "httpx",
+						ResultId:   utils.Tools.GenerateHash(),
+						Body:       httpData.ResponseBody,
 					}
+					r.NextModule.GetInput() <- []string{httpData.URL}
 				}
 
 			}(data)

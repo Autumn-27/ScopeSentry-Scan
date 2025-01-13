@@ -18,6 +18,7 @@ var (
 	AbsolutePath string
 	ConfigPath   string
 	ConfigDir    string
+	TmpDir       string
 	// AppConfig Global variable to hold the loaded configuration
 	AppConfig             Config
 	DisallowedURLFilters  []*regexp.Regexp
