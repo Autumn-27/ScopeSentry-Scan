@@ -146,7 +146,6 @@ func (r *Runner) ModuleRun() error {
 				}
 
 				if len(r.Option.URLScan) != 0 {
-					var urlList []string
 					// 调用插件
 					for _, pluginId := range r.Option.URLScan {
 						//var plgWg sync.WaitGroup
@@ -171,14 +170,8 @@ func (r *Runner) ModuleRun() error {
 									case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 										return
 									default:
-										urlS, err := plg.Execute(data)
+										_, err := plg.Execute(data)
 										if err == nil {
-											urls, ok := urlS.([]string)
-											if ok {
-												if len(urls) > 0 {
-													urlList = append(urlList, urls...)
-												}
-											}
 										}
 									}
 								}
