@@ -156,18 +156,19 @@ func (d *duplicate) Crawler(value string, taskId string) bool {
 
 func (d *duplicate) URLParams(rawUrl string) string {
 	parsedURL, err := url.Parse(rawUrl)
-	dupKey := utils.Tools.CalculateMD5(strings.TrimLeft(strings.TrimLeft(rawUrl, "http://"), "https://"))
+	dupKey := utils.Tools.CalculateMD5(strings.TrimLeft(strings.TrimLeft(strings.TrimSuffix(rawUrl, "/"), "http://"), "https://"))
 	if err != nil {
 	} else {
 		queryParams := parsedURL.Query()
 		if len(queryParams) > 0 {
-			paramskey := fmt.Sprintf("%s%s", parsedURL.Host, parsedURL.Path)
+			paramskey := fmt.Sprintf("%s%s", parsedURL.Host, strings.TrimSuffix(parsedURL.Path, "/"))
 			for key, _ := range queryParams {
 				paramskey += key
 			}
 			dupKey = utils.Tools.CalculateMD5(paramskey)
 		}
 	}
+	fmt.Println(dupKey)
 	return dupKey
 }
 

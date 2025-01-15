@@ -7,6 +7,8 @@
 
 package main
 
+import "github.com/Autumn-27/ScopeSentry-Scan/internal/results"
+
 //import (
 //	"github.com/Autumn-27/ScopeSentry-Scan/pkg/system"
 //)
@@ -14,3 +16,10 @@ package main
 //func main() {
 //	system.SetUp()
 //}
+
+func main() {
+	results.InitializeDuplicate()
+	results.Duplicate.URLParams("http://ads.com?a=dwasd")
+	results.Duplicate.URLParams("http://ads.com/?a=dwasdw")
+	results.Duplicate.URLParams("http://ads.com/?a=dwasdw&d=sdwa")
+}

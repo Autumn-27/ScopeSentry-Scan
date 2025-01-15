@@ -194,13 +194,14 @@ func (r *Runner) ModuleRun() error {
 							logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 						}
 					}
+					// 调用url去重工具 对url数据进行去重
+
 					// 发送urlfile
 					urlFile := types.UrlFile{
 						Filepath: urlFilePath,
 					}
 					r.NextModule.GetInput() <- urlFile
 
-					// 调用url去重工具 对url数据进行去重
 				} else {
 					// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
 					r.NextModule.GetInput() <- types.UrlResult{
