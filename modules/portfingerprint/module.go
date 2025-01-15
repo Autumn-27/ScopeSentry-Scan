@@ -197,12 +197,16 @@ func (r *Runner) ModuleRun() error {
 								rev, err := utils.Requests.TcpRecv(asset.IP, uint16(portUint64))
 								if err == nil {
 									rawResponse := string(rev)
-									encodedResponse, err := json.Marshal(rawResponse)
-									if err != nil {
-										// 处理编码错误
-										logger.SlogError(fmt.Sprintf("JSON 编码错误:", err))
+									if rawResponse != "" {
+										encodedResponse, err := json.Marshal(rawResponse)
+										if err != nil {
+											// 处理编码错误
+											logger.SlogError(fmt.Sprintf("JSON 编码错误:", err))
+										} else {
+											asset.Raw = json.RawMessage(fmt.Sprintf("{\"data\":%s}", encodedResponse))
+										}
 									} else {
-										asset.Raw = json.RawMessage(fmt.Sprintf("{\"data\":%s}", encodedResponse))
+										asset.Raw = json.RawMessage("")
 									}
 								} else {
 									asset.Raw = json.RawMessage("")

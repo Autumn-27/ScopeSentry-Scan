@@ -6,6 +6,11 @@
 // -------------------------------------------
 package main
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 //import (
 //	"fmt"
 //	"github.com/Autumn-27/ScopeSentry-Scan/pkg/portScanMode"
@@ -19,3 +24,8 @@ package main
 //	fmt.Println(system.GetTimeNow())
 //	portScanMode.PortScan2("39.125.123.24", "1-65535", "port")
 //}
+
+func main() {
+	message := json.RawMessage("")
+	fmt.Println(len(message))
+}
