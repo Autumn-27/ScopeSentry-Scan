@@ -217,14 +217,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
-	subfile = filepath.Join(global.DictPath, "subdomain", subfile)
+	subfile = filepath.Join(global.DictPath, subfile)
 	subDictChan := make(chan string, 10)
-	go func() {
-		err := utils.Tools.ReadFileLineReader(subfile, subDictChan, ctx)
-		if err != nil {
-			logger.SlogInfoLocal(fmt.Sprintf("%v", err))
-		}
-	}()
+	go utils.Tools.ReadFileLineReader(subfile, subDictChan, ctx)
 	rawSubdomain := []string{}
 	dotIndex := strings.Index(target, "*.")
 	// 读取子域名字典
