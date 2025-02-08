@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"time"
 )
 
 type Runner struct {
@@ -32,7 +33,10 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 
 func (r *Runner) ModuleRun() error {
 	if len(r.Option.PassiveScan) != 0 {
-		handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.DirScan))
+		var start time.Time
+		var end time.Time
+		handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan))
+		start = time.Now()
 		// 调用插件
 		for _, pluginId := range r.Option.PassiveScan {
 			plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
@@ -48,20 +52,44 @@ func (r *Runner) ModuleRun() error {
 				logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
 			}
 		}
+		closePlgFunc := func() {
+			for _, pluginId := range r.Option.PassiveScan {
+				plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
+				if flag {
+					logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
+					go func() {
+						plg.SetCustom("close task")
+					}()
+				}
+			}
+			end = time.Now()
+			duration := end.Sub(start)
+			handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan), duration)
+		}
 
 		for {
 			select {
 			case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+				closePlgFunc()
+				return nil
+			case data, ok := <-r.Input:
+				if !ok {
+					time.Sleep(3 * time.Second)
+					closePlgFunc()
+					return nil
+				}
+
+				// 获取到输入数据 通过SetCustom发送到插件中，这里为了兼容之前的，使用SetCustom传递数据，不增加新的函数
 				for _, pluginId := range r.Option.PassiveScan {
 					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 					if flag {
 						logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
 						go func() {
-							plg.SetCustom("close task")
+							plg.SetCustom(data)
 						}()
 					}
 				}
-				return nil
+
 			}
 		}
 
