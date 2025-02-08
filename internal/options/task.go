@@ -27,6 +27,7 @@ type TaskOptions struct {
 	WebCrawler          []string                     // 爬虫模块
 	DirScan             []string                     //目录扫描模块
 	VulnerabilityScan   []string                     //漏洞扫描模块
+	PassiveScan         []string                     // 被动扫描模块
 	Parameters          map[string]map[string]string // 各个插件的参数
 	IsRestart           bool                         // 是否为重启后从本地获取缓存中获取的目标
 	Duplicates          string                       // 是否忽略已经存储在mongodb中的子域名
