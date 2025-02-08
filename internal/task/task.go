@@ -31,49 +31,44 @@ import (
 
 func GetTask() {
 	// 运行本地缓存的任务
-	RunPebbledbTask()
+	//RunPebbledbTask()
 	// 从redis获取任务
 	RunRedisTask()
 }
 
 // RunPebbledbTask 运行本地缓存任务
-func RunPebbledbTask() {
-	prefix := "task:"
-	keys, err := pebbledb.PebbleStore.GetKeysWithPrefix(prefix)
+func RunPebbledbTask(value []byte) {
+	logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
+	var runnerOption options.TaskOptions
+	err := utils.Tools.JSONToStruct(value, &runnerOption)
+	// 任务增加全局上下文
+	contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
+	// 设置为本地获取的任务
+	runnerOption.IsRestart = true
 	if err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("pebbledb get task error: %v", err))
-		os.Exit(0)
-	}
-	if len(keys) > 0 {
-		// 打印所有以 "task:" 开头的键值对
-		for key, value := range keys {
-			logger.SlogInfoLocal(fmt.Sprintf("get PebbleStore task: %v", string(value)))
-			var runnerOption options.TaskOptions
-			err = utils.Tools.JSONToStruct(value, &runnerOption)
-			// 任务增加全局上下文
-			contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
-			// 设置为本地获取的任务
-			runnerOption.IsRestart = true
-			if err != nil {
-				logger.SlogErrorLocal(fmt.Sprintf("task JSONToStruct error: %v - %v", string(value), err))
-				err = pebbledb.PebbleStore.Delete([]byte(fmt.Sprintf("task:%s", runnerOption.ID)))
-				if err != nil {
-					logger.SlogErrorLocal(fmt.Sprintf("PebbleStore delete error: %v", runnerOption.ID))
-				}
-				continue
-			}
-			// 运行任务目标
-			RunPebbleTarget(runnerOption)
-			// 任务运行完毕删除任务
-			err = pebbledb.PebbleStore.Delete([]byte(key))
-			if err != nil {
-				logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", key, err))
-			}
-			logger.SlogInfoLocal(fmt.Sprintf("PebbleStore task run end: %v", runnerOption.ID))
+		logger.SlogErrorLocal(fmt.Sprintf("task JSONToStruct error: %v - %v", string(value), err))
+		err = pebbledb.PebbleStore.Delete([]byte(fmt.Sprintf("task:%s", runnerOption.ID)))
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("PebbleStore delete error: %v", runnerOption.ID))
 		}
-		// 关闭nuclei引擎
-		handler.CloseNucleiEngine()
+		return
 	}
+	// 运行任务目标
+	RunPebbleTarget(runnerOption)
+	// 任务运行完毕删除任务 更新放到redis task中删除一次
+	//err = pebbledb.PebbleStore.Delete([]byte(key))
+	//if err != nil {
+	//	logger.SlogErrorLocal(fmt.Sprintf("PebbleStore Delete %v error: %v", key, err))
+	//}
+	logger.SlogInfoLocal(fmt.Sprintf("PebbleStore task run end: %v", runnerOption.ID))
+	//if len(keys) > 0 {
+	//	// 打印所有以 "task:" 开头的键值对
+	//	for key, value := range keys {
+	//
+	//	}
+	//	// 关闭nuclei引擎
+	//	handler.CloseNucleiEngine()
+	//}
 }
 
 // RunRedisTask 从redis中获取任务
@@ -103,9 +98,16 @@ func RunRedisTask() {
 				logger.SlogError(fmt.Sprintf("Task parse error: %s", err))
 				continue
 			}
+			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
+			// 如果本地存在该任务 后台运行本地缓存任务
+			value, _ := pebbledb.PebbleStore.Get([]byte(taskKey))
+			if value != nil {
+				go RunPebbledbTask(value)
+				time.Sleep(5 * time.Second)
+			}
+
 			// 将任务配置写入本地
 			runnerOption.IsRestart = false
-			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 			err = pebbledb.PebbleStore.Put([]byte(taskKey), []byte(taskInfo))
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("PebbleStore.Put Task error: %s", err))
