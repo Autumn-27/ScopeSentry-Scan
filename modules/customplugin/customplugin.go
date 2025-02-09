@@ -28,10 +28,11 @@ type Plugin struct {
 	UnInstallFunc func() error
 	ExecuteFunc   func(input interface{}, op options.PluginOption) (interface{}, error)
 	GetNameFunc   func() string
+	SetCustomFunc func(interface{})
 	TaskName      string
 }
 
-func NewPlugin(module string, plgId string, installFunc func() error, checkFunc func() error, executeFunc func(input interface{}, op options.PluginOption) (interface{}, error), unInstallFunc func() error, getNameFunc func() string) *Plugin {
+func NewPlugin(module string, plgId string, installFunc func() error, checkFunc func() error, executeFunc func(input interface{}, op options.PluginOption) (interface{}, error), unInstallFunc func() error, getNameFunc func() string, setCustomFunc func(interface{})) *Plugin {
 	return &Plugin{
 		Module:        module,
 		PluginId:      plgId,
@@ -40,6 +41,7 @@ func NewPlugin(module string, plgId string, installFunc func() error, checkFunc 
 		ExecuteFunc:   executeFunc,
 		UnInstallFunc: unInstallFunc,
 		GetNameFunc:   getNameFunc,
+		SetCustomFunc: setCustomFunc,
 	}
 }
 
@@ -58,7 +60,7 @@ func (p *Plugin) GetTaskId() string {
 	return p.TaskId
 }
 func (p *Plugin) SetCustom(cu interface{}) {
-	p.Custom = cu
+	p.SetCustomFunc(cu)
 }
 
 func (p *Plugin) GetCustom() interface{} {

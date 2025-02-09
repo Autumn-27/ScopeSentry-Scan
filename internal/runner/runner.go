@@ -10,7 +10,6 @@ package runner
 import (
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
@@ -29,9 +28,7 @@ func Run(op options.TaskOptions) error {
 	start = time.Now()
 	handler.TaskHandle.StartTask()
 	handler.TaskHandle.ProgressStart("scan", op.Target, op.ID, 1)
-	global.SetPassiveScanChan(op.ID)
 	// 设置PassiveScan的input
-	op.InputChan["PassiveScan"] = global.TaskPassiveScanGlobal[op.ID]
 	op.ModuleRunWg = &wg
 	op.TargetHandler = append(op.TargetHandler, "7bbaec6487f51a9aafeff4720c7643f0")
 	process := modules.CreateScanProcess(&op)

@@ -13,6 +13,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assethandle"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/assetmapping"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/dirscan"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/passivescan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portfingerprint"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscan"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/portscanpreparation"
@@ -28,6 +29,8 @@ import (
 func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	// 初始化 InputChan
 	op.InputChan = make(map[string]chan interface{})
+
+	passivescan.SetPassiveScanChan(op)
 
 	// 漏洞扫描模块
 	op.ModuleRunWg.Add(1)

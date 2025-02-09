@@ -21,6 +21,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/runner"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/passivescan"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	goRedis "github.com/redis/go-redis/v9"
@@ -210,6 +211,7 @@ func RunRedisTask() {
 				}
 				time.Sleep(3 * time.Second)
 				wg.Wait()
+				passivescan.PassiveScanChanDone(runnerOption.ID)
 				// 删除任务上下文
 				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
