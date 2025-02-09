@@ -99,20 +99,7 @@ func RunRedisTask() {
 				continue
 			}
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
-			// 如果本地存在该任务 后台运行本地缓存任务
-			value, _ := pebbledb.PebbleStore.Get([]byte(taskKey))
-			if value != nil {
-				go RunPebbledbTask(value)
-				time.Sleep(5 * time.Second)
-			}
 
-			// 将任务配置写入本地
-			runnerOption.IsRestart = false
-			err = pebbledb.PebbleStore.Put([]byte(taskKey), []byte(taskInfo))
-			if err != nil {
-				logger.SlogError(fmt.Sprintf("PebbleStore.Put Task error: %s", err))
-				continue
-			}
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
 			if runnerOption.Type == "page_monitoring" {
 				// 运行页面监控程序
@@ -135,12 +122,35 @@ func RunRedisTask() {
 					}
 				}()
 			} else {
+				cacheRunFlag := false
+				// 如果本地存在该任务 后台运行本地缓存任务，这里主要是在节点崩溃重启后可以继续运行，如果是任务暂停，本地的任务信息会被删除，这里不会运行，不会造成暂停失败
+				value, _ := pebbledb.PebbleStore.Get([]byte(taskKey))
+				if value != nil {
+					cacheRunFlag = true
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						RunPebbledbTask(value)
+					}()
+					time.Sleep(5 * time.Second)
+				}
+
+				// 将任务配置写入本地
+				runnerOption.IsRestart = false
+				err = pebbledb.PebbleStore.Put([]byte(taskKey), []byte(taskInfo))
+				if err != nil {
+					logger.SlogError(fmt.Sprintf("PebbleStore.Put Task error: %s", err))
+					continue
+				}
+
 				// 任务增加全局上下文
 				contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
-				if runnerOption.Type == "start" {
+				// 如果任务是暂停后开始的并且前边没有缓存的本地任务，则先运行本地缓存的目标
+				if runnerOption.Type == "start" && !cacheRunFlag {
 					runnerOption.IsRestart = false
-					// 如果任务是暂停后开始的，则先运行本地缓存的目标
+					wg.Add(1)
 					go func() {
+						defer wg.Done()
 						logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task start run pebbledb: %v", runnerOption.ID))
 						RunPebbleTarget(runnerOption)
 						logger.SlogInfoLocal(fmt.Sprintf("[stop to start]task end run pebbledb: %v", runnerOption.ID))

@@ -49,6 +49,10 @@ func InstallPlugin(id string) {
 	logger.SlogInfoLocal(fmt.Sprintf("load plugin:%v", id))
 
 	plugin, err := plugins.LoadCustomPlugin(plgPath, result.Module, result.Hash)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("load plugin error: %v %v %v", plgPath, result.Module, result.Hash))
+		return
+	}
 	plugins.GlobalPluginManager.RegisterPlugin(plugin.GetModule(), plugin.GetPluginId(), plugin)
 	nodePlgInfokey := fmt.Sprintf("NodePlg:%v", global.AppConfig.NodeName)
 	plgInfo := map[string]interface{}{

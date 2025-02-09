@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"sync"
 	"time"
 )
 
@@ -32,9 +33,12 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 }
 
 func (r *Runner) ModuleRun() error {
+	defer PassiveScanWgMap[r.Option.ID].Done()
+
 	if len(r.Option.PassiveScan) != 0 {
 		var start time.Time
 		var end time.Time
+		var wg sync.WaitGroup
 		handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan))
 		start = time.Now()
 		// 调用插件
@@ -43,6 +47,8 @@ func (r *Runner) ModuleRun() error {
 			if flag {
 				logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetName()))
 				go func() {
+					wg.Add(1)
+					defer wg.Done()
 					_, err := plg.Execute("")
 					if err != nil {
 
@@ -71,11 +77,13 @@ func (r *Runner) ModuleRun() error {
 			select {
 			case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 				closePlgFunc()
+				wg.Wait()
 				return nil
 			case data, ok := <-r.Input:
 				if !ok {
 					time.Sleep(3 * time.Second)
 					closePlgFunc()
+					wg.Wait()
 					return nil
 				}
 
@@ -111,4 +119,29 @@ func (r *Runner) GetInput() chan interface{} {
 
 func (r *Runner) CloseInput() {
 	close(r.Input)
+}
+
+var TaskPassiveScanGlobal = make(map[string]chan interface{})
+var mu sync.Mutex // 声明一个互斥锁
+var PassiveScanWgMap = make(map[string]*sync.WaitGroup)
+
+func SetPassiveScanChan(id string, op *options.TaskOptions) {
+	mu.Lock()         // 获取锁，确保只有一个 goroutine 能修改 map
+	defer mu.Unlock() // 函数结束时释放锁
+
+	// 检查 id 是否已经存在
+	if _, exists := TaskPassiveScanGlobal[id]; !exists {
+		// 如果不存在，则创建一个新的 chan 并添加到字典
+		vulnerabilityInputChan := make(chan interface{}, 100)
+		TaskPassiveScanGlobal[id] = vulnerabilityInputChan
+		passivescanModule := NewRunner(op, nil)
+		passivescanModule.SetInput(vulnerabilityInputChan)
+		go func() {
+			PassiveScanWgMap[id].Add(1)
+			err := passivescanModule.ModuleRun()
+			if err != nil {
+
+			}
+		}()
+	}
 }
