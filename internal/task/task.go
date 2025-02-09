@@ -123,6 +123,10 @@ func RunRedisTask() {
 					}
 				}()
 			} else {
+				// 开启被动扫描
+				passiveOptionCopy := runnerOption
+				passivescan.SetPassiveScanChan(&passiveOptionCopy)
+
 				cacheRunFlag := false
 				// 如果本地存在该任务 后台运行本地缓存任务，这里主要是在节点崩溃重启后可以继续运行，如果是任务暂停，本地的任务信息会被删除，这里不会运行，不会造成暂停失败
 				value, _ := pebbledb.PebbleStore.Get([]byte(taskKey))
@@ -212,6 +216,7 @@ func RunRedisTask() {
 				time.Sleep(3 * time.Second)
 				wg.Wait()
 				passivescan.PassiveScanChanDone(runnerOption.ID)
+				passivescan.PassiveScanWgMap[runnerOption.ID].Wait()
 				// 删除任务上下文
 				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
