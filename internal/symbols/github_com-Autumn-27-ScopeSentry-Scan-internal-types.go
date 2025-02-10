@@ -38,6 +38,7 @@ func init() {
 		"SubdomainResult":      reflect.ValueOf((*types.SubdomainResult)(nil)),
 		"SubdomainTakerFinger": reflect.ValueOf((*types.SubdomainTakerFinger)(nil)),
 		"TmpPageMonitResult":   reflect.ValueOf((*types.TmpPageMonitResult)(nil)),
+		"UrlFile":              reflect.ValueOf((*types.UrlFile)(nil)),
 		"UrlResult":            reflect.ValueOf((*types.UrlResult)(nil)),
 		"VulnResult":           reflect.ValueOf((*types.VulnResult)(nil)),
 		"WebFinger":            reflect.ValueOf((*types.WebFinger)(nil)),

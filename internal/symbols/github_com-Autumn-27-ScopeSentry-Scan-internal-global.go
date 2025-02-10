@@ -32,6 +32,7 @@ func init() {
 		"TakeoverFinger":        reflect.ValueOf(&global.TakeoverFinger).Elem(),
 		"TmpCustomMapParameter": reflect.ValueOf(&global.TmpCustomMapParameter).Elem(),
 		"TmpCustomParameter":    reflect.ValueOf(&global.TmpCustomParameter).Elem(),
+		"TmpDir":                reflect.ValueOf(&global.TmpDir).Elem(),
 		"VERSION":               reflect.ValueOf(&global.VERSION).Elem(),
 		"WebFingers":            reflect.ValueOf(&global.WebFingers).Elem(),
 

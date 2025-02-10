@@ -1196,3 +1196,8 @@ func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFac
 
 	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }
+
+// Command 简介调用exec.Command
+func (t *UtilTools) Command(name string, arg ...string) *exec.Cmd {
+	return exec.Command(name, arg...)
+}

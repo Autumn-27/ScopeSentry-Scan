@@ -22,6 +22,33 @@
 //go:generate yaegi extract github.com/Autumn-27/ScopeSentry-Scan/internal/types
 package symbols
 
-import "reflect"
+import (
+	"github.com/traefik/yaegi/stdlib"
+	"reflect"
+)
 
 var Symbols = map[string]map[string]reflect.Value{}
+
+func init() {
+	// 注册常用标准库
+	for pkg, symbols := range map[string]string{
+		"os":            "os",
+		"os/exec":       "os/exec",
+		"io":            "io",
+		"io/ioutil":     "io/ioutil",
+		"net/http":      "net/http",
+		"net/url":       "net/url",
+		"time":          "time",
+		"regexp":        "regexp",
+		"encoding/json": "encoding/json",
+		"encoding/csv":  "encoding/csv",
+		"bytes":         "bytes",
+		"strings":       "strings",
+		"math":          "math",
+		"math/rand":     "math/rand",
+		"fmt":           "fmt",
+		"log":           "log",
+	} {
+		Symbols[pkg] = stdlib.Symbols[symbols]
+	}
+}

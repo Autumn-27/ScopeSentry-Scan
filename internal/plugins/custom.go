@@ -19,6 +19,7 @@ import (
 	"github.com/traefik/yaegi/stdlib"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -70,6 +71,9 @@ func LoadCustomPlugin(path string, modlue string, plgId string) (interfaces.Plug
 	if err != nil {
 		return nil, err
 	}
+	err = interp.Use(map[string]map[string]reflect.Value{
+		"os/exec": stdlib.Symbols["os/exec"],
+	})
 	_, err = interp.EvalPath(path)
 	if err != nil {
 		return nil, err
