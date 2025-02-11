@@ -4,3 +4,6 @@ dist/
 /output/
 !/*/output/
 data/
+module.xray.yaml
+plugin.xray.yaml
+xray.yaml
