@@ -136,6 +136,9 @@ func SetPassiveScanChan(op *options.TaskOptions) {
 		TaskPassiveScanGlobal[op.ID] = vulnerabilityInputChan
 		passivescanModule := NewRunner(op, nil)
 		passivescanModule.SetInput(vulnerabilityInputChan)
+		if PassiveScanWgMap[op.ID] == nil {
+			PassiveScanWgMap[op.ID] = &sync.WaitGroup{}
+		}
 		go func() {
 			PassiveScanWgMap[op.ID].Add(1)
 			err := passivescanModule.ModuleRun()

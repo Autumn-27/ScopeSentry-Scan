@@ -202,8 +202,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	defer utils.Tools.DeleteFile(resultPath)
 	executionTimeout := 60
 	parameter := p.GetParameter()
+	proxy := ""
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "et")
+		args, err := utils.Tools.ParseArgs(parameter, "et", "proxy")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -211,6 +212,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					switch key {
 					case "et":
 						executionTimeout, _ = strconv.Atoi(value)
+					case "proxy":
+						proxy = value
 					default:
 						continue
 					}
@@ -220,6 +223,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 	}
 	args := []string{"--url-file", data.Filepath, "--json", resultPath, "--config", radConfigPath}
+	if proxy != "" {
+		args = append(args, "-http-proxy")
+		args = append(args, proxy)
+	}
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	err := utils.Tools.ExecuteCommandWithTimeout(filepath.Join(filepath.Join(global.ExtDir, "rad"), p.RadFileName), args, time.Duration(executionTimeout)*time.Minute, ctx)
 	if err != nil {
