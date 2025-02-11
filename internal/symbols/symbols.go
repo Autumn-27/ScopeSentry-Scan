@@ -32,22 +32,7 @@ var Symbols = map[string]map[string]reflect.Value{}
 func init() {
 	// 注册常用标准库
 	for pkg, symbols := range map[string]string{
-		"os":            "os",
-		"os/exec":       "os/exec",
-		"io":            "io",
-		"io/ioutil":     "io/ioutil",
-		"net/http":      "net/http",
-		"net/url":       "net/url",
-		"time":          "time",
-		"regexp":        "regexp",
-		"encoding/json": "encoding/json",
-		"encoding/csv":  "encoding/csv",
-		"bytes":         "bytes",
-		"strings":       "strings",
-		"math":          "math",
-		"math/rand":     "math/rand",
-		"fmt":           "fmt",
-		"log":           "log",
+		"os/exec": "os/exec",
 	} {
 		Symbols[pkg] = stdlib.Symbols[symbols]
 	}
