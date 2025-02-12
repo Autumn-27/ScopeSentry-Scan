@@ -159,5 +159,6 @@ func PassiveScanChanDone(id string) {
 	if _, exists := TaskPassiveScanGlobal[id]; exists {
 		logger.SlogInfo(fmt.Sprintf("passive scan end: %v", id))
 		close(TaskPassiveScanGlobal[id])
+		delete(TaskPassiveScanGlobal, id)
 	}
 }

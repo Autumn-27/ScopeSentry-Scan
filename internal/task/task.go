@@ -239,6 +239,7 @@ func RunRedisTask() {
 			CleanGlobal()
 			// 清空文件锁
 			utils.Tools.ClearAllLocks()
+			logger.SlogInfo(fmt.Sprintf("Task clean end: %v", runnerOption.ID))
 		}
 	}
 }
