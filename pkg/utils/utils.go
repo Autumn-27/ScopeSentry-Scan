@@ -470,7 +470,7 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 }
 
 func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration, externalCtx context.Context) error {
-	logger.SlogDebugLocal(fmt.Sprintf("ExecuteCommandWithTimeout cmd: %v args %v", command, args))
+	logger.SlogInfo(fmt.Sprintf("ExecuteCommandWithTimeout cmd: %v args %v", command, args))
 	// 创建一个带有超时的上下文
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel() // 确保在函数结束后取消上下文，防止资源泄漏

@@ -141,7 +141,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 将原始url写入文件中
 				urlFilePath := filepath.Join(global.TmpDir, filename)
-				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL)
+				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL+"\n")
 				if err != nil {
 				}
 

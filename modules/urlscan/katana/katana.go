@@ -263,7 +263,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			r.Length = len(katanaResult.Response.Body)
 			r.Body = katanaResult.Response.Body
 			r.Time = utils.Tools.GetTimeNow()
-			err := utils.Tools.WriteContentFile(urlFilePath, katanaResult.Request.URL)
+			err := utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
 			if err != nil {
 			}
 			p.Result <- r

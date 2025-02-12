@@ -157,5 +157,6 @@ func (p *Plugin) Clone() interfaces.Plugin {
 		ExecuteFunc:   p.ExecuteFunc,
 		UnInstallFunc: p.UnInstallFunc,
 		GetNameFunc:   p.GetNameFunc,
+		SetCustomFunc: p.SetCustomFunc,
 	}
 }

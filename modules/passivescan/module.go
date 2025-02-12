@@ -49,6 +49,8 @@ func (r *Runner) ModuleRun() error {
 				go func() {
 					wg.Add(1)
 					defer wg.Done()
+					plg.SetTaskId(r.Option.ID)
+					plg.SetTaskName(r.Option.TaskName)
 					_, err := plg.Execute("")
 					if err != nil {
 
@@ -61,6 +63,8 @@ func (r *Runner) ModuleRun() error {
 		closePlgFunc := func() {
 			for _, pluginId := range r.Option.PassiveScan {
 				plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
+				plg.SetTaskId(r.Option.ID)
+				plg.SetTaskName(r.Option.TaskName)
 				if flag {
 					logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
 					go func() {
@@ -91,7 +95,8 @@ func (r *Runner) ModuleRun() error {
 				for _, pluginId := range r.Option.PassiveScan {
 					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 					if flag {
-						logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
+						plg.SetTaskId(r.Option.ID)
+						plg.SetTaskName(r.Option.TaskName)
 						go func() {
 							plg.SetCustom(data)
 						}()
@@ -110,7 +115,7 @@ func (r *Runner) SetInput(ch chan interface{}) {
 }
 
 func (r *Runner) GetName() string {
-	return "DirScan"
+	return "PassiveScan"
 }
 
 func (r *Runner) GetInput() chan interface{} {
@@ -131,6 +136,7 @@ func SetPassiveScanChan(op *options.TaskOptions) {
 
 	// 检查 id 是否已经存在
 	if _, exists := TaskPassiveScanGlobal[op.ID]; !exists {
+		logger.SlogInfo(fmt.Sprintf("passive scan begin: %v", op.ID))
 		// 如果不存在，则创建一个新的 chan 并添加到字典
 		vulnerabilityInputChan := make(chan interface{}, 100)
 		TaskPassiveScanGlobal[op.ID] = vulnerabilityInputChan
@@ -151,6 +157,7 @@ func SetPassiveScanChan(op *options.TaskOptions) {
 
 func PassiveScanChanDone(id string) {
 	if _, exists := TaskPassiveScanGlobal[id]; exists {
+		logger.SlogInfo(fmt.Sprintf("passive scan end: %v", id))
 		close(TaskPassiveScanGlobal[id])
 	}
 }

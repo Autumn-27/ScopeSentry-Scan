@@ -166,7 +166,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				}
 				r.Time = utils.Tools.GetTimeNow()
 				p.Result <- r
-				err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL)
+				err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL+"\n")
 				if err != nil {
 				}
 			}
