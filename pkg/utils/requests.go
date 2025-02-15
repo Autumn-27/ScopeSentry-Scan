@@ -397,10 +397,11 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 			"Referer:" + rootDomain,
 		}
 	}
-	
+
 	options := runner.Options{
 		CustomHeaders:             customHeaders,
 		FollowRedirects:           followRedirects,
+		MaxRedirects:              5,
 		RandomAgent:               true,
 		Methods:                   "GET",
 		JSONOutput:                false,

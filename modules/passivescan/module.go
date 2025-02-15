@@ -72,6 +72,7 @@ func (r *Runner) ModuleRun() error {
 					}()
 				}
 			}
+			wg.Wait()
 			end = time.Now()
 			duration := end.Sub(start)
 			handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan), duration)
@@ -81,13 +82,11 @@ func (r *Runner) ModuleRun() error {
 			select {
 			case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
 				closePlgFunc()
-				wg.Wait()
 				return nil
 			case data, ok := <-r.Input:
 				if !ok {
 					time.Sleep(3 * time.Second)
 					closePlgFunc()
-					wg.Wait()
 					return nil
 				}
 
