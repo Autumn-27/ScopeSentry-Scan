@@ -151,7 +151,7 @@ func RunRedisTask() {
 				// 任务增加全局上下文
 				contextmanager.GlobalContextManagers.AddContext(runnerOption.ID)
 				// 如果任务是暂停后开始的并且前边没有缓存的本地任务，则先运行本地缓存的目标
-				if runnerOption.Type == "start" && !cacheRunFlag {
+				if runnerOption.IsStart && !cacheRunFlag {
 					runnerOption.IsRestart = false
 					wg.Add(1)
 					go func() {

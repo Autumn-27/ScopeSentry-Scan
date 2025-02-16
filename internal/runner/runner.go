@@ -12,9 +12,13 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net/url"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -41,7 +45,41 @@ func Run(op options.TaskOptions) error {
 			return
 		}
 	}()
-	ch <- op.Target
+	switch op.Type {
+	case "subdomain":
+		tmp := types.SubdomainResult{
+			Type: "A",
+			Host: op.Target,
+		}
+		op.InputChan["SubdomainSecurity"] <- tmp
+	case "asset":
+		var resultArray []interface{}
+		scheme, domain, port, err := extractDomainAndPort(op.Target)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("task %v target %v scan type [%v] parse target error: %v", op.ID, op.Target, op.Type, err))
+			break
+		}
+		tmp := types.AssetOther{
+			Host:    domain,
+			Port:    port,
+			Service: scheme,
+		}
+		if strings.Contains(scheme, "http") {
+			tmp.Type = "http"
+		} else {
+			tmp.Type = "other"
+		}
+		resultArray = append(resultArray, tmp)
+		op.InputChan["AssetMapping"] <- resultArray
+	case "UrlScan":
+		tmp := types.UrlResult{
+			Output:   op.Target,
+			ResultId: utils.Tools.CalculateMD5(op.Target),
+		}
+		op.InputChan["UrlSecurity"] <- tmp
+	default:
+		ch <- op.Target
+	}
 	close(ch)
 	time.Sleep(10 * time.Second)
 	wg.Wait()
@@ -61,6 +99,33 @@ func Run(op options.TaskOptions) error {
 		handler.TaskHandle.EndTask()
 		return nil
 	}
+}
+
+func extractDomainAndPort(inputURL string) (string, string, string, error) {
+	// 解析 URL
+	parsedURL, err := url.Parse(inputURL)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	// 提取域名
+	domain := parsedURL.Hostname()
+
+	// 提取端口，返回空字符串表示没有端口
+	port := parsedURL.Port()
+
+	// 如果没有指定端口，返回默认值
+	if port == "" {
+		// 判断 URL 协议，常见的 http 默认端口是 80，https 默认端口是 443
+		switch parsedURL.Scheme {
+		case "http":
+			port = "80"
+		case "https":
+			port = "443"
+		}
+	}
+
+	return parsedURL.Scheme, domain, port, nil
 }
 
 func CleanTmp() {
