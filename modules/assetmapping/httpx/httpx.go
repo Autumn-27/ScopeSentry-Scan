@@ -143,7 +143,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	parameter := p.GetParameter()
 	cdncheck := "false"
 	screenshot := false
-	tlsprobe := true
+	tlsprobe := false
 	FollowRedirects := true
 	bypassHeader := false
 	screenshotTimeout := 10
@@ -162,8 +162,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							screenshot = true
 						}
 					case "tlsprobe":
-						if value == "false" {
-							tlsprobe = false
+						if value == "true" {
+							tlsprobe = true
 						}
 					case "st":
 						screenshotTimeout, _ = strconv.Atoi(value)
