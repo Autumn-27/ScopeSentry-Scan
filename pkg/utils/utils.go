@@ -1156,44 +1156,52 @@ func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFac
 		return ""
 	}
 
-	// 解码原始图片数据
-	img, imgType, err := image.Decode(bytes.NewReader(screenshotBytes))
+	// 创建字节缓冲区直接处理图像数据
+	var buf bytes.Buffer
+
+	// 使用 image.DecodeConfig 获取图像类型和尺寸，不加载整个图片
+	config, _, err := image.DecodeConfig(bytes.NewReader(screenshotBytes))
 	if err != nil {
-		logger.SlogWarn(fmt.Sprintf("Error decoding image:", err))
-		return base64.StdEncoding.EncodeToString(screenshotBytes)
+		logger.SlogWarn(fmt.Sprintf("Error getting image config:", err))
+		return base64.StdEncoding.EncodeToString(screenshotBytes) // 返回原始 Base64 编码
 	}
 
 	// 计算新的图片尺寸（通过缩放比例）
-	newWidth := uint(float64(img.Bounds().Dx()) * scaleFactor)
-	newHeight := uint(float64(img.Bounds().Dy()) * scaleFactor)
+	newWidth := uint(float64(config.Width) * scaleFactor)
+	newHeight := uint(float64(config.Height) * scaleFactor)
+
+	// 解码并处理图片的流式操作
+	img, imgType, err := image.Decode(bytes.NewReader(screenshotBytes))
+	if err != nil {
+		logger.SlogWarn(fmt.Sprintf("Error decoding image:", err))
+		return base64.StdEncoding.EncodeToString(screenshotBytes) // 返回原始 Base64 编码
+	}
 
 	// 压缩图片（无损或有损方式，调整尺寸）
 	compressedImg := resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
 
-	// 创建字节缓冲区存放压缩后的图片数据
-	var buf bytes.Buffer
-
 	// 根据图片格式进行不同的编码
 	switch imgType {
 	case "jpeg":
-		// JPEG 格式使用有损压缩
+		// 使用有损压缩
 		err = jpeg.Encode(&buf, compressedImg, nil)
 		if err != nil {
 			logger.SlogWarn(fmt.Sprintf("Error encoding JPEG image:", err))
-			return base64.StdEncoding.EncodeToString(buf.Bytes())
+			return base64.StdEncoding.EncodeToString(buf.Bytes()) // 错误时返回 Base64 编码
 		}
 	case "png":
-		// PNG 格式使用无损压缩
+		// 使用无损压缩
 		err = png.Encode(&buf, compressedImg)
 		if err != nil {
 			logger.SlogWarn(fmt.Sprintf("Error encoding PNG image:", err))
-			return base64.StdEncoding.EncodeToString(buf.Bytes())
+			return base64.StdEncoding.EncodeToString(buf.Bytes()) // 错误时返回 Base64 编码
 		}
 	default:
 		logger.SlogWarn(fmt.Sprintf("Unsupported image format:", imgType))
-		return base64.StdEncoding.EncodeToString(buf.Bytes())
+		return base64.StdEncoding.EncodeToString(buf.Bytes()) // 默认返回 Base64 编码
 	}
 
+	// 返回压缩并编码后的 Base64 字符串
 	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
