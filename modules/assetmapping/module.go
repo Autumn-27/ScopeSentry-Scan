@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
-	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
@@ -62,27 +61,29 @@ func (r *Runner) ModuleRun() error {
 					r.NextModule.CloseInput()
 					return
 				}
-				if assetResult, ok := result.(types.AssetOther); ok {
-					if assetResult.Type == "http" {
-						// 这里可能是上个模块直接发送过来的
-						httpxResultsHandler := func(ra types.AssetHttp) {
-							r.NextModule.GetInput() <- ra
-						}
-						var url string
-						if assetResult.Port != "" {
-							url = assetResult.Host + ":" + assetResult.Port + assetResult.UrlPath
-						} else {
-							url = assetResult.Host + assetResult.UrlPath
-						}
-						utils.Requests.Httpx([]string{url}, httpxResultsHandler, "false", false, 10, false, true, contextmanager.GlobalContextManagers.GetContext(r.Option.ID), 10, false)
-					} else {
-						// 如果是other类型的资产，直接发送到下个模块
-						r.NextModule.GetInput() <- result
-					}
-				} else {
-					// 如果不是types.AssetOther，就是types.AssetHttp，直接发送到下个模块
-					r.NextModule.GetInput() <- result
-				}
+				// 如果没有选择资产测绘的话，这里会收到assetOther类型为http的资产，不再进行判断进行测绘
+				r.NextModule.GetInput() <- result
+				//if assetResult, ok := result.(types.AssetOther); ok {
+				//	if assetResult.Type == "http" {
+				//		// 这里可能是上个模块直接发送过来的
+				//		httpxResultsHandler := func(ra types.AssetHttp) {
+				//			r.NextModule.GetInput() <- ra
+				//		}
+				//		var url string
+				//		if assetResult.Port != "" {
+				//			url = assetResult.Host + ":" + assetResult.Port + assetResult.UrlPath
+				//		} else {
+				//			url = assetResult.Host + assetResult.UrlPath
+				//		}
+				//		utils.Requests.Httpx([]string{url}, httpxResultsHandler, "false", false, 10, false, true, contextmanager.GlobalContextManagers.GetContext(r.Option.ID), 10, false)
+				//	} else {
+				//		// 如果是other类型的资产，直接发送到下个模块
+				//		r.NextModule.GetInput() <- result
+				//	}
+				//} else {
+				//	// 如果不是types.AssetOther，就是types.AssetHttp，直接发送到下个模块
+				//	r.NextModule.GetInput() <- result
+				//}
 			}
 		}
 	}()

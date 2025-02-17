@@ -34,7 +34,13 @@ func Run(op options.TaskOptions) error {
 	handler.TaskHandle.ProgressStart("scan", op.Target, op.ID, 1)
 	// 设置PassiveScan的input
 	op.ModuleRunWg = &wg
-	op.TargetHandler = append(op.TargetHandler, "7bbaec6487f51a9aafeff4720c7643f0")
+	switch op.Type {
+	case "subdomainSource":
+	case "assetSource":
+	case "UrlScanSource":
+	default:
+		op.TargetHandler = append(op.TargetHandler, "7bbaec6487f51a9aafeff4720c7643f0")
+	}
 	process := modules.CreateScanProcess(&op)
 	ch := make(chan interface{})
 	process.SetInput(ch)
@@ -46,13 +52,13 @@ func Run(op options.TaskOptions) error {
 		}
 	}()
 	switch op.Type {
-	case "subdomain":
+	case "subdomainSource":
 		tmp := types.SubdomainResult{
 			Type: "A",
 			Host: op.Target,
 		}
 		op.InputChan["SubdomainSecurity"] <- tmp
-	case "asset":
+	case "assetSource":
 		var resultArray []interface{}
 		scheme, domain, port, err := extractDomainAndPort(op.Target)
 		if err != nil {
@@ -71,7 +77,7 @@ func Run(op options.TaskOptions) error {
 		}
 		resultArray = append(resultArray, tmp)
 		op.InputChan["AssetMapping"] <- resultArray
-	case "UrlScan":
+	case "UrlScanSource":
 		tmp := types.UrlResult{
 			Output:   op.Target,
 			ResultId: utils.Tools.CalculateMD5(op.Target),
