@@ -67,6 +67,9 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 	ProgressInfo := map[string]interface{}{
 		ty: utils.Tools.GetTimeNow(),
 	}
+	if typ == "scan" {
+		ProgressInfo["node"] = global.AppConfig.NodeName
+	}
 	err := redis.RedisClient.HMSet(context.Background(), key, ProgressInfo)
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("ProgressStart redis error: %s", err))
