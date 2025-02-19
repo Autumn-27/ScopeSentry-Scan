@@ -18,7 +18,9 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -255,6 +257,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		if flag {
 			urlNumber += 1
 			var r types.UrlResult
+			parsedURL, err := url.Parse(katanaResult.Request.URL)
+			if err != nil {
+				parsedURL.Path = katanaResult.Request.URL
+			}
+			r.Ext = path.Ext(parsedURL.Path)
 			r.Input = data.URL
 			r.Source = katanaResult.Request.Source
 			r.Output = katanaResult.Request.URL
@@ -263,7 +270,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			r.Length = len(katanaResult.Response.Body)
 			r.Body = katanaResult.Response.Body
 			r.Time = utils.Tools.GetTimeNow()
-			err := utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
+			err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
 			if err != nil {
 			}
 			p.Result <- r

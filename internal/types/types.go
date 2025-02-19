@@ -114,6 +114,7 @@ type UrlResult struct {
 	Length     int    `json:"length"`
 	Time       string `json:"time"`
 	Body       string `bson:"body"`
+	Ext        string `bson:"ext"`
 	Project    string
 	TaskName   string   `bson:"taskName"`
 	ResultId   string   `bson:"resultId"`

@@ -28,6 +28,8 @@ import (
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/unidoc/unipdf/v3/extractor"
+	"github.com/unidoc/unipdf/v3/model"
 	"gopkg.in/yaml.v3"
 	"image"
 	"image/jpeg"
@@ -1208,4 +1210,50 @@ func (t *UtilTools) CompressAndEncodeScreenshot(screenshotBytes []byte, scaleFac
 // Command 简介调用exec.Command
 func (t *UtilTools) Command(name string, arg ...string) *exec.Cmd {
 	return exec.Command(name, arg...)
+}
+
+func (t *UtilTools) GetPdfContent(filepath string) string {
+	f, err := os.Open(filepath)
+	if err != nil {
+		logger.SlogWarn(fmt.Sprintf("GetPdfContent open file errror: %v", err))
+		return ""
+	}
+
+	defer f.Close()
+
+	pdfReader, err := model.NewPdfReader(f)
+	if err != nil {
+		logger.SlogWarn(fmt.Sprintf("GetPdfContent NewPdfReader errror: %v", err))
+		return ""
+	}
+
+	numPages, err := pdfReader.GetNumPages()
+	if err != nil {
+		logger.SlogWarn(fmt.Sprintf("GetPdfContent GetNumPages errror: %v", err))
+		return ""
+	}
+	content := ""
+	for i := 0; i < numPages; i++ {
+		pageNum := i + 1
+
+		page, err := pdfReader.GetPage(pageNum)
+		if err != nil {
+			logger.SlogWarn(fmt.Sprintf("GetPdfContent GetPage errror: %v", err))
+			return ""
+		}
+
+		ex, err := extractor.New(page)
+		if err != nil {
+			logger.SlogWarn(fmt.Sprintf("GetPdfContent extractor.New errror: %v", err))
+			return ""
+		}
+
+		text, err := ex.ExtractText()
+		if err != nil {
+			logger.SlogWarn(fmt.Sprintf("GetPdfContent ExtractText errror: %v", err))
+			return ""
+		}
+		content += text
+	}
+	return content
 }

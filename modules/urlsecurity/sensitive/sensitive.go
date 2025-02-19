@@ -18,6 +18,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/dlclark/regexp2"
+	"path/filepath"
+	"strings"
 )
 
 type Plugin struct {
@@ -137,6 +139,39 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	if duplicateFlag {
+		pdfCheck := false
+		parameter := p.GetParameter()
+		if parameter != "" {
+			args, err := utils.Tools.ParseArgs(parameter, "pdf")
+			if err != nil {
+			} else {
+				for key, value := range args {
+					if value != "" {
+						switch key {
+						case "pdf":
+							if value == "true" {
+								pdfCheck = true
+							}
+						default:
+							continue
+						}
+					}
+
+				}
+			}
+		}
+		if pdfCheck {
+			if strings.ToLower(data.Ext) == ".pdf" {
+				tmpFilePath := filepath.Join(global.TmpDir, utils.Tools.GenerateRandomString(6)+".pdf")
+				err := utils.Tools.WriteContentFile(tmpFilePath, data.Body)
+				if err == nil {
+					content := utils.Tools.GetPdfContent(tmpFilePath)
+					if content != "" {
+						data.Body = content
+					}
+				}
+			}
+		}
 		chunkSize := 5120
 		overlapSize := 100
 		findFlag := false

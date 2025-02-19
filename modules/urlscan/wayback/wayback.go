@@ -18,6 +18,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback/source"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -150,6 +152,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			if flag {
 				// 没有重复
 				var r types.UrlResult
+				parsedURL, err := url.Parse(result.URL)
+				if err != nil {
+					parsedURL.Path = result.URL
+				}
+				r.Ext = path.Ext(parsedURL.Path)
 				r.Input = data.URL
 				r.Source = result.Source
 				r.Output = result.URL
