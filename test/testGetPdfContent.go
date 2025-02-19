@@ -9,27 +9,29 @@ package main
 
 import (
 	"fmt"
-	"rsc.io/pdf"
 )
 
 func main() {
-	c := GetPdfContent("C:\\Users\\autumn\\Desktop\\PHPOK 5.3 Getshell.pdf")
+	c := GetPdfContent("C:\\Users\\autumn\\Desktop\\")
 	fmt.Println(c)
 }
 
 func GetPdfContent(filePath string) string {
-	f, err := pdf.Open(filePath)
-	if err != nil {
-	}
-
-	// 获取 PDF 页数
-	numPages := f.NumPage()
-
-	for i := 1; i <= numPages; i++ {
-		page := f.Page(i)
-
-		fmt.Println(page.Content().Text)
-	}
-
 	return ""
+	//f, r, err := pdf.Open(filePath)
+	//// remember close file
+	//defer f.Close()
+	//if err != nil {
+	//	logger.SlogWarn(fmt.Sprintf("GetPdfContent error: %v", err))
+	//	return ""
+	//}
+	//var buf bytes.Buffer
+	//b, err := r.GetPlainText()
+	//if err != nil {
+	//	logger.SlogWarn(fmt.Sprintf("GetPdfContent GetPlainText error: %v", err))
+	//	return ""
+	//}
+	//buf.ReadFrom(b)
+	//
+	//return buf.String()
 }

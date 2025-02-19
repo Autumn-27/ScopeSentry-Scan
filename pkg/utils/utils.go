@@ -23,13 +23,12 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/hbollon/go-edlib"
+	"github.com/ledongthuc/pdf"
 	"github.com/nfnt/resize"
 	"github.com/projectdiscovery/cdncheck"
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/unidoc/unipdf/v3/extractor"
-	"github.com/unidoc/unipdf/v3/model"
 	"gopkg.in/yaml.v3"
 	"image"
 	"image/jpeg"
@@ -1212,48 +1211,21 @@ func (t *UtilTools) Command(name string, arg ...string) *exec.Cmd {
 	return exec.Command(name, arg...)
 }
 
-func (t *UtilTools) GetPdfContent(filepath string) string {
-	f, err := os.Open(filepath)
-	if err != nil {
-		logger.SlogWarn(fmt.Sprintf("GetPdfContent open file errror: %v", err))
-		return ""
-	}
-
+func (t *UtilTools) GetPdfContent(filePath string) string {
+	f, r, err := pdf.Open(filePath)
+	// remember close file
 	defer f.Close()
-
-	pdfReader, err := model.NewPdfReader(f)
 	if err != nil {
-		logger.SlogWarn(fmt.Sprintf("GetPdfContent NewPdfReader errror: %v", err))
+		logger.SlogWarn(fmt.Sprintf("GetPdfContent error: %v", err))
 		return ""
 	}
-
-	numPages, err := pdfReader.GetNumPages()
+	var buf bytes.Buffer
+	b, err := r.GetPlainText()
 	if err != nil {
-		logger.SlogWarn(fmt.Sprintf("GetPdfContent GetNumPages errror: %v", err))
+		logger.SlogWarn(fmt.Sprintf("GetPdfContent GetPlainText error: %v", err))
 		return ""
 	}
-	content := ""
-	for i := 0; i < numPages; i++ {
-		pageNum := i + 1
+	buf.ReadFrom(b)
 
-		page, err := pdfReader.GetPage(pageNum)
-		if err != nil {
-			logger.SlogWarn(fmt.Sprintf("GetPdfContent GetPage errror: %v", err))
-			return ""
-		}
-
-		ex, err := extractor.New(page)
-		if err != nil {
-			logger.SlogWarn(fmt.Sprintf("GetPdfContent extractor.New errror: %v", err))
-			return ""
-		}
-
-		text, err := ex.ExtractText()
-		if err != nil {
-			logger.SlogWarn(fmt.Sprintf("GetPdfContent ExtractText errror: %v", err))
-			return ""
-		}
-		content += text
-	}
-	return content
+	return buf.String()
 }
