@@ -231,8 +231,8 @@ func UpdatePoc(content string) {
 		var ids []string
 		for _, id := range strings.Split(parts[1], ",") {
 			ids = append(ids, id)
-			LoadPoc(ids)
 		}
+		LoadPoc(ids)
 	}
 }
 
