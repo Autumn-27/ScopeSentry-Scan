@@ -105,4 +105,6 @@ func main() {
 	//
 	//}
 	//fmt.Printf("%v", result.Results)
+	utils.InitializeTools()
+	utils.Tools.WafCheck("172.65.235.9")
 }

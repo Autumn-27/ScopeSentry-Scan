@@ -14,6 +14,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strings"
 )
 
 type Plugin struct {
@@ -129,6 +130,34 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if len(domainSkip.IP) == 1 {
 		flag, _ := utils.Tools.CdnCheck(domainSkip.IP[0])
 		domainSkip.Skip = flag
+		if !flag {
+			flagWaf, wafValue := utils.Tools.WafCheck(domainSkip.IP[0])
+			if flagWaf {
+				WafName := make(map[string]bool)
+				WafName["cloudflare"] = true // 初始值
+				parameter := p.GetParameter()
+				if parameter != "" {
+					args, err := utils.Tools.ParseArgs(parameter, "waf")
+					if err != nil {
+					} else {
+						for key, value := range args {
+							if value != "" {
+								switch key {
+								case "waf":
+									wafP := strings.Split(value, ",")
+									for _, w := range wafP {
+										WafName[strings.TrimSpace(w)] = true
+									}
+								}
+							}
+						}
+					}
+				}
+				if WafName[strings.ToLower(wafValue)] {
+					domainSkip.Skip = flagWaf
+				}
+			}
+		}
 	} else {
 		domainSkip.Skip = false
 	}

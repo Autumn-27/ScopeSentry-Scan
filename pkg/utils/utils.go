@@ -856,6 +856,15 @@ func (t *UtilTools) CdnCheck(host string) (bool, string) {
 	}
 }
 
+func (t *UtilTools) WafCheck(ipStr string) (bool, string) {
+	ip := net.ParseIP(ipStr)
+	waf, s, err := t.CdnCheckClient.CheckWAF(ip)
+	if err != nil {
+		return false, ""
+	}
+	return waf, s
+}
+
 // GetDomain 提取URL中的域名
 func (t *UtilTools) GetDomain(rawUrl string) string {
 	// 解析 URL
