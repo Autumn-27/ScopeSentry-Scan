@@ -68,6 +68,10 @@ func (d *DnsTools) QueryOne(hostname string) *retryabledns.DNSData {
 	return rawResp
 }
 
+func (d *DnsTools) QueryMultiple(hostname string) (*retryabledns.DNSData, error) {
+	return d.Clinet.QueryMultiple(hostname)
+}
+
 func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types.SubdomainResult {
 	var recordType string
 	switch {

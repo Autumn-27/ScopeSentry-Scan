@@ -35,17 +35,17 @@ func InitializeResultQueue() {
 	for _, module := range modules {
 		if module == "PageMonitoringUrl" {
 			ResultQueues[module] = &ResultQueue{
-				Queue:   make(chan interface{}, 100),
+				Queue:   make(chan interface{}, 3000),
 				CloseCh: make(chan struct{}),
 			}
 		} else if module == "URLScan" {
 			ResultQueues[module] = &ResultQueue{
-				Queue:   make(chan interface{}, 250),
+				Queue:   make(chan interface{}, 3000),
 				CloseCh: make(chan struct{}),
 			}
 		} else if module == "SensitiveResult" {
 			ResultQueues[module] = &ResultQueue{
-				Queue:   make(chan interface{}, 120),
+				Queue:   make(chan interface{}, 3000),
 				CloseCh: make(chan struct{}),
 			}
 		} else if module == "SensitiveBody" {

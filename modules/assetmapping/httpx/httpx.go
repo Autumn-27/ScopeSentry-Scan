@@ -138,6 +138,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				url = asset.Host + asset.UrlPath
 			}
 			targetList = append(targetList, url)
+
+			logger.SlogInfoLocal(fmt.Sprintf("httpx run target: %v", url))
 		}
 	}
 	parameter := p.GetParameter()

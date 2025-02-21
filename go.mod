@@ -8,8 +8,6 @@ replace git.cs.nctu.edu.tw/calee/sctp => git.cs.nycu.edu.tw/calee/sctp v1.1.0
 
 replace github.com/praetorian-inc/fingerprintx => ./libs/fingerprintx
 
-replace github.com/projectdiscovery/subfinder/v2 => ./libs/subfinder/v2
-
 replace github.com/jaeles-project/gospider => ./libs/gospider
 
 replace github.com/projectdiscovery/nuclei/v3 v3.3.6 => ./libs/nuclei
@@ -38,11 +36,11 @@ require (
 	github.com/projectdiscovery/fdmax v0.0.4 // indirect
 	github.com/projectdiscovery/goconfig v0.0.1 // indirect
 	github.com/projectdiscovery/goflags v0.1.65 // indirect
-	github.com/projectdiscovery/gologger v1.1.33
-	github.com/projectdiscovery/hmap v0.0.68 // indirect
+	github.com/projectdiscovery/gologger v1.1.40
+	github.com/projectdiscovery/hmap v0.0.74 // indirect
 	github.com/projectdiscovery/mapcidr v1.1.34 // indirect
 	github.com/projectdiscovery/rawhttp v0.1.74 // indirect
-	github.com/projectdiscovery/retryablehttp-go v1.0.88 // indirect
+	github.com/projectdiscovery/retryablehttp-go v1.0.95 // indirect
 	github.com/remeh/sizedwaitgroup v1.0.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	go.etcd.io/bbolt v1.3.10 // indirect
@@ -65,20 +63,18 @@ require (
 	github.com/projectdiscovery/httpx v1.6.9
 	github.com/projectdiscovery/katana v1.1.0
 	github.com/projectdiscovery/nuclei/v3 v3.3.6
-	github.com/projectdiscovery/retryabledns v1.0.86
-	github.com/projectdiscovery/subfinder/v2 v2.0.0-00010101000000-000000000000
+	github.com/projectdiscovery/retryabledns v1.0.93
+	github.com/projectdiscovery/subfinder/v2 v2.6.8
 	github.com/projectdiscovery/tlsx v1.1.8
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sergi/go-diff v1.2.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/traefik/yaegi v0.16.1
-	github.com/unidoc/unipdf/v3 v3.66.0
 	github.com/valyala/fasthttp v1.52.0
 	go.mongodb.org/mongo-driver v1.17.0
 	go.uber.org/zap v1.25.0
 	gopkg.in/yaml.v3 v3.0.1
-	rsc.io/pdf v0.1.1
 )
 
 require (
@@ -157,7 +153,6 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/corona10/goimagehash v1.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/davidmz/go-pageant v1.0.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
@@ -284,13 +279,12 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/projectdiscovery/asnmap v1.1.1 // indirect
 	github.com/projectdiscovery/blackrock v0.0.1 // indirect
-	github.com/projectdiscovery/chaos-client v0.5.1 // indirect
+	github.com/projectdiscovery/chaos-client v0.5.2 // indirect
 	github.com/projectdiscovery/dsl v0.3.3 // indirect
-	github.com/projectdiscovery/fastdialer v0.2.10 // indirect
+	github.com/projectdiscovery/fastdialer v0.2.14 // indirect
 	github.com/projectdiscovery/fasttemplate v0.0.2 // indirect
 	github.com/projectdiscovery/freeport v0.0.7 // indirect
 	github.com/projectdiscovery/go-smb2 v0.0.0-20240129202741-052cc450c6cb // indirect
@@ -301,12 +295,12 @@ require (
 	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 // indirect
 	github.com/projectdiscovery/n3iwf v0.0.0-20230523120440-b8cd232ff1f5 // indirect
 	github.com/projectdiscovery/networkpolicy v0.0.9 // indirect
-	github.com/projectdiscovery/ratelimit v0.0.61 // indirect
+	github.com/projectdiscovery/ratelimit v0.0.68 // indirect
 	github.com/projectdiscovery/rdap v0.9.1-0.20221108103045-9865884d1917 // indirect
 	github.com/projectdiscovery/sarif v0.0.1 // indirect
 	github.com/projectdiscovery/uncover v1.0.9 // indirect
 	github.com/projectdiscovery/useragent v0.0.78 // indirect
-	github.com/projectdiscovery/utils v0.2.21 // indirect
+	github.com/projectdiscovery/utils v0.4.6 // indirect
 	github.com/projectdiscovery/yamldoc-go v1.0.4 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -326,7 +320,6 @@ require (
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/tidwall/buntdb v1.3.1 // indirect
@@ -344,10 +337,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
-	github.com/unidoc/freetype v0.2.3 // indirect
-	github.com/unidoc/pkcs7 v0.2.0 // indirect
-	github.com/unidoc/timestamp v0.0.0-20200412005513-91597fd3793a // indirect
-	github.com/unidoc/unitype v0.4.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/weppos/publicsuffix-go v0.30.2 // indirect
@@ -377,14 +366,12 @@ require (
 	goftp.io/server/v2 v2.0.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-	golang.org/x/image v0.21.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
-	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/corvus-ch/zbase32.v1 v1.0.0 // indirect

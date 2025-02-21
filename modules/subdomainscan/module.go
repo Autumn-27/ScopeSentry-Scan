@@ -41,7 +41,7 @@ func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{}, 100)
+	resultChan := make(chan interface{}, 5000)
 	go func() {
 		err := r.NextModule.ModuleRun()
 		if err != nil {
@@ -85,11 +85,15 @@ func (r *Runner) ModuleRun() error {
 						continue
 					}
 				} else {
+					fmt.Printf("get result begin:%v\n", result)
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，或者是没有开启此模块的扫描，直接发送到下个模块
 					target, ok := result.(string)
 					if !ok {
 						r.NextModule.GetInput() <- result
 					} else {
+						var subStart time.Time
+						var subEnd time.Time
+						subStart = time.Now()
 						// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
 						flag := results.Duplicate.SubdomainInTask(r.Option.ID, target, r.Option.IsRestart)
 						if flag {
@@ -109,8 +113,10 @@ func (r *Runner) ModuleRun() error {
 								r.NextModule.GetInput() <- tmp
 							}
 						}
+						subEnd = time.Now()
+						duration := subEnd.Sub(subStart)
+						fmt.Printf("subdomain result %v time: %v\n", target, duration)
 					}
-
 				}
 			}
 		}
@@ -138,6 +144,12 @@ func (r *Runner) ModuleRun() error {
 				time.Sleep(3 * time.Second)
 				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: input开始关闭", r.GetName()))
 				allPluginWg.Wait()
+				if !doneCalled {
+					close(resultChan)
+					resultWg.Wait()
+					r.Option.ModuleRunWg.Done()
+					doneCalled = true // 标记已调用 Done
+				}
 				// 通道已关闭，结束处理
 				if firstData {
 					end = time.Now()
@@ -145,12 +157,6 @@ func (r *Runner) ModuleRun() error {
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
 				}
 				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
-				if !doneCalled {
-					close(resultChan)
-					resultWg.Wait()
-					r.Option.ModuleRunWg.Done()
-					doneCalled = true // 标记已调用 Done
-				}
 				return nil
 			}
 			//_, ok = data.(string)

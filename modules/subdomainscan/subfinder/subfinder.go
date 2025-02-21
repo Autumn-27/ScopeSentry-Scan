@@ -149,6 +149,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
+	subdomainResult := make(chan string, 100)
+	subResult := []string{}
 
 	rawCount := 1
 	// 将原始域名增加到子域名列表
@@ -160,7 +162,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		// and other system related options
 		ResultCallback: func(s *resolve.HostEntry) {
 			rawCount += 1
-			p.Result <- s.Host
+			logger.SlogInfoLocal(fmt.Sprintf("subfinder target %v found subdomain: %v", target, s.Host))
+			subdomainResult <- s.Host
+			subResult = append(subResult, s.Host)
+			//go func() {
+			//	p.Result <- tmp
+			//}()
 		},
 		Domain: []string{target},
 		Output: &bytes.Buffer{},
@@ -177,6 +184,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
 		return nil, err
 	}
+
 	//subdomainVerificationResult := make(chan string, 100)
 	//go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	//
