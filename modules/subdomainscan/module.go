@@ -156,7 +156,7 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
 				}
-				logger.SlogDebugLocal(fmt.Sprintf("%v关闭: 结果处理完毕", r.GetName()))
+				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				return nil
 			}
 			//_, ok = data.(string)

@@ -108,6 +108,7 @@ func (r *Runner) ModuleRun() error {
 					r.Option.ModuleRunWg.Done()
 					doneCalled = true // 标记已调用 Done
 				}
+				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				return nil
 			}
 			_, ok = data.(types.DomainSkip)

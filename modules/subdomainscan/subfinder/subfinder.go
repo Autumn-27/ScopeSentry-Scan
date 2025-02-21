@@ -21,6 +21,7 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
+	"sync"
 )
 
 type Plugin struct {
@@ -149,7 +150,24 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
+	var resultWg sync.WaitGroup
 	subdomainResult := make(chan string, 100)
+	readResult := func() {
+		defer resultWg.Done()
+		for h := range subdomainResult {
+			resultDns := utils.DNS.QueryOne(h)
+			resultDns.Host = h
+			tmp := utils.DNS.DNSdataToSubdomainResult(resultDns)
+			p.Result <- tmp
+		}
+
+	}
+	go func() {
+		for i := 0; i < 100; i++ {
+			resultWg.Add(1)
+			go readResult()
+		}
+	}()
 	subResult := []string{}
 
 	rawCount := 1
@@ -184,7 +202,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogError(fmt.Sprintf("%v error: %v", p.GetName(), err))
 		return nil, err
 	}
-
+	close(subdomainResult)
+	resultWg.Wait()
 	//subdomainVerificationResult := make(chan string, 100)
 	//go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 1*time.Hour, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()))
 	//

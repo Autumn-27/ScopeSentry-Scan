@@ -105,13 +105,13 @@ func (r *Runner) ModuleRun() error {
 					duration := end.Sub(start)
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.URLScan), duration)
 				}
-				logger.SlogDebugLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				if !doneCalled {
 					close(resultChan)
 					resultWg.Wait()
 					r.Option.ModuleRunWg.Done()
 					doneCalled = true // 标记已调用 Done
 				}
+				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				return nil
 			}
 			// 将原始数据发送到下个模块，这里的输入为 types.AssetOther 、 types.AssetHttp

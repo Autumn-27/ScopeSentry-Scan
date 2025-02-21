@@ -116,6 +116,7 @@ func (r *Runner) ModuleRun() error {
 					r.Option.ModuleRunWg.Done()
 					doneCalled = true // 标记已调用 Done
 				}
+				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
 				return nil
 			}
 			// 该模块接收的数据为[]string、types.UrlResult、types.AssetOther 、 types.AssetHttp

@@ -294,11 +294,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogDebugLocal(fmt.Sprintf("%v PortScan error: %v", domainSkip.Domain, r))
 	}
 	if err := scanner.Err(); err != nil {
-		logger.SlogErrorLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domainSkip.Domain, err))
+		logger.SlogWarnLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domainSkip.Domain, err))
+		return nil, nil
 	}
 	scanner = bufio.NewScanner(stderr)
 	for scanner.Scan() {
-		logger.SlogErrorLocal(fmt.Sprintf("RustScan stderr: %v", scanner.Text()))
+		logger.SlogWarnLocal(fmt.Sprintf("RustScan stderr: %v", scanner.Text()))
+		return nil, nil
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {

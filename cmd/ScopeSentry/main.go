@@ -148,6 +148,7 @@ func Banner() {
 func pprof() {
 	if global.AppConfig.Debug {
 		go func() {
+			runtime.SetBlockProfileRate(1)
 			_ = http.ListenAndServe("0.0.0.0:6060", nil)
 		}()
 		//go DebugMem()

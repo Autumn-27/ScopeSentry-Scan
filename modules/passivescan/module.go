@@ -137,7 +137,7 @@ func SetPassiveScanChan(op *options.TaskOptions) {
 	if _, exists := TaskPassiveScanGlobal[op.ID]; !exists {
 		logger.SlogInfo(fmt.Sprintf("passive scan begin: %v", op.ID))
 		// 如果不存在，则创建一个新的 chan 并添加到字典
-		vulnerabilityInputChan := make(chan interface{}, 100)
+		vulnerabilityInputChan := make(chan interface{}, 5000)
 		TaskPassiveScanGlobal[op.ID] = vulnerabilityInputChan
 		passivescanModule := NewRunner(op, nil)
 		passivescanModule.SetInput(vulnerabilityInputChan)
