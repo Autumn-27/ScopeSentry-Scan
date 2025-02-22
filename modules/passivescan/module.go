@@ -35,78 +35,72 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	defer PassiveScanWgMap[r.Option.ID].Done()
 
-	if len(r.Option.PassiveScan) != 0 {
-		var start time.Time
-		var end time.Time
-		var wg sync.WaitGroup
-		handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan))
-		start = time.Now()
-		// 调用插件
-		for _, pluginId := range r.Option.PassiveScan {
-			plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
-			if flag {
-				logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetName()))
-				go func() {
-					wg.Add(1)
-					defer wg.Done()
-					plg.SetTaskId(r.Option.ID)
-					plg.SetTaskName(r.Option.TaskName)
-					_, err := plg.Execute("")
-					if err != nil {
-
-					}
-				}()
-			} else {
-				logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
-			}
-		}
-		closePlgFunc := func() {
-			for _, pluginId := range r.Option.PassiveScan {
-				plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
+	var start time.Time
+	var end time.Time
+	var wg sync.WaitGroup
+	handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan))
+	start = time.Now()
+	// 调用插件
+	for _, pluginId := range r.Option.PassiveScan {
+		plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
+		if flag {
+			logger.SlogDebugLocal(fmt.Sprintf("%v plugin start execute", plg.GetName()))
+			go func() {
+				wg.Add(1)
+				defer wg.Done()
 				plg.SetTaskId(r.Option.ID)
 				plg.SetTaskName(r.Option.TaskName)
+				_, err := plg.Execute("")
+				if err != nil {
+
+				}
+			}()
+		} else {
+			logger.SlogError(fmt.Sprintf("plugin %v not found", pluginId))
+		}
+	}
+	closePlgFunc := func() {
+		for _, pluginId := range r.Option.PassiveScan {
+			plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
+			plg.SetTaskId(r.Option.ID)
+			plg.SetTaskName(r.Option.TaskName)
+			if flag {
+				logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
+				go func() {
+					plg.SetCustom("close task")
+				}()
+			}
+		}
+		wg.Wait()
+		end = time.Now()
+		duration := end.Sub(start)
+		handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan), duration)
+	}
+	for {
+		select {
+		case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+			closePlgFunc()
+			return nil
+		case data, ok := <-r.Input:
+			if !ok {
+				time.Sleep(3 * time.Second)
+				closePlgFunc()
+				return nil
+			}
+			// 获取到输入数据 通过SetCustom发送到插件中，这里为了兼容之前的，使用SetCustom传递数据，不增加新的函数
+			for _, pluginId := range r.Option.PassiveScan {
+				plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
 				if flag {
-					logger.SlogInfo(fmt.Sprintf("task %v close %v module %v plugin", r.Option.ID, r.GetName(), plg.GetName()))
+					plg.SetTaskId(r.Option.ID)
+					plg.SetTaskName(r.Option.TaskName)
 					go func() {
-						plg.SetCustom("close task")
+						plg.SetCustom(data)
 					}()
 				}
 			}
-			wg.Wait()
-			end = time.Now()
-			duration := end.Sub(start)
-			handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PassiveScan), duration)
+
 		}
-
-		for {
-			select {
-			case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
-				closePlgFunc()
-				return nil
-			case data, ok := <-r.Input:
-				if !ok {
-					time.Sleep(3 * time.Second)
-					closePlgFunc()
-					return nil
-				}
-
-				// 获取到输入数据 通过SetCustom发送到插件中，这里为了兼容之前的，使用SetCustom传递数据，不增加新的函数
-				for _, pluginId := range r.Option.PassiveScan {
-					plg, flag := plugins.GlobalPluginManager.GetPlugin(r.GetName(), pluginId)
-					if flag {
-						plg.SetTaskId(r.Option.ID)
-						plg.SetTaskName(r.Option.TaskName)
-						go func() {
-							plg.SetCustom(data)
-						}()
-					}
-				}
-
-			}
-		}
-
 	}
-	return nil
 }
 
 func (r *Runner) SetInput(ch chan interface{}) {
@@ -137,7 +131,7 @@ func SetPassiveScanChan(op *options.TaskOptions) {
 	if _, exists := TaskPassiveScanGlobal[op.ID]; !exists {
 		logger.SlogInfo(fmt.Sprintf("passive scan begin: %v", op.ID))
 		// 如果不存在，则创建一个新的 chan 并添加到字典
-		vulnerabilityInputChan := make(chan interface{}, 5000)
+		vulnerabilityInputChan := make(chan interface{}, 2000)
 		TaskPassiveScanGlobal[op.ID] = vulnerabilityInputChan
 		passivescanModule := NewRunner(op, nil)
 		passivescanModule.SetInput(vulnerabilityInputChan)

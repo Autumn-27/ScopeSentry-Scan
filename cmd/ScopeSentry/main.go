@@ -185,3 +185,35 @@ func printMemStats(interval time.Duration) {
 		}
 	}
 }
+
+func goPringStack() {
+	// 启动一个定时器，每隔 5 秒打印一次堆栈信息
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	// 启动一个 Goroutine 模拟程序持续运行
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			// 模拟一些工作
+		}
+	}()
+
+	// 主 goroutine 持续打印堆栈
+	for {
+		select {
+		case <-ticker.C:
+			printStack()
+		}
+	}
+}
+
+func printStack() {
+	// 获取堆栈信息
+	buf := make([]byte, 4096)
+	n := runtime.Stack(buf, true)
+	// 格式化输出
+	fmt.Printf("========== Stack Trace (Length: %d) ==========\n", n)
+	fmt.Printf("%s\n", buf)
+	fmt.Printf("===========================================\n")
+}

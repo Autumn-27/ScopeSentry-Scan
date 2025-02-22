@@ -39,9 +39,12 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
+	var nextModuleRun sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{}, 5000)
+	resultChan := make(chan interface{}, 2000)
 	go func() {
+		nextModuleRun.Add(1)
+		defer nextModuleRun.Done()
 		err := r.NextModule.ModuleRun()
 		if err != nil {
 			logger.SlogError(fmt.Sprintf("Next module run error: %v", err))
@@ -51,25 +54,16 @@ func (r *Runner) ModuleRun() error {
 	resultWg.Add(1)
 	go func() {
 		defer resultWg.Done()
-		for {
-			select {
-			case result, ok := <-resultChan:
-				if !ok {
-					// 如果 resultChan 关闭了，退出循环
-					// 此模块运行完毕，关闭下个模块的输入
-					r.NextModule.CloseInput()
-					return
+		defer r.NextModule.CloseInput()
+		for result := range resultChan { // 自动处理通道关闭
+			if portaliveResult, ok := result.(types.PortAlive); ok {
+				port := portaliveResult.Port
+				if port == "" {
+					port = "null"
 				}
-				if portaliveResult, ok := result.(types.PortAlive); ok {
-					port := portaliveResult.Port
-					if port == "" {
-						port = "null"
-					}
-					flag := results.Duplicate.PortIntask(r.Option.ID, portaliveResult.Host, port, r.Option.IsRestart)
-					if flag {
-						// 本地缓存中不存在
-						r.NextModule.GetInput() <- result
-					}
+				flag := results.Duplicate.PortIntask(r.Option.ID, portaliveResult.Host, port, r.Option.IsRestart)
+				if flag {
+					r.NextModule.GetInput() <- result
 				}
 			}
 		}
@@ -91,6 +85,7 @@ func (r *Runner) ModuleRun() error {
 				r.Option.ModuleRunWg.Done()
 				doneCalled = true // 标记已调用 Done
 			}
+			nextModuleRun.Wait()
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -109,6 +104,7 @@ func (r *Runner) ModuleRun() error {
 					doneCalled = true // 标记已调用 Done
 				}
 				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
+				nextModuleRun.Wait()
 				return nil
 			}
 			_, ok = data.(types.DomainSkip)

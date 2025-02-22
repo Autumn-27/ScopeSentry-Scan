@@ -32,84 +32,84 @@ func CreateScanProcess(op *options.TaskOptions) interfaces.ModuleRunner {
 	// 漏洞扫描模块
 	op.ModuleRunWg.Add(1)
 	vulnerabilityModule := vulnerabilityscan.NewRunner(op, nil)
-	vulnerabilityInputChan := make(chan interface{}, 5000)
+	vulnerabilityInputChan := make(chan interface{}, 2000)
 	vulnerabilityModule.SetInput(vulnerabilityInputChan)
 	op.InputChan["Vulnerability"] = vulnerabilityInputChan
 
 	// 目录扫描模块
 	op.ModuleRunWg.Add(1)
 	dirScanModule := dirscan.NewRunner(op, vulnerabilityModule)
-	dirScanInputChan := make(chan interface{}, 5000)
+	dirScanInputChan := make(chan interface{}, 2000)
 	dirScanModule.SetInput(dirScanInputChan)
 	op.InputChan["DirScan"] = dirScanInputChan
 
 	// url安全模块
 	op.ModuleRunWg.Add(1)
 	urlSecurityModule := urlsecurity.NewRunner(op, dirScanModule)
-	urlSecurityInputChan := make(chan interface{}, 5000)
+	urlSecurityInputChan := make(chan interface{}, 2000)
 	urlSecurityModule.SetInput(urlSecurityInputChan)
 	op.InputChan["UrlSecurity"] = urlSecurityInputChan
 
 	// 爬虫模块
 	op.ModuleRunWg.Add(1)
 	webCrawlerModule := webcrawler.NewRunner(op, urlSecurityModule)
-	WebCrawlerInputChan := make(chan interface{}, 5000)
+	WebCrawlerInputChan := make(chan interface{}, 2000)
 	webCrawlerModule.SetInput(WebCrawlerInputChan)
 	op.InputChan["WebCrawler"] = WebCrawlerInputChan
 
 	// url扫描模块
 	op.ModuleRunWg.Add(1)
 	urlScanModule := urlscan.NewRunner(op, webCrawlerModule)
-	urlScanInputChan := make(chan interface{}, 5000)
+	urlScanInputChan := make(chan interface{}, 2000)
 	urlScanModule.SetInput(urlScanInputChan)
 	op.InputChan["UrlScan"] = urlScanInputChan
 
 	// 资产处理模块
 	op.ModuleRunWg.Add(1)
 	assetHandleModule := assethandle.NewRunner(op, urlScanModule)
-	assetHandleInputChan := make(chan interface{}, 5000)
+	assetHandleInputChan := make(chan interface{}, 2000)
 	assetHandleModule.SetInput(assetHandleInputChan)
 	op.InputChan["AssetHandle"] = assetHandleInputChan
 
 	// 资产测绘模块
 	op.ModuleRunWg.Add(1)
 	assetMappingModule := assetmapping.NewRunner(op, assetHandleModule)
-	assetMappingInputChan := make(chan interface{}, 5000)
+	assetMappingInputChan := make(chan interface{}, 2000)
 	assetMappingModule.SetInput(assetMappingInputChan)
 	op.InputChan["AssetMapping"] = assetMappingInputChan
 
 	// 端口指纹识别模块
 	op.ModuleRunWg.Add(1)
 	portFingerprintModule := portfingerprint.NewRunner(op, assetMappingModule)
-	portFingerprintInputChan := make(chan interface{}, 5000)
+	portFingerprintInputChan := make(chan interface{}, 2000)
 	portFingerprintModule.SetInput(portFingerprintInputChan)
 	op.InputChan["PortFingerprint"] = portFingerprintInputChan
 
 	// 端口扫描模块
 	op.ModuleRunWg.Add(1)
 	portScanModule := portscan.NewRunner(op, portFingerprintModule)
-	portScanInputChan := make(chan interface{}, 5000)
+	portScanInputChan := make(chan interface{}, 2000)
 	portScanModule.SetInput(portScanInputChan)
 	op.InputChan["PortScan"] = portScanInputChan
 
 	// 端口扫描预处理模块
 	op.ModuleRunWg.Add(1)
 	portScanPreparationModule := portscanpreparation.NewRunner(op, portScanModule)
-	portScanPreparationInputChan := make(chan interface{}, 5000)
+	portScanPreparationInputChan := make(chan interface{}, 2000)
 	portScanPreparationModule.SetInput(portScanPreparationInputChan)
 	op.InputChan["PortScanPreparation"] = portScanPreparationInputChan
 
 	// 子域名安全模块
 	op.ModuleRunWg.Add(1)
 	subdomainSecurityModule := subdomainsecurity.NewRunner(op, portScanPreparationModule)
-	subdomainSecurityInputChan := make(chan interface{}, 5000)
+	subdomainSecurityInputChan := make(chan interface{}, 2000)
 	subdomainSecurityModule.SetInput(subdomainSecurityInputChan)
 	op.InputChan["SubdomainSecurity"] = subdomainSecurityInputChan
 
 	// 子域名扫描模块
 	op.ModuleRunWg.Add(1)
 	subdomainScanModule := subdomainscan.NewRunner(op, subdomainSecurityModule)
-	subdomainScanInputChan := make(chan interface{}, 5000)
+	subdomainScanInputChan := make(chan interface{}, 2000)
 	subdomainScanModule.SetInput(subdomainScanInputChan)
 	op.InputChan["SubdomainScan"] = subdomainScanInputChan
 

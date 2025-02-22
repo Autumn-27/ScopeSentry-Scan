@@ -40,9 +40,12 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
+	var nextModuleRun sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{}, 5000)
+	resultChan := make(chan interface{}, 2000)
 	go func() {
+		nextModuleRun.Add(1)
+		defer nextModuleRun.Done()
 		err := r.NextModule.ModuleRun()
 		if err != nil {
 			logger.SlogError(fmt.Sprintf("Next module run error: %v", err))
@@ -85,7 +88,7 @@ func (r *Runner) ModuleRun() error {
 						continue
 					}
 				} else {
-					fmt.Printf("get result begin:%v\n", result)
+					//fmt.Printf("get result begin:%v\n", result)
 					// 如果发来的不是types.SubdomainResult，说明是上个模块的输出直接过来的，或者是没有开启此模块的扫描，直接发送到下个模块
 					target, ok := result.(string)
 					if !ok {
@@ -138,6 +141,7 @@ func (r *Runner) ModuleRun() error {
 				r.Option.ModuleRunWg.Done()
 				doneCalled = true // 标记已调用 Done
 			}
+			nextModuleRun.Wait()
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -157,6 +161,7 @@ func (r *Runner) ModuleRun() error {
 					handler.TaskHandle.ProgressEnd(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.SubdomainScan), duration)
 				}
 				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
+				nextModuleRun.Wait()
 				return nil
 			}
 			//_, ok = data.(string)

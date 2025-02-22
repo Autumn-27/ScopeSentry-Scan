@@ -41,9 +41,12 @@ func NewRunner(op *options.TaskOptions, nextModule interfaces.ModuleRunner) *Run
 func (r *Runner) ModuleRun() error {
 	var allPluginWg sync.WaitGroup
 	var resultWg sync.WaitGroup
+	var nextModuleRun sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{}, 5000)
+	resultChan := make(chan interface{}, 2000)
 	go func() {
+		nextModuleRun.Add(1)
+		defer nextModuleRun.Done()
 		err := r.NextModule.ModuleRun()
 		if err != nil {
 			logger.SlogError(fmt.Sprintf("Next module run error: %v", err))
@@ -94,6 +97,7 @@ func (r *Runner) ModuleRun() error {
 				r.Option.ModuleRunWg.Done()
 				doneCalled = true // 标记已调用 Done
 			}
+			nextModuleRun.Wait()
 			return nil
 		case data, ok := <-r.Input:
 			if !ok {
@@ -112,6 +116,7 @@ func (r *Runner) ModuleRun() error {
 					doneCalled = true // 标记已调用 Done
 				}
 				logger.SlogInfoLocal(fmt.Sprintf("module %v target %v close resultChan", r.GetName(), r.Option.Target))
+				nextModuleRun.Wait()
 				return nil
 			}
 			// 将原始数据发送到下个模块，这里的输入为 types.AssetOther 、 types.AssetHttp

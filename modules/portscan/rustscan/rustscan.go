@@ -25,6 +25,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -192,8 +193,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	// 如果没有找到端口 默认扫描top1000
 	executionTimeout := 60
 	PortRange := ""
+	maxPort := 200
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port", "et")
+		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port", "et", "maxport")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -211,6 +213,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						}
 					case "et":
 						executionTimeout, _ = strconv.Atoi(value)
+					case "maxport":
+						maxPort, _ = strconv.Atoi(value)
 					default:
 						continue
 					}
@@ -234,19 +238,17 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 
 	cmd := exec.CommandContext(ctx, rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
+	defer stdout.Close()
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("RustScan StdoutPipe error： %v", err))
-		return nil, err
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		logger.SlogWarnLocal(fmt.Sprintf("RustScan StderrPipe error: %v", err))
 		return nil, err
 	}
 	if err := cmd.Start(); err != nil {
 		logger.SlogWarnLocal(fmt.Sprintf("RustScan cmd.Start error： %v", err))
 		return nil, err
 	}
+	var wg sync.WaitGroup
+	portFlag := 0
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		r := scanner.Text()
@@ -264,6 +266,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			continue
 		}
 		if strings.Contains(r, "Open") {
+			portFlag += 1
+			if portFlag > maxPort {
+				p.Log(fmt.Sprintf("target %v open port number > max port: %v", domainSkip.Domain, portFlag), "w")
+				cancel()
+				return nil, nil
+			}
 			// 端口开放
 			openIpPort := strings.SplitN(r, " ", 2)
 			// 检查是否是IPv6地址
@@ -295,17 +303,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	if err := scanner.Err(); err != nil {
 		logger.SlogWarnLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domainSkip.Domain, err))
-		return nil, nil
-	}
-	scanner = bufio.NewScanner(stderr)
-	for scanner.Scan() {
-		logger.SlogWarnLocal(fmt.Sprintf("RustScan stderr: %v", scanner.Text()))
+		wg.Wait()
 		return nil, nil
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
 		logger.SlogDebugLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domainSkip.Domain, err))
 	}
+	wg.Wait()
 	return nil, nil
 }
 
