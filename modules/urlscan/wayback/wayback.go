@@ -133,6 +133,25 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	var wg sync.WaitGroup
 	filename := utils.Tools.CalculateMD5(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
+	proxy := ""
+	parameter := p.GetParameter()
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "proxy")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				if value != "" {
+					switch key {
+					case "proxy":
+						proxy = value
+					default:
+						continue
+					}
+				}
+
+			}
+		}
+	}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -164,7 +183,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				r.Source = result.Source
 				r.Output = result.URL
 				r.OutputType = ""
-				response, err := utils.Requests.HttpGet(result.URL)
+				var response types.HttpResponse
+				if proxy != "" {
+					response, err = utils.ProxyRequests.HttpGetProxy(result.URL, proxy)
+				} else {
+					response, err = utils.Requests.HttpGet(result.URL)
+				}
 				if err != nil {
 					r.Status = 0
 					r.Length = 0

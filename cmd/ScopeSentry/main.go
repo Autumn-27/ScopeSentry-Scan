@@ -68,6 +68,7 @@ func main() {
 	utils.InitializeDnsTools()
 	utils.InitializeRequests()
 	utils.InitializeResults()
+	utils.InitializeProxyRequestsPool()
 	// 初始化通知模块
 	notification.InitializeNotification()
 	// 初始化协程池
