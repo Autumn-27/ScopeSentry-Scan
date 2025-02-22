@@ -148,7 +148,7 @@ func (p *Plugin) Install() error {
 	}
 	KatanaExecPath := filepath.Join(katanaPath, p.KatanaFileName)
 	if _, err := os.Stat(KatanaExecPath); os.IsNotExist(err) {
-		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/refs/heads/1.5-restructure/tools", p.KatanaDir, p.KatanaFileName), KatanaExecPath)
+		_, err := utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://raw.githubusercontent.com/Autumn-27/ScopeSentry-Scan/main/tools", p.KatanaDir, p.KatanaFileName), KatanaExecPath)
 		if err != nil {
 			_, err = utils.Tools.HttpGetDownloadFile(fmt.Sprintf("%v/%v/%v", "https://gitee.com/constL/ScopeSentry-Scan/raw/main/tools", p.KatanaDir, p.KatanaFileName), KatanaExecPath)
 			if err != nil {
@@ -190,8 +190,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	timeout := "5"
 	maxDepth := "5"
 	executionTimeout := 60
+	proxy := ""
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et")
+		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -205,6 +206,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						maxDepth = value
 					case "et":
 						executionTimeout, _ = strconv.Atoi(value)
+					case "proxy":
+						proxy = value
 
 					default:
 						continue
@@ -227,6 +230,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-c", threads,
 		"-p", "10",
 		"-o", resultFile,
+	}
+	if proxy != "" {
+		args = append(args, "-proxy")
+		args = append(args, proxy)
 	}
 	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())

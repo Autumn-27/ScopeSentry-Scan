@@ -94,9 +94,6 @@ func (r *Runner) ModuleRun() error {
 					if !ok {
 						r.NextModule.GetInput() <- result
 					} else {
-						var subStart time.Time
-						var subEnd time.Time
-						subStart = time.Now()
 						// 判断该目标是否在当前任务此节点或者其他节点已经扫描过了
 						flag := results.Duplicate.SubdomainInTask(r.Option.ID, target, r.Option.IsRestart)
 						if flag {
@@ -116,9 +113,6 @@ func (r *Runner) ModuleRun() error {
 								r.NextModule.GetInput() <- tmp
 							}
 						}
-						subEnd = time.Now()
-						duration := subEnd.Sub(subStart)
-						fmt.Printf("subdomain result %v time: %v\n", target, duration)
 					}
 				}
 			}

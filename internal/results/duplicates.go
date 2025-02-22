@@ -168,7 +168,6 @@ func (d *duplicate) URLParams(rawUrl string) string {
 			dupKey = utils.Tools.CalculateMD5(paramskey)
 		}
 	}
-	fmt.Println(dupKey)
 	return dupKey
 }
 

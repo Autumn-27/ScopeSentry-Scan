@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/handler"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"os"
 	"time"
 )
 
@@ -85,7 +86,8 @@ func RefreshConfig() {
 					Uninstall(jsonData.Content)
 				case "UpdateSystem":
 					SystemUpdate(jsonData.Content)
-
+				case "restart":
+					os.Exit(0)
 				}
 			}
 		}

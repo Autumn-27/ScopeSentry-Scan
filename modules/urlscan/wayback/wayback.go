@@ -153,10 +153,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				// 没有重复
 				var r types.UrlResult
 				parsedURL, err := url.Parse(result.URL)
+				urlPath := ""
 				if err != nil {
-					parsedURL.Path = result.URL
+					urlPath = result.URL
+				} else {
+					urlPath = parsedURL.Path
 				}
-				r.Ext = path.Ext(parsedURL.Path)
+				r.Ext = path.Ext(urlPath)
 				r.Input = data.URL
 				r.Source = result.Source
 				r.Output = result.URL
