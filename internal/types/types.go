@@ -8,6 +8,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -179,12 +180,13 @@ type DirResult struct {
 }
 
 type SensitiveRule struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	State   bool     `json:"enabled"`
-	Regular string   `json:"pattern"`
-	Color   string   `bson:"color"`
-	Tags    []string `bson:"tags"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	State       bool     `json:"enabled"`
+	Regular     string   `json:"pattern"`
+	Color       string   `bson:"color"`
+	Tags        []string `bson:"tags"`
+	RuleCompile *regexp2.Regexp
 }
 
 type SensitiveResult struct {

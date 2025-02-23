@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"github.com/dlclark/regexp2"
 	goRedis "github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -157,6 +158,12 @@ func UpdateSensitive() {
 		r.State = rule.State
 		r.Color = rule.Color
 		r.Name = rule.Name
+		RuleCompile, err := regexp2.Compile(rule.Regular, 0)
+		if err != nil {
+			logger.SlogWarnLocal(fmt.Sprintf("Error compiling sensitive regex pattern: %v - %s - %v", err, rule.ID, rule.Regular))
+			RuleCompile = nil
+		}
+		r.RuleCompile = RuleCompile
 		global.SensitiveRules = append(global.SensitiveRules, r)
 	}
 	logger.SlogInfoLocal("sens rule load end")

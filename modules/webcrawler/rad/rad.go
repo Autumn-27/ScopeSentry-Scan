@@ -218,7 +218,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						continue
 					}
 				}
-
 			}
 		}
 	}

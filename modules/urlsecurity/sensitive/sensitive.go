@@ -182,12 +182,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				return nil, nil
 			default:
 				if rule.State {
-					r, err := regexp2.Compile(rule.Regular, 0)
-					if err != nil {
-						p.Log(fmt.Sprintf("Error compiling sensitive regex pattern: %s - %s - %v", err, rule.ID, rule.Regular), "e")
+					if rule.RuleCompile == nil {
+						p.Log(fmt.Sprintf("Error compiling sensitive regex pattern:- %s - %v", rule.ID, rule.Regular), "e")
 						continue
 					}
-					result, err := processInChunks(r, data.Body, chunkSize, overlapSize)
+					result, err := processInChunks(rule.RuleCompile, data.Body, chunkSize, overlapSize)
 					if err != nil {
 						p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
 					}
