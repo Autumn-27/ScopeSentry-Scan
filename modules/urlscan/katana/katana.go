@@ -265,9 +265,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			urlNumber += 1
 			var r types.UrlResult
 			parsedURL, err := url.Parse(katanaResult.Request.URL)
+			urlPath := ""
 			if err != nil {
-				parsedURL.Path = katanaResult.Request.URL
+				urlPath = katanaResult.Request.URL
+			} else {
+				urlPath = parsedURL.Path
 			}
+			r.Ext = path.Ext(urlPath)
 			r.Ext = path.Ext(parsedURL.Path)
 			r.Input = data.URL
 			r.Source = katanaResult.Request.Source
