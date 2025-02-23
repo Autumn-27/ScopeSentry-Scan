@@ -10,22 +10,28 @@ import (
 func init() {
 	Symbols["github.com/Autumn-27/ScopeSentry-Scan/pkg/utils/utils"] = map[string]reflect.Value{
 		// function, constant and variable definitions
-		"DNS":                reflect.ValueOf(&utils.DNS).Elem(),
-		"DefaultResolvers":   reflect.ValueOf(&utils.DefaultResolvers).Elem(),
-		"HttpClient":         reflect.ValueOf(&utils.HttpClient).Elem(),
-		"InitializeDnsTools": reflect.ValueOf(utils.InitializeDnsTools),
-		"InitializeRequests": reflect.ValueOf(utils.InitializeRequests),
-		"InitializeResults":  reflect.ValueOf(utils.InitializeResults),
-		"InitializeTools":    reflect.ValueOf(utils.InitializeTools),
-		"Requests":           reflect.ValueOf(&utils.Requests).Elem(),
-		"Results":            reflect.ValueOf(&utils.Results).Elem(),
-		"SizeThreshold":      reflect.ValueOf(&utils.SizeThreshold).Elem(),
-		"Tools":              reflect.ValueOf(&utils.Tools).Elem(),
-		"Wappalyzer":         reflect.ValueOf(&utils.Wappalyzer).Elem(),
+		"CreateClientWithProxy":       reflect.ValueOf(utils.CreateClientWithProxy),
+		"DNS":                         reflect.ValueOf(&utils.DNS).Elem(),
+		"DefaultResolvers":            reflect.ValueOf(&utils.DefaultResolvers).Elem(),
+		"GetProxyClient":              reflect.ValueOf(utils.GetProxyClient),
+		"HttpClient":                  reflect.ValueOf(&utils.HttpClient).Elem(),
+		"InitializeDnsTools":          reflect.ValueOf(utils.InitializeDnsTools),
+		"InitializeProxyRequestsPool": reflect.ValueOf(utils.InitializeProxyRequestsPool),
+		"InitializeRequests":          reflect.ValueOf(utils.InitializeRequests),
+		"InitializeResults":           reflect.ValueOf(utils.InitializeResults),
+		"InitializeTools":             reflect.ValueOf(utils.InitializeTools),
+		"ProxyRequests":               reflect.ValueOf(&utils.ProxyRequests).Elem(),
+		"ProxyRequestsPool":           reflect.ValueOf(&utils.ProxyRequestsPool).Elem(),
+		"Requests":                    reflect.ValueOf(&utils.Requests).Elem(),
+		"Results":                     reflect.ValueOf(&utils.Results).Elem(),
+		"SizeThreshold":               reflect.ValueOf(&utils.SizeThreshold).Elem(),
+		"Tools":                       reflect.ValueOf(&utils.Tools).Elem(),
+		"Wappalyzer":                  reflect.ValueOf(&utils.Wappalyzer).Elem(),
 
 		// type definitions
-		"DnsTools":  reflect.ValueOf((*utils.DnsTools)(nil)),
-		"Result":    reflect.ValueOf((*utils.Result)(nil)),
-		"UtilTools": reflect.ValueOf((*utils.UtilTools)(nil)),
+		"DnsTools":     reflect.ValueOf((*utils.DnsTools)(nil)),
+		"ProxyRequest": reflect.ValueOf((*utils.ProxyRequest)(nil)),
+		"Result":       reflect.ValueOf((*utils.Result)(nil)),
+		"UtilTools":    reflect.ValueOf((*utils.UtilTools)(nil)),
 	}
 }
