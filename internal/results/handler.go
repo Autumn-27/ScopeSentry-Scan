@@ -173,6 +173,8 @@ func (h *handler) URL(result *types.UrlResult) {
 		ResultId:   result.ResultId,
 		RootDomain: result.RootDomain,
 		Body:       "", // 设置Body为空
+		Tags:       result.Tags,
+		Ext:        result.Ext,
 	}
 	interfaceSlice = &resultCopy
 	ResultQueues["URLScan"].Queue <- interfaceSlice
