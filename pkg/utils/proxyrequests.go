@@ -100,7 +100,7 @@ func (r *proxyRequest) HttpGetProxy(uri string, proxyAddr string) (types.HttpRes
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
 	// 定义最大响应体大小 (100KB)
-	const maxBodySize = 100 * 1024
+	const maxBodySize = 4 * 1024 * 1024
 
 	// 截断 Body
 	body := resp.Body()
@@ -197,7 +197,7 @@ func (r *proxyRequest) HttpGetWithCustomHeaderProxy(uri string, customHeaders []
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
 	// 定义最大响应体大小 (100KB)
-	const maxBodySize = 100 * 1024
+	const maxBodySize = 4 * 1024 * 1024
 
 	// 截断 Body
 	body := resp.Body()

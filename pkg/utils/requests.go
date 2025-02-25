@@ -76,7 +76,7 @@ func (r *request) HttpGet(uri string) (types.HttpResponse, error) {
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
 	// 定义最大响应体大小 (100KB)
-	const maxBodySize = 100 * 1024
+	const maxBodySize = 4 * 1024 * 1024
 
 	// 截断 Body
 	body := resp.Body()
@@ -161,7 +161,7 @@ func (r *request) HttpGetWithCustomHeader(uri string, customHeaders []string) (t
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
 	// 定义最大响应体大小 (100KB)
-	const maxBodySize = 100 * 1024
+	const maxBodySize = 4 * 1024 * 1024
 
 	// 截断 Body
 	body := resp.Body()
