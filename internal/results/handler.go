@@ -215,12 +215,12 @@ func (h *handler) Sensitive(result *types.SensitiveResult) {
 
 }
 
-func (h *handler) SensitiveBody(body *string, md5 string) {
+func (h *handler) SensitiveBody(body string, md5 string) {
 	selector := bson.M{"md5": md5}
 
 	update := bson.M{
 		"$set": bson.M{
-			"body": *body,
+			"body": body,
 			"md5":  md5,
 		},
 	}

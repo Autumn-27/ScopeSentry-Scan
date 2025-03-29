@@ -210,7 +210,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 		if findFlag {
-			results.Handler.SensitiveBody(&data.Body, respMd5)
+			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
 	//end = time.Now()

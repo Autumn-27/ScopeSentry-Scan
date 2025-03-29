@@ -8,6 +8,7 @@
 package trufflehog
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
@@ -18,8 +19,12 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/dlclark/regexp2"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/engine/defaults"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"time"
 )
 
 type Plugin struct {
@@ -103,6 +108,8 @@ func (p *Plugin) GetModule() string {
 }
 
 func (p *Plugin) Install() error {
+	getAllScanners()
+	logger.SlogInfoLocal(fmt.Sprintf("[%v] init scanner number %v", p.Name, len(AllScanners)))
 	return nil
 }
 
@@ -118,6 +125,17 @@ func (p *Plugin) SetParameter(args string) {
 
 func (p *Plugin) GetParameter() string {
 	return p.Parameter
+}
+
+var AllScanners map[string]detectors.Detector
+
+func getAllScanners() {
+	AllScanners = make(map[string]detectors.Detector)
+	for _, s := range defaults.DefaultDetectors() {
+		secretType := reflect.Indirect(reflect.ValueOf(s)).Type().PkgPath()
+		path := strings.Split(secretType, "/")[len(strings.Split(secretType, "/"))-1]
+		AllScanners[path] = s
+	}
 }
 
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
@@ -138,11 +156,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
 	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+	exclude := []string{}
+	verify := false
 	if duplicateFlag {
 		pdfCheck := false
 		parameter := p.GetParameter()
 		if parameter != "" {
-			args, err := utils.Tools.ParseArgs(parameter, "pdf")
+			args, err := utils.Tools.ParseArgs(parameter, "pdf", "exclude", "verify")
 			if err != nil {
 			} else {
 				for key, value := range args {
@@ -152,6 +172,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							if value == "true" {
 								pdfCheck = true
 							}
+						case "exclude":
+							exclude = strings.Split(value, ",")
+						case "verify":
+							if value == "true" {
+								verify = true
+							}
+
 						default:
 							continue
 						}
@@ -172,37 +199,47 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				}
 			}
 		}
+		if len(exclude) != 0 {
+			for _, ex := range exclude {
+				delete(AllScanners, ex)
+			}
+			logger.SlogInfoLocal(fmt.Sprintf("[%v] scanner number %v", p.Name, len(AllScanners)))
+		}
 		chunkSize := 5120
 		overlapSize := 100
 		findFlag := false
-		for _, rule := range global.SensitiveRules {
-			//start := time.Now()
+		for name, scanner := range AllScanners {
 			select {
 			case <-ctx.Done():
 				return nil, nil
 			default:
-				if rule.State {
-					if rule.RuleCompile == nil {
-						p.Log(fmt.Sprintf("Error compiling sensitive regex pattern:- %s - %v", rule.ID, rule.Regular), "e")
-						continue
+				result, err := processInChunks(scanner, data.Body, chunkSize, overlapSize, ctx, verify)
+				if err != nil {
+					continue
+				}
+				if len(result) != 0 {
+					var tmpResult types.SensitiveResult
+					tmpResult = types.SensitiveResult{
+						Url:      data.Output,
+						UrlId:    data.ResultId,
+						SID:      name,
+						Time:     utils.Tools.GetTimeNow(),
+						Color:    "red",
+						Md5:      respMd5,
+						TaskName: p.TaskName,
+						Status:   1,
+						Tags:     []string{p.Name},
 					}
-					result, err := processInChunks(rule.RuleCompile, data.Body, chunkSize, overlapSize)
-					if err != nil {
-						p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
-					}
-					if len(result) != 0 {
-						var tmpResult types.SensitiveResult
-						tmpResult = types.SensitiveResult{
-							Url:      data.Output,
-							UrlId:    data.ResultId,
-							SID:      rule.Name,
-							Match:    result,
-							Time:     utils.Tools.GetTimeNow(),
-							Color:    rule.Color,
-							Md5:      respMd5,
-							TaskName: p.TaskName,
-							Status:   1,
+					for _, res := range result {
+						if verify {
+							if res.Verified {
+								tmpResult.Match = append(tmpResult.Match, string(res.Raw))
+							}
+						} else {
+							tmpResult.Match = append(tmpResult.Match, string(res.Raw))
 						}
+					}
+					if len(tmpResult.Match) != 0 {
 						go results.Handler.Sensitive(&tmpResult)
 						findFlag = true
 					}
@@ -210,7 +247,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 		if findFlag {
-			results.Handler.SensitiveBody(&data.Body, respMd5)
+			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
 	//end = time.Now()
@@ -219,8 +256,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) ([]string, error) {
-	var result []string
+func processInChunks(scanner detectors.Detector, text string, chunkSize int, overlapSize int, ctx context.Context, verify bool) ([]detectors.Result, error) {
+	var result []detectors.Result
+	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	// 确保在函数结束时调用 cancel 以释放资源
+	defer cancel()
 	for start := 0; start < len(text); start += chunkSize {
 		end := start + chunkSize
 		if end > len(text) {
@@ -231,18 +271,24 @@ func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapS
 		if end+overlapSize < len(text) {
 			chunkEnd = end + overlapSize
 		}
-
-		matches, err := findMatchesInChunk(regex, text[start:chunkEnd])
+		foundKeyword := false
+		str := strings.ToLower(text[start:chunkEnd])
+		for _, kw := range scanner.Keywords() {
+			if strings.Contains(str, strings.ToLower(kw)) {
+				foundKeyword = true
+			}
+		}
+		if !foundKeyword {
+			continue
+		}
+		res, err := scanner.FromData(timeoutCtx, verify, []byte(text[start:chunkEnd]))
 		if err != nil {
-			return []string{}, err
+			logger.SlogWarnLocal(fmt.Sprintf("[trufflehog] %v scanner.FromData error %v", scanner.Description(), err))
+			continue
 		}
-
-		if len(matches) > 0 {
-			result = append(result, matches...)
+		if len(res) != 0 {
+			result = append(result, res...)
 		}
-	}
-	if len(result) != 0 {
-		result = uniqueStrings(result)
 	}
 	return result, nil
 }
