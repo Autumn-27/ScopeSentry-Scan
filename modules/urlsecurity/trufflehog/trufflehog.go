@@ -158,6 +158,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	exclude := []string{}
 	verify := false
+	start := time.Now()
 	if duplicateFlag {
 		pdfCheck := false
 		parameter := p.GetParameter()
@@ -231,7 +232,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						Tags:     []string{p.Name},
 					}
 					for _, res := range result {
-						logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, res.Raw))
+						logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
 						if verify {
 							if res.Verified {
 								tmpResult.Match = append(tmpResult.Match, string(res.Raw))
@@ -251,9 +252,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
-	//end = time.Now()
-	//duration := end.Sub(start)
-	//p.Log(fmt.Sprintf("target %v run time: %v", data.Output, duration))
+	end := time.Now()
+	duration := end.Sub(start)
+	logger.SlogDebugLocal(fmt.Sprintf("[Plugins %v] target %v run time: %v", p.Name, data.Output, duration))
 	return nil, nil
 }
 

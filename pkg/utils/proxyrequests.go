@@ -50,6 +50,8 @@ func CreateClientWithProxy(proxyAddr string) (*fasthttp.Client, error) {
 		DisableHeaderNamesNormalizing: true,
 		DisablePathNormalizing:        true,
 		TLSConfig:                     tlsConfig,
+		ReadBufferSize:                4 * 1024 * 1024,
+		MaxResponseBodySize:           10 * 1024 * 1024,
 		Dial: func(addr string) (net.Conn, error) {
 			// 创建代理的连接
 			return net.Dial("tcp", proxyAddr)

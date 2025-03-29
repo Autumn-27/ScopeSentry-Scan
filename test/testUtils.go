@@ -8,12 +8,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"sync"
 )
 
 func ToBase62(num int64) string {
@@ -106,5 +109,35 @@ func main() {
 	//}
 	//fmt.Printf("%v", result.Results)
 	utils.InitializeTools()
-	utils.Tools.WafCheck("172.65.235.9")
+	//utils.Tools.WafCheck("172.65.235.9")
+	var wg sync.WaitGroup
+	//for i := 0; i < 10; i++ {
+	//	wg.Add(1)
+	//	go func() {
+	//		defer wg.Done()
+	//		res, err := utils.Requests.HttpGet("http://127.0.0.1:666/app-main.bundle.js")
+	//		if err != nil {
+	//			fmt.Println(err)
+	//		}
+	//		fmt.Println(res.StatusCode)
+	//		time.Sleep(10 * time.Second)
+	//	}()
+	//}
+	//time.Sleep(3 * time.Second)
+	//wg.Wait()
+
+	waybackResults := make(chan string, 1000)
+	go utils.Tools.ReadFileLineByLine("C:\\Users\\autumn\\Desktop\\test.txt", waybackResults, context.Background())
+
+	for result := range waybackResults {
+		wg.Add(1)
+		defer wg.Done()
+		fmt.Println(result)
+		res, err := utils.Requests.HttpGet(result)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(res.StatusCode)
+	}
+	wg.Wait()
 }

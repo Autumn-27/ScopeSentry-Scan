@@ -48,6 +48,8 @@ func InitializeRequests() {
 		DisableHeaderNamesNormalizing: true,
 		DisablePathNormalizing:        true,
 		TLSConfig:                     tlsConfig,
+		ReadBufferSize:                4 * 1024 * 1024,
+		MaxResponseBodySize:           10 * 1024 * 1024,
 		Dial: (&fasthttp.TCPDialer{
 			Concurrency:      4096,
 			DNSCacheDuration: time.Hour,
@@ -70,20 +72,12 @@ func (r *request) HttpGet(uri string) (types.HttpResponse, error) {
 	}()
 	req.Header.SetMethod(fasthttp.MethodGet)
 	req.SetRequestURI(uri)
-
 	if err := HttpClient.Do(req, resp); err != nil {
 		return types.HttpResponse{}, err
 	}
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
-	// 定义最大响应体大小 (10MB)
-	const maxBodySize = 10 * 1024 * 1024
 
-	// 截断 Body
-	//body := resp.Body()
-	//if len(body) > maxBodySize {
-	//	body = body[:maxBodySize]
-	//}
 	tmp.Body = string(resp.Body())
 	tmp.StatusCode = resp.StatusCode()
 	if location := resp.Header.Peek("location"); len(location) > 0 {
