@@ -19,6 +19,7 @@ import (
 	"github.com/projectdiscovery/httpx/runner"
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/valyala/fasthttp"
+	"math"
 	"net"
 	"strings"
 	"syscall"
@@ -75,15 +76,15 @@ func (r *request) HttpGet(uri string) (types.HttpResponse, error) {
 	}
 	tmp := types.HttpResponse{}
 	tmp.Url = uri
-	// 定义最大响应体大小 (100KB)
-	const maxBodySize = 4 * 1024 * 1024
+	// 定义最大响应体大小 (10MB)
+	const maxBodySize = 10 * 1024 * 1024
 
 	// 截断 Body
-	body := resp.Body()
-	if len(body) > maxBodySize {
-		body = body[:maxBodySize]
-	}
-	tmp.Body = string(body)
+	//body := resp.Body()
+	//if len(body) > maxBodySize {
+	//	body = body[:maxBodySize]
+	//}
+	tmp.Body = string(resp.Body())
 	tmp.StatusCode = resp.StatusCode()
 	if location := resp.Header.Peek("location"); len(location) > 0 {
 		tmp.Redirect = string(location)
@@ -425,7 +426,7 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 		HostMaxErrors:             30,
 		StoreResponse:             false,
 		StoreChain:                false,
-		MaxResponseBodySizeToRead: 100000,
+		MaxResponseBodySizeToRead: math.MaxInt32,
 		Screenshot:                screenshot,
 		ScreenshotTimeout:         time.Duration(screenshotTimeout) * time.Second,
 		Timeout:                   10,

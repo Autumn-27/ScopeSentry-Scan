@@ -208,6 +208,7 @@ func (r *Runner) ModuleRun() error {
 						OutputType: "httpx",
 						ResultId:   utils.Tools.GenerateHash(),
 						Body:       httpData.ResponseBody,
+						Status:     httpData.StatusCode,
 					}
 					// 发送urlfile
 					urlFile := types.UrlFile{

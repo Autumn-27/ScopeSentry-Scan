@@ -231,6 +231,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						Tags:     []string{p.Name},
 					}
 					for _, res := range result {
+						logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, res.Raw))
 						if verify {
 							if res.Verified {
 								tmpResult.Match = append(tmpResult.Match, string(res.Raw))

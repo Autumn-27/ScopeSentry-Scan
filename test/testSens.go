@@ -26,6 +26,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/trufflehog"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"os"
 	"path/filepath"
 )
 
@@ -33,9 +34,10 @@ func main() {
 	DebugInit()
 	plg := trufflehog.NewPlugin()
 	plg.Install()
+	data, _ := os.ReadFile("C:\\Users\\autumn\\Desktop\\app-main.bundle.js")
 	input := types.UrlResult{
 		Output: "httpx://test.com",
-		Body:   "",
+		Body:   string(data),
 		Status: 200,
 	}
 	plg.Execute(input)

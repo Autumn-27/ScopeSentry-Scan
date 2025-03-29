@@ -27,6 +27,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/pagemonitoring"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/sensitive"
+	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/trufflehog"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/vulnerabilityscan/nuclei"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/webcrawler/rad"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
@@ -124,6 +125,10 @@ func (pm *PluginManager) InitializePlugins() error {
 	// sensitive
 	sensitivePlugin := sensitive.NewPlugin()
 	pm.RegisterPlugin(sensitivePlugin.Module, sensitivePlugin.PluginId, sensitivePlugin)
+
+	// trufflehog
+	trufflehogPlugin := trufflehog.NewPlugin()
+	pm.RegisterPlugin(trufflehogPlugin.Module, trufflehogPlugin.PluginId, trufflehogPlugin)
 
 	// pagemonitoring
 	pagemonitoringPlugin := pagemonitoring.NewPlugin()
