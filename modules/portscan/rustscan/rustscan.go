@@ -267,29 +267,49 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 		if strings.Contains(r, "Open") {
 			portFlag += 1
-			if portFlag > maxPort {
-				p.Log(fmt.Sprintf("target %v open port number > max port: %v", domainSkip.Domain, portFlag), "w")
-				cancel()
-				return nil, nil
+			if !domainSkip.CIDR {
+				if portFlag > maxPort {
+					p.Log(fmt.Sprintf("target %v open port number > max port: %v", domainSkip.Domain, portFlag), "w")
+					cancel()
+					return nil, nil
+				}
 			}
 			// 端口开放
 			openIpPort := strings.SplitN(r, " ", 2)
 			// 检查是否是IPv6地址
 			if match := ipv6Regex.FindStringSubmatch(openIpPort[1]); match != nil {
-				result := types.PortAlive{
-					Host: domainSkip.Domain,
-					IP:   match[1], // IPv6地址
-					Port: match[2], // 端口
+				var result types.PortAlive
+				if domainSkip.CIDR {
+					result = types.PortAlive{
+						Host: match[1],
+						IP:   match[1], // IPv6地址
+						Port: match[2], // 端口
+					}
+				} else {
+					result = types.PortAlive{
+						Host: domainSkip.Domain,
+						IP:   match[1], // IPv6地址
+						Port: match[2], // 端口
+					}
 				}
 				p.Result <- result
 				continue
 			} else {
 				// 处理IPv4地址的情况
 				openPort := strings.SplitN(openIpPort[1], ":", 2)
-				result := types.PortAlive{
-					Host: domainSkip.Domain,
-					IP:   openPort[0], // IPv4地址
-					Port: openPort[1], // 端口
+				var result types.PortAlive
+				if domainSkip.CIDR {
+					result = types.PortAlive{
+						Host: openPort[0],
+						IP:   openPort[0], // IPv4地址
+						Port: openPort[1], // 端口
+					}
+				} else {
+					result = types.PortAlive{
+						Host: domainSkip.Domain,
+						IP:   openPort[0], // IPv4地址
+						Port: openPort[1], // 端口
+					}
 				}
 				p.Result <- result
 				continue

@@ -177,6 +177,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- target
 		return nil, nil
 	}
+	// 输入CIDR:开头的 不进行分布式 直接将数据发送到rustscan进行扫描
+	uppTarget := strings.ToUpper(target)
+	if strings.HasPrefix(uppTarget, "CIDR:") {
+		tg := strings.Replace(uppTarget, "CIDR:", "", 1)
+		tmpDominSkip := types.DomainSkip{Domain: tg, Skip: false, CIDR: true}
+		p.Result <- tmpDominSkip
+		return nil, nil
+	}
 
 	// 尝试解析 URL
 	parsedURL, err := url.Parse(target)

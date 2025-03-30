@@ -284,6 +284,7 @@ type DomainSkip struct {
 	Domain string
 	Skip   bool
 	IP     []string
+	CIDR   bool
 }
 type DomainResolve struct {
 	Domain string
