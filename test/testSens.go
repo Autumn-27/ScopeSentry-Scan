@@ -8,6 +8,8 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/bigcache"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
@@ -26,21 +28,61 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlsecurity/trufflehog"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"os"
+	"net/url"
+	"path"
 	"path/filepath"
+	"time"
 )
 
 func main() {
 	DebugInit()
 	plg := trufflehog.NewPlugin()
 	plg.Install()
-	data, _ := os.ReadFile("C:\\Users\\autumn\\Desktop\\app-main.bundle.js")
-	input := types.UrlResult{
-		Output: "httpx://test.com",
-		Body:   string(data),
-		Status: 200,
+	//data, _ := os.ReadFile("C:\\Users\\autumn\\Desktop\\PushSdk-8.3.68.0 (1).zip")
+	//input := types.UrlResult{
+	//	Output: "httpx://test.com",
+	//	Body:   string(data),
+	//	Status: 200,
+	//}
+	//plg.Execute(input)
+
+	resultChan := make(chan string, 100)
+	go func() {
+		err := utils.Tools.ReadFileLineReader("C:\\Users\\autumn\\AppData\\Local\\JetBrains\\GoLand2023.3\\tmp\\GoLand\\ext\\katana\\NlxJtbZYo3wwIrW9", resultChan, context.Background())
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
+		}
+	}()
+	time.Sleep(2 * time.Second)
+	var katanaResult types.KatanaResult
+	for result := range resultChan {
+		err := json.Unmarshal([]byte(result), &katanaResult)
+		if err != nil {
+			continue
+		}
+		var r types.UrlResult
+		parsedURL, err := url.Parse(katanaResult.Request.URL)
+		urlPath := ""
+		if err != nil {
+			urlPath = katanaResult.Request.URL
+		} else {
+			urlPath = parsedURL.Path
+		}
+		r.Ext = path.Ext(urlPath)
+		r.Ext = path.Ext(parsedURL.Path)
+		r.Input = "http://dwasdwadwa"
+		r.Source = katanaResult.Request.Source
+		r.Output = katanaResult.Request.URL
+		r.OutputType = katanaResult.Request.Attribute
+		r.Status = katanaResult.Response.StatusCode
+		r.Length = len(katanaResult.Response.Body)
+		r.Body = katanaResult.Response.Body
+		r.Time = utils.Tools.GetTimeNow()
+		if err != nil {
+		}
+		plg.Execute(r)
 	}
-	plg.Execute(input)
+
 }
 
 func DebugInit() {

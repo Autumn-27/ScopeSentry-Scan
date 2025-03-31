@@ -23,7 +23,9 @@ import (
 	"github.com/trufflesecurity/trufflehog/v3/pkg/engine/defaults"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -159,11 +161,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	exclude := []string{}
 	verify := false
 	start := time.Now()
+	thread := 5
 	if duplicateFlag {
 		pdfCheck := false
 		parameter := p.GetParameter()
 		if parameter != "" {
-			args, err := utils.Tools.ParseArgs(parameter, "pdf", "exclude", "verify")
+			args, err := utils.Tools.ParseArgs(parameter, "pdf", "exclude", "verify", "thread")
 			if err != nil {
 			} else {
 				for key, value := range args {
@@ -179,7 +182,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							if value == "true" {
 								verify = true
 							}
-
+						case "thread":
+							thread, _ = strconv.Atoi(value)
 						default:
 							continue
 						}
@@ -209,45 +213,56 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		chunkSize := 5120
 		overlapSize := 100
 		findFlag := false
+		sem := make(chan struct{}, thread)
+		var wg sync.WaitGroup
 		for name, scanner := range AllScanners {
-			select {
-			case <-ctx.Done():
-				return nil, nil
-			default:
-				result, err := processInChunks(scanner, data.Body, chunkSize, overlapSize, ctx, verify)
-				if err != nil {
-					continue
-				}
-				if len(result) != 0 {
-					var tmpResult types.SensitiveResult
-					tmpResult = types.SensitiveResult{
-						Url:      data.Output,
-						UrlId:    data.ResultId,
-						SID:      name,
-						Time:     utils.Tools.GetTimeNow(),
-						Color:    "red",
-						Md5:      respMd5,
-						TaskName: p.TaskName,
-						Status:   1,
-						Tags:     []string{p.Name},
+			sem <- struct{}{} // 占用一个并发槽位
+			wg.Add(1)
+			go func(name string, scanner detectors.Detector) {
+				defer func() {
+					<-sem // 释放并发槽位
+					wg.Done()
+				}()
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					result, err := processInChunks(scanner, data.Body, chunkSize, overlapSize, ctx, verify)
+					if err != nil {
+						return
 					}
-					for _, res := range result {
-						logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
-						if verify {
-							if res.Verified {
+					if len(result) != 0 {
+						var tmpResult types.SensitiveResult
+						tmpResult = types.SensitiveResult{
+							Url:      data.Output,
+							UrlId:    data.ResultId,
+							SID:      name,
+							Time:     utils.Tools.GetTimeNow(),
+							Color:    "red",
+							Md5:      respMd5,
+							TaskName: p.TaskName,
+							Status:   1,
+							Tags:     []string{p.Name},
+						}
+						for _, res := range result {
+							logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
+							if verify {
+								if res.Verified {
+									tmpResult.Match = append(tmpResult.Match, string(res.Raw))
+								}
+							} else {
 								tmpResult.Match = append(tmpResult.Match, string(res.Raw))
 							}
-						} else {
-							tmpResult.Match = append(tmpResult.Match, string(res.Raw))
+						}
+						if len(tmpResult.Match) != 0 {
+							go results.Handler.Sensitive(&tmpResult)
+							findFlag = true
 						}
 					}
-					if len(tmpResult.Match) != 0 {
-						go results.Handler.Sensitive(&tmpResult)
-						findFlag = true
-					}
 				}
-			}
+			}(name, scanner)
 		}
+		wg.Wait()
 		if findFlag {
 			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
