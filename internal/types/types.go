@@ -323,3 +323,18 @@ type BulkUpdateOperation struct {
 	Selector bson.M // 条件选择器数组
 	Update   bson.M // 更新内容数组
 }
+
+type RootDomain struct {
+	Domain   string   `bson:"domain"`
+	Tags     []string `bson:"tags"`
+	TaskName string   `bson:"taskName"`
+	Project  string   `bson:"project"`
+}
+
+type APP struct {
+	Name     string   `bson:"name"`
+	Version  string   `bson:"version"`
+	Tags     []string `bson:"tags"`
+	TaskName string   `bson:"taskName"`
+	Project  string   `bson:"project"`
+}
