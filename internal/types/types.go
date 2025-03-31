@@ -326,15 +326,35 @@ type BulkUpdateOperation struct {
 
 type RootDomain struct {
 	Domain   string   `bson:"domain"`
+	Url      string   `bson:"url"`
+	ICP      string   `bson:"icp"`
 	Tags     []string `bson:"tags"`
 	TaskName string   `bson:"taskName"`
 	Project  string   `bson:"project"`
+	Time     string   `bson:"time"`
 }
 
 type APP struct {
-	Name     string   `bson:"name"`
-	Version  string   `bson:"version"`
-	Tags     []string `bson:"tags"`
-	TaskName string   `bson:"taskName"`
-	Project  string   `bson:"project"`
+	Name        string   `bson:"name"`
+	Version     string   `bson:"version"`
+	Url         string   `bson:"url"`
+	File        string   `bson:"-"`
+	BundleID    string   `bson:"bundleID"`
+	Category    string   `bson:"category"`
+	Description string   `bson:"description"`
+	Logo        string   `bson:"logo"`
+	Tags        []string `bson:"tags"`
+	TaskName    string   `bson:"taskName"`
+	Project     string   `bson:"project"`
+	Time        string   `bson:"time"`
+}
+
+type MP struct {
+	Name        string   `bson:"name"`
+	Url         string   `bson:"url"`
+	Description string   `bson:"description"`
+	Tags        []string `bson:"tags"`
+	TaskName    string   `bson:"taskName"`
+	Project     string   `bson:"project"`
+	Time        string   `bson:"time"`
 }
