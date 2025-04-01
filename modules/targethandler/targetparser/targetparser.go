@@ -11,8 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/results"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"golang.org/x/net/idna"
 	"net"
 	"net/url"
@@ -184,6 +186,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- tmpDominSkip
 		return nil, nil
 	}
+	rootDomain, err := utils.Tools.GetRootDomain(target)
+	if err == nil {
+		if net.ParseIP(rootDomain) == nil {
+			flag := results.Duplicate.RootDomain(rootDomain, p.TaskId)
+			if !flag {
+				p.Result <- types.RootDomain{Domain: rootDomain, TaskName: p.TaskName}
+			}
+		}
+	}
 
 	// 尝试解析 URL
 	parsedURL, err := url.Parse(target)
@@ -198,9 +209,6 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			//port := hostParts[1]
 			rawHost = hostParts[0]
 			p.Result <- ipOrDomain
-			if net.ParseIP(ipOrDomain) == nil {
-
-			}
 			//// 判断主机部分是否为 IP 地址
 			//if net.ParseIP(ipOrDomain) != nil {
 			//	// 处理 IP 地址 + 端口号
