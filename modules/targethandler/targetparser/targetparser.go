@@ -178,9 +178,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	// 输入CIDR:开头的 不进行分布式 直接将数据发送到rustscan进行扫描
-	uppTarget := strings.ToUpper(target)
-	if strings.HasPrefix(uppTarget, "CIDR:") {
-		tg := strings.Replace(uppTarget, "CIDR:", "", 1)
+	if strings.HasPrefix(target, "CIDR:") {
+		tg := strings.Replace(target, "CIDR:", "", 1)
 		tmpDominSkip := types.DomainSkip{Domain: tg, Skip: false, CIDR: true}
 		p.Result <- tmpDominSkip
 		return nil, nil
@@ -199,6 +198,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			//port := hostParts[1]
 			rawHost = hostParts[0]
 			p.Result <- ipOrDomain
+			if net.ParseIP(ipOrDomain) == nil {
+
+			}
 			//// 判断主机部分是否为 IP 地址
 			//if net.ParseIP(ipOrDomain) != nil {
 			//	// 处理 IP 地址 + 端口号

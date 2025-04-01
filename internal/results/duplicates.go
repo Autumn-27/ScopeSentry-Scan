@@ -186,3 +186,14 @@ func (d *duplicate) DuplicateUrlFileKey(filename string, taskId string) bool {
 		return false
 	}
 }
+
+func (d *duplicate) RootDomain(domain string, taskId string) bool {
+	key := "duplicates:" + taskId + ":rootdomain:" + domain
+	if d.DuplicateLocalCache(key) {
+		keyRedis := "duplicates:" + taskId + ":rootdomain"
+		valueRedis := domain
+		return d.DuplicateRedisCache(keyRedis, valueRedis)
+	} else {
+		return false
+	}
+}

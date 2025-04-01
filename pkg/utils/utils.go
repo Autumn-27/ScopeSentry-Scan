@@ -29,6 +29,7 @@ import (
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+	"golang.org/x/net/publicsuffix"
 	"gopkg.in/yaml.v3"
 	"image"
 	"image/jpeg"
@@ -362,24 +363,29 @@ func (t *UtilTools) GetRootDomain(input string) (string, error) {
 		if ipHost != nil {
 			return ipHost.String(), nil
 		}
-		hostParts := strings.Split(u.Hostname(), ".")
-		if len(hostParts) < 2 {
-			return "", fmt.Errorf("域名格式不正确")
+		eTLDPlusOne, err := publicsuffix.EffectiveTLDPlusOne(u.Hostname())
+		if err != nil {
+			return input, fmt.Errorf("根域名解析错误")
 		}
-		if len(hostParts) == 2 {
-			return u.Hostname(), nil
-		}
-		// 检查是否为复合域名
-		if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
-			return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
-		}
-
-		// 如果域名以 www 开头，特殊处理
-		if hostParts[0] == "www" {
-			return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
-		}
-
-		return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+		return eTLDPlusOne, nil
+		//hostParts := strings.Split(u.Hostname(), ".")
+		//if len(hostParts) < 2 {
+		//	return "", fmt.Errorf("域名格式不正确")
+		//}
+		//if len(hostParts) == 2 {
+		//	return u.Hostname(), nil
+		//}
+		//// 检查是否为复合域名
+		//if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
+		//	return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+		//}
+		//
+		//// 如果域名以 www 开头，特殊处理
+		//if hostParts[0] == "www" {
+		//	return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+		//}
+		//
+		//return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
 	}
 	return input, fmt.Errorf("输入既不是有效的 URL，也不是有效的 IP 地址")
 }
