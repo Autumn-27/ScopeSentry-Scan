@@ -7,3 +7,4 @@ data/
 module.xray.yaml
 plugin.xray.yaml
 xray.yaml
+/*.stat
