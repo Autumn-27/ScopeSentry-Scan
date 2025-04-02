@@ -340,6 +340,7 @@ type APP struct {
 	Url         string   `bson:"url"`
 	ICP         string   `bson:"icp"`
 	FilePath    string   `bson:"-"`
+	Company     string   `bson:"company"`
 	BundleID    string   `bson:"bundleID"`
 	Category    string   `bson:"category"`
 	Description string   `bson:"description"`
@@ -355,6 +356,7 @@ type MP struct {
 	Url         string   `bson:"url"`
 	ICP         string   `bson:"icp"`
 	Description string   `bson:"description"`
+	Company     string   `bson:"company"`
 	FilePath    string   `bson:"-"`
 	Tags        []string `bson:"tags"`
 	TaskName    string   `bson:"taskName"`
