@@ -327,3 +327,24 @@ func (h *handler) PageMonitoringInsertBody(result *types.PageMonitBody) {
 	interfaceSlice = &result
 	ResultQueues["PageMonitoringBody"].Queue <- interfaceSlice
 }
+
+func (h *handler) RootDomain(result *types.RootDomain) {
+	var interfaceSlice interface{}
+	result.Project = h.GetAssetProject(result.Domain)
+	interfaceSlice = &result
+	ResultQueues["RootDomain"].Queue <- interfaceSlice
+}
+
+func (h *handler) APP(result *types.APP) {
+	var interfaceSlice interface{}
+	result.Project = h.GetAssetProject(result.ICP)
+	interfaceSlice = &result
+	ResultQueues["APP"].Queue <- interfaceSlice
+}
+
+func (h *handler) MP(result *types.MP) {
+	var interfaceSlice interface{}
+	result.Project = h.GetAssetProject(result.ICP)
+	interfaceSlice = &result
+	ResultQueues["MP"].Queue <- interfaceSlice
+}

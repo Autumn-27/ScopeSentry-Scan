@@ -75,87 +75,94 @@ func (r *Runner) ModuleRun() error {
 					return
 				}
 				r.NextModule.GetInput() <- result
-				if assetResult, ok := result.(types.AssetOther); ok {
-					if assetResult.Type == "http" {
+				switch dataTmp := result.(type) {
+				case types.AssetOther:
+					if dataTmp.Type == "http" {
 						continue
 					}
 					// 过滤unknown
-					if assetResult.Service == "unknown" {
-						if len(assetResult.Raw) == 0 {
+					if dataTmp.Service == "unknown" {
+						if len(dataTmp.Raw) == 0 {
 							continue
 						}
 					}
-					assetResult.TaskName = []string{r.Option.TaskName}
-					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
+					dataTmp.TaskName = []string{r.Option.TaskName}
+					flag, id, bsonData := results.Duplicate.AssetInMongodb(dataTmp.Host, dataTmp.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff
 						var oldAsset types.AssetOther
 						data, _ := bson.Marshal(bsonData)
 						_ = bson.Unmarshal(data, &oldAsset)
-						changeData := utils.Results.CompareAssetOther(oldAsset, assetResult)
+						changeData := utils.Results.CompareAssetOther(oldAsset, dataTmp)
 						if changeData.Timestamp != "" {
 							// 说明资产存在变化，将结果发送到changelog中
 							changeData.AssetId = id
 							go results.Handler.AssetChangeLog(&changeData)
 							// 对资产进行更新,设置最新的扫描时间
 						}
-						assetResult.LastScanTime = assetResult.Time
-						assetResult.Time = oldAsset.Time
-						assetResult.Project = oldAsset.Project
-						assetResult.RootDomain = oldAsset.RootDomain
-						assetResult.TaskName = append(assetResult.TaskName, oldAsset.TaskName...)
-						assetResult.TaskName = utils.Tools.RemoveStringDuplicates(assetResult.TaskName)
-						assetResult.Tags = append(assetResult.Tags, oldAsset.Tags...)
-						assetResult.Tags = utils.Tools.RemoveStringDuplicates(assetResult.Tags)
-						go results.Handler.AssetUpdate(id, assetResult)
+						dataTmp.LastScanTime = dataTmp.Time
+						dataTmp.Time = oldAsset.Time
+						dataTmp.Project = oldAsset.Project
+						dataTmp.RootDomain = oldAsset.RootDomain
+						dataTmp.TaskName = append(dataTmp.TaskName, oldAsset.TaskName...)
+						dataTmp.TaskName = utils.Tools.RemoveStringDuplicates(dataTmp.TaskName)
+						dataTmp.Tags = append(dataTmp.Tags, oldAsset.Tags...)
+						dataTmp.Tags = utils.Tools.RemoveStringDuplicates(dataTmp.Tags)
+						go results.Handler.AssetUpdate(id, dataTmp)
 						// 资产没有变化，不进行操作
 					} else {
 						// 数据库中不存在该资产，直接插入。
-						assetResult.LastScanTime = assetResult.Time
-						go results.Handler.AssetOtherInsert(&assetResult)
+						dataTmp.LastScanTime = dataTmp.Time
+						go results.Handler.AssetOtherInsert(&dataTmp)
 					}
-					assetOtherArray = append(assetOtherArray, assetResult)
+					assetOtherArray = append(assetOtherArray, dataTmp)
 					if len(assetOtherArray) > 10 {
 						r.NextModule.GetInput() <- assetOtherArray
 						assetOtherArray = nil
 					}
-				} else {
-					assetHttpResult, okh := result.(types.AssetHttp)
-					if okh {
-						assetHttpResult.TaskName = []string{r.Option.TaskName}
-						flag, id, bsonData := results.Duplicate.AssetInMongodb(assetHttpResult.Host, assetHttpResult.Port)
-						if flag {
-							var oldAssetHttp types.AssetHttp
-							data, _ := bson.Marshal(bsonData)
-							_ = bson.Unmarshal(data, &oldAssetHttp)
-							changeData := utils.Results.CompareAssetHttp(oldAssetHttp, assetHttpResult)
-							if changeData.Timestamp != "" {
-								// 说明资产存在变化，将结果发送到changelog中
-								changeData.AssetId = id
-								go results.Handler.AssetChangeLog(&changeData)
-							}
-							// 对资产进行更新,设置最新的扫描时间
-							assetHttpResult.LastScanTime = assetHttpResult.Time
-							assetHttpResult.Time = oldAssetHttp.Time
-							assetHttpResult.Project = oldAssetHttp.Project
-							assetHttpResult.RootDomain = oldAssetHttp.RootDomain
-							assetHttpResult.TaskName = append(assetHttpResult.TaskName, oldAssetHttp.TaskName...)
-							assetHttpResult.TaskName = utils.Tools.RemoveStringDuplicates(assetHttpResult.TaskName)
-							assetHttpResult.Tags = append(assetHttpResult.Tags, oldAssetHttp.Tags...)
-							assetHttpResult.Tags = utils.Tools.RemoveStringDuplicates(assetHttpResult.Tags)
-							go results.Handler.AssetUpdate(id, assetHttpResult)
-							// 资产没有变化，不进行操作
-						} else {
-							// 数据库中不存在该资产，直接插入。
-							go results.Handler.AssetHttpInsert(&assetHttpResult)
+				case types.AssetHttp:
+					dataTmp.TaskName = []string{r.Option.TaskName}
+					flag, id, bsonData := results.Duplicate.AssetInMongodb(dataTmp.Host, dataTmp.Port)
+					if flag {
+						var oldAssetHttp types.AssetHttp
+						data, _ := bson.Marshal(bsonData)
+						_ = bson.Unmarshal(data, &oldAssetHttp)
+						changeData := utils.Results.CompareAssetHttp(oldAssetHttp, dataTmp)
+						if changeData.Timestamp != "" {
+							// 说明资产存在变化，将结果发送到changelog中
+							changeData.AssetId = id
+							go results.Handler.AssetChangeLog(&changeData)
 						}
-
-						assetHttpArray = append(assetHttpArray, assetHttpResult)
-						if len(assetHttpArray) > 10 {
-							r.NextModule.GetInput() <- assetHttpArray
-							assetHttpArray = nil
-						}
+						// 对资产进行更新,设置最新的扫描时间
+						dataTmp.LastScanTime = dataTmp.Time
+						dataTmp.Time = oldAssetHttp.Time
+						dataTmp.Project = oldAssetHttp.Project
+						dataTmp.RootDomain = oldAssetHttp.RootDomain
+						dataTmp.TaskName = append(dataTmp.TaskName, oldAssetHttp.TaskName...)
+						dataTmp.TaskName = utils.Tools.RemoveStringDuplicates(dataTmp.TaskName)
+						dataTmp.Tags = append(dataTmp.Tags, oldAssetHttp.Tags...)
+						dataTmp.Tags = utils.Tools.RemoveStringDuplicates(dataTmp.Tags)
+						go results.Handler.AssetUpdate(id, dataTmp)
+						// 资产没有变化，不进行操作
+					} else {
+						// 数据库中不存在该资产，直接插入。
+						go results.Handler.AssetHttpInsert(&dataTmp)
 					}
+
+					assetHttpArray = append(assetHttpArray, dataTmp)
+					if len(assetHttpArray) > 10 {
+						r.NextModule.GetInput() <- assetHttpArray
+						assetHttpArray = nil
+					}
+				case types.RootDomain:
+					dataTmp.TaskName = r.Option.TaskName
+					go results.Handler.RootDomain(&dataTmp)
+				case types.APP:
+					dataTmp.TaskName = r.Option.TaskName
+					go results.Handler.APP(&dataTmp)
+				case types.MP:
+					dataTmp.TaskName = r.Option.TaskName
+					go results.Handler.MP(&dataTmp)
 				}
 			}
 		}
@@ -210,6 +217,9 @@ func (r *Runner) ModuleRun() error {
 				var ty string
 				var assetOther types.AssetOther
 				var assetHttp types.AssetHttp
+				var rootDomain types.RootDomain
+				var app types.APP
+				var mp types.MP
 				switch a := data.(type) {
 				case types.AssetOther:
 					ty = "other"
@@ -217,6 +227,15 @@ func (r *Runner) ModuleRun() error {
 				case types.AssetHttp:
 					ty = "htttp"
 					assetHttp = a
+				case types.RootDomain:
+					ty = "rootDomain"
+					rootDomain = a
+				case types.APP:
+					ty = "app"
+					app = a
+				case types.MP:
+					ty = "mp"
+					mp = a
 				default:
 					r.NextModule.GetInput() <- data
 					return
@@ -240,7 +259,8 @@ func (r *Runner) ModuleRun() error {
 							plg.SetTaskId(r.Option.ID)
 							plg.SetTaskName(r.Option.TaskName)
 							var pluginFunc func()
-							if ty == "other" {
+							switch ty {
+							case "other":
 								pluginFunc = func(data interface{}) func() {
 									return func() {
 										defer plgWg.Done()
@@ -254,7 +274,7 @@ func (r *Runner) ModuleRun() error {
 										}
 									}
 								}(&assetOther)
-							} else {
+							case "htttp":
 								pluginFunc = func(data interface{}) func() {
 									return func() {
 										defer plgWg.Done()
@@ -268,8 +288,49 @@ func (r *Runner) ModuleRun() error {
 										}
 									}
 								}(&assetHttp)
+							case "rootDomain":
+								pluginFunc = func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										select {
+										case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+											return
+										default:
+											_, err := plg.Execute(data)
+											if err != nil {
+											}
+										}
+									}
+								}(&rootDomain)
+							case "app":
+								pluginFunc = func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										select {
+										case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+											return
+										default:
+											_, err := plg.Execute(data)
+											if err != nil {
+											}
+										}
+									}
+								}(&app)
+							case "mp":
+								pluginFunc = func(data interface{}) func() {
+									return func() {
+										defer plgWg.Done()
+										select {
+										case <-contextmanager.GlobalContextManagers.GetContext(r.Option.ID).Done():
+											return
+										default:
+											_, err := plg.Execute(data)
+											if err != nil {
+											}
+										}
+									}
+								}(&mp)
 							}
-
 							err := pool.PoolManage.SubmitTask(r.GetName(), pluginFunc)
 							if err != nil {
 								plgWg.Done()
@@ -283,10 +344,18 @@ func (r *Runner) ModuleRun() error {
 					}
 				}
 				// 如果没有开启此模块，或者开启此模块并且插件运行结束，将data发送到结果处理处
-				if ty == "other" {
+
+				switch ty {
+				case "other":
 					resultChan <- assetOther
-				} else {
+				case "htttp":
 					resultChan <- assetHttp
+				case "rootDomain":
+					resultChan <- rootDomain
+				case "app":
+					resultChan <- app
+				case "mp":
+					resultChan <- mp
 				}
 			}(data)
 		}

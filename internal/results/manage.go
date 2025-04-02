@@ -29,7 +29,7 @@ func InitializeResultQueue() {
 		"SubdomainScan", "SubdomainSecurity",
 		"AssetChangeLog", "URLScan",
 		"WebCrawler", "VulnerabilityScan",
-		"SensitiveResult", "DirScan", "PageMonitoring", "PageMonitoringBody", "SensitiveBody",
+		"SensitiveResult", "DirScan", "PageMonitoring", "PageMonitoringBody", "SensitiveBody", "RootDomain", "APP", "MP",
 	}
 	// 初始化模块队列和 Goroutine
 	for _, module := range modules {
@@ -89,7 +89,6 @@ func processQueue(module string, mq *ResultQueue) {
 					flushBuffer(module, &buffer)
 				}
 			}
-
 		case <-ticker.C:
 			if len(buffer) > 0 {
 				flushBuffer(module, &buffer)
@@ -133,6 +132,12 @@ func flushBuffer(module string, buffer *[]interface{}) {
 			name = "PageMonitoring"
 		case "PageMonitoringBody":
 			name = "PageMonitoringBody"
+		case "RootDomain":
+			name = "RootDomain"
+		case "APP":
+			name = "APP"
+		case "MP":
+			name = "MP"
 		}
 		Results.Insert(name, buffer)
 	}

@@ -337,7 +337,8 @@ type APP struct {
 	Name        string   `bson:"name"`
 	Version     string   `bson:"version"`
 	Url         string   `bson:"url"`
-	File        string   `bson:"-"`
+	ICP         string   `bson:"icp"`
+	FilePath    string   `bson:"-"`
 	BundleID    string   `bson:"bundleID"`
 	Category    string   `bson:"category"`
 	Description string   `bson:"description"`
@@ -351,7 +352,9 @@ type APP struct {
 type MP struct {
 	Name        string   `bson:"name"`
 	Url         string   `bson:"url"`
+	ICP         string   `bson:"icp"`
 	Description string   `bson:"description"`
+	FilePath    string   `bson:"-"`
 	Tags        []string `bson:"tags"`
 	TaskName    string   `bson:"taskName"`
 	Project     string   `bson:"project"`
