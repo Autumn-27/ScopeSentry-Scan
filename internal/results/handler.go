@@ -338,6 +338,7 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 			"taskName": result.TaskName,
 			"project":  result.Project,
 			"time":     result.Time,
+			"company":  result.Company,
 		},
 	}
 	op := types.BulkUpdateOperation{

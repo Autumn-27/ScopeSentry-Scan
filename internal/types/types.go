@@ -327,6 +327,7 @@ type BulkUpdateOperation struct {
 type RootDomain struct {
 	Domain   string   `bson:"domain"`
 	ICP      string   `bson:"icp"`
+	Company  string   `bson:"company"`
 	Tags     []string `bson:"tags"`
 	TaskName string   `bson:"taskName"`
 	Project  string   `bson:"project"`
