@@ -51,7 +51,7 @@ func (r *result) Insert(name string, result *[]interface{}) bool {
 	return true
 }
 
-func (r *result) Update(result *[]interface{}) bool {
+func (r *result) Update(result *[]interface{}, name string) bool {
 	// 将 *[]interface{} 转换为 []types.BulkUpdateOperation
 	var operations []mongo.WriteModel
 
@@ -73,7 +73,7 @@ func (r *result) Update(result *[]interface{}) bool {
 		operations = append(operations, updateModel)
 	}
 	// 调用 BulkWrite 批量写入或更新操作
-	_, err := mongodb.MongodbClient.BulkWrite("SensitiveBody", operations)
+	_, err := mongodb.MongodbClient.BulkWrite(name, operations)
 	if err != nil {
 		fmt.Println("Error during bulk write:", err)
 		return false

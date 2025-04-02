@@ -190,7 +190,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if err == nil {
 		if net.ParseIP(rootDomain) == nil {
 			flag := results.Duplicate.RootDomain(rootDomain, p.TaskId)
-			if !flag {
+			if flag {
 				p.Result <- types.RootDomain{Domain: rootDomain}
 			}
 		}

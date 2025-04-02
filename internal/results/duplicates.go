@@ -156,7 +156,7 @@ func (d *duplicate) Crawler(value string, taskId string) bool {
 
 func (d *duplicate) URLParams(rawUrl string) string {
 	parsedURL, err := url.Parse(rawUrl)
-	dupKey := utils.Tools.CalculateMD5(strings.TrimLeft(strings.TrimLeft(strings.TrimSuffix(rawUrl, "/"), "http://"), "https://"))
+	dupKey := utils.Tools.CalculateMD5(strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(rawUrl, "/"), "http://"), "https://"))
 	if err != nil {
 	} else {
 		queryParams := parsedURL.Query()

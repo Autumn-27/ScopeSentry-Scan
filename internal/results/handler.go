@@ -290,16 +290,16 @@ func (h *handler) Vulnerability(result *types.VulnResult) {
 		if global.NotificationConfig.VulLevel != "" {
 			if strings.Contains(strings.ToLower(global.NotificationConfig.VulLevel), strings.ToLower(result.Level)+",") {
 				if result.Url != "" {
-					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Url)
+					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]-[%v]\n", result.Url, result.Level, result.VulName, result.Matched)
 				} else {
-					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Matched)
+					NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Level, result.VulName, result.Matched)
 				}
 			}
 		} else {
 			if result.Url != "" {
-				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Url)
+				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]-[%v]\n", result.Url, result.Level, result.VulName, result.Matched)
 			} else {
-				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Matched)
+				NotificationMsg += fmt.Sprintf("%v-[%v]-[%v]\n", result.Level, result.VulName, result.Matched)
 			}
 		}
 		notification.NotificationQueues["VulnerabilityScan"].Queue <- NotificationMsg
@@ -329,10 +329,22 @@ func (h *handler) PageMonitoringInsertBody(result *types.PageMonitBody) {
 }
 
 func (h *handler) RootDomain(result *types.RootDomain) {
-	var interfaceSlice interface{}
+	selector := bson.M{"domain": result.Domain}
 	result.Project = h.GetAssetProject(result.Domain)
-	interfaceSlice = &result
-	ResultQueues["RootDomain"].Queue <- interfaceSlice
+	update := bson.M{
+		"$set": bson.M{
+			"icp":      result.ICP,
+			"tags":     result.Tags,
+			"taskName": result.TaskName,
+			"project":  result.Project,
+			"time":     result.Time,
+		},
+	}
+	op := types.BulkUpdateOperation{
+		Selector: selector,
+		Update:   update,
+	}
+	ResultQueues["RootDomain"].Queue <- op
 }
 
 func (h *handler) APP(result *types.APP) {

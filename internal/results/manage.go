@@ -109,7 +109,9 @@ func flushBuffer(module string, buffer *[]interface{}) {
 	}
 	var name string
 	if module == "SensitiveBody" {
-		Results.Update(buffer)
+		Results.Update(buffer, "SensitiveBody")
+	} else if module == "RootDomain" {
+		Results.Update(buffer, "RootDomain")
 	} else {
 		switch module {
 		case "SubdomainScan":
@@ -132,8 +134,6 @@ func flushBuffer(module string, buffer *[]interface{}) {
 			name = "PageMonitoring"
 		case "PageMonitoringBody":
 			name = "PageMonitoringBody"
-		case "RootDomain":
-			name = "RootDomain"
 		case "APP":
 			name = "APP"
 		case "MP":

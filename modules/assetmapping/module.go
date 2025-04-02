@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/options"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/plugins"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"sync"
@@ -129,8 +130,16 @@ func (r *Runner) ModuleRun() error {
 				nextModuleRun.Wait()
 				return nil
 			}
-			assets, ok := data.([]interface{})
-			if !ok {
+			//assets, ok := data.([]interface{})
+			//if !ok {
+			//	r.NextModule.GetInput() <- data
+			//	continue
+			//}
+			switch data.(type) {
+			case []interface{}:
+			case types.RootDomain:
+				r.NextModule.GetInput() <- data
+			default:
 				r.NextModule.GetInput() <- data
 				continue
 			}
@@ -140,7 +149,7 @@ func (r *Runner) ModuleRun() error {
 				firstData = true
 			}
 			allPluginWg.Add(1)
-			go func(assets []interface{}) {
+			go func(assets interface{}) {
 				defer allPluginWg.Done()
 				//发送来的数据 只能是types.Asset
 				if len(r.Option.AssetMapping) != 0 {
@@ -162,7 +171,7 @@ func (r *Runner) ModuleRun() error {
 							plg.SetTaskId(r.Option.ID)
 							plg.SetTaskName(r.Option.TaskName)
 							// 这里和其他模块不同 传递的是数组
-							pluginFunc := func(assets []interface{}) func() {
+							pluginFunc := func(assets interface{}) func() {
 								return func() {
 									defer plgWg.Done()
 									select {
@@ -188,11 +197,17 @@ func (r *Runner) ModuleRun() error {
 					}
 				} else {
 					// 如果没有开启资产测绘，将types.Asset 发送到结果处，在结果处进行转换
-					for _, asset := range assets {
-						resultChan <- asset
+					switch d := assets.(type) {
+					case []interface{}:
+						for _, asset := range d {
+							resultChan <- asset
+						}
+					default:
+						resultChan <- d
 					}
+
 				}
-			}(assets)
+			}(data)
 
 		}
 	}

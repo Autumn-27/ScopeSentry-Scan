@@ -86,13 +86,13 @@ func flushBuffer(module string, buffer *string) {
 		if api.Method == "GET" {
 			_, err := utils.Requests.HttpGet(uri)
 			if err != nil {
-				logger.SlogError(fmt.Sprintf("SendNotification HTTP Get Error: %s", uri))
+				logger.SlogError(fmt.Sprintf("SendNotification %v HTTP Get Error: %v", uri, err))
 			}
 		} else {
 			data := strings.Replace(api.Data, "*msg*", *buffer, -1)
 			err, _ := utils.Requests.HttpPost(uri, []byte(data), api.ContentType)
 			if err != nil {
-				logger.SlogError(fmt.Sprintf("SendNotification HTTP Post Error: %s", uri))
+				logger.SlogError(fmt.Sprintf("SendNotification %v HTTP Post Error: %v", uri, err))
 			}
 		}
 	}

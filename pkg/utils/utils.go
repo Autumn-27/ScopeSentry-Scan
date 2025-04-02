@@ -347,8 +347,8 @@ func (t *UtilTools) GetParameter(Parameters map[string]map[string]string, module
 
 // GetRootDomain 获取域名的根域名
 func (t *UtilTools) GetRootDomain(input string) (string, error) {
-	input = strings.TrimLeft(input, "http://")
-	input = strings.TrimLeft(input, "https://")
+	input = strings.TrimPrefix(input, "http://")
+	input = strings.TrimPrefix(input, "https://")
 	input = strings.Trim(input, "/")
 	ip := net.ParseIP(input)
 	if ip != nil {

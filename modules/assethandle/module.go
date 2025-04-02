@@ -148,7 +148,6 @@ func (r *Runner) ModuleRun() error {
 						// 数据库中不存在该资产，直接插入。
 						go results.Handler.AssetHttpInsert(&dataTmp)
 					}
-
 					assetHttpArray = append(assetHttpArray, dataTmp)
 					if len(assetHttpArray) > 10 {
 						r.NextModule.GetInput() <- assetHttpArray
