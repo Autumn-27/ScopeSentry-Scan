@@ -331,15 +331,36 @@ func (h *handler) PageMonitoringInsertBody(result *types.PageMonitBody) {
 func (h *handler) RootDomain(result *types.RootDomain) {
 	selector := bson.M{"domain": result.Domain}
 	result.Project = h.GetAssetProject(result.Domain)
+	var resultEx types.RootDomain
+	err := mongodb.MongodbClient.FindOne("RootDomain", bson.M{"domain": result.Domain}, nil, &resultEx)
+	tmpData := bson.M{
+		"icp":      result.ICP,
+		"tags":     result.Tags,
+		"taskName": result.TaskName,
+		"project":  result.Project,
+		"time":     result.Time,
+		"company":  result.Company,
+	}
+	if err != nil {
+		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
+	} else {
+		// mongodb中存在
+		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新，如果不一样需要更新，并且不一样的时候新的icp、company、project需要不为空
+		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project {
+			return
+		}
+		if result.ICP == "" {
+			tmpData["icp"] = resultEx.ICP
+		}
+		if result.Company == "" {
+			tmpData["company"] = resultEx.Company
+		}
+		if result.Project == "" {
+			tmpData["project"] = resultEx.Project
+		}
+	}
 	update := bson.M{
-		"$set": bson.M{
-			"icp":      result.ICP,
-			"tags":     result.Tags,
-			"taskName": result.TaskName,
-			"project":  result.Project,
-			"time":     result.Time,
-			"company":  result.Company,
-		},
+		"$set": tmpData,
 	}
 	op := types.BulkUpdateOperation{
 		Selector: selector,

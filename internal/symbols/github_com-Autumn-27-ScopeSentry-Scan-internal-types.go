@@ -10,6 +10,7 @@ import (
 func init() {
 	Symbols["github.com/Autumn-27/ScopeSentry-Scan/internal/types/types"] = map[string]reflect.Value{
 		// type definitions
+		"APP":                  reflect.ValueOf((*types.APP)(nil)),
 		"AssetChangeLog":       reflect.ValueOf((*types.AssetChangeLog)(nil)),
 		"AssetHttp":            reflect.ValueOf((*types.AssetHttp)(nil)),
 		"AssetOther":           reflect.ValueOf((*types.AssetOther)(nil)),
@@ -23,6 +24,7 @@ func init() {
 		"HttpResponse":         reflect.ValueOf((*types.HttpResponse)(nil)),
 		"HttpSample":           reflect.ValueOf((*types.HttpSample)(nil)),
 		"KatanaResult":         reflect.ValueOf((*types.KatanaResult)(nil)),
+		"MP":                   reflect.ValueOf((*types.MP)(nil)),
 		"NotificationApi":      reflect.ValueOf((*types.NotificationApi)(nil)),
 		"NotificationConfig":   reflect.ValueOf((*types.NotificationConfig)(nil)),
 		"PageMonit":            reflect.ValueOf((*types.PageMonit)(nil)),
@@ -31,6 +33,7 @@ func init() {
 		"PortAlive":            reflect.ValueOf((*types.PortAlive)(nil)),
 		"PortDict":             reflect.ValueOf((*types.PortDict)(nil)),
 		"Project":              reflect.ValueOf((*types.Project)(nil)),
+		"RootDomain":           reflect.ValueOf((*types.RootDomain)(nil)),
 		"SecretResults":        reflect.ValueOf((*types.SecretResults)(nil)),
 		"SensitiveResult":      reflect.ValueOf((*types.SensitiveResult)(nil)),
 		"SensitiveRule":        reflect.ValueOf((*types.SensitiveRule)(nil)),

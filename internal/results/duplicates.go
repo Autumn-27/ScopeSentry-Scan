@@ -197,3 +197,11 @@ func (d *duplicate) RootDomain(domain string, taskId string) bool {
 		return false
 	}
 }
+
+func (d *duplicate) Custom(locakKey string, redisKey string, redisValue string) bool {
+	if d.DuplicateLocalCache(locakKey) {
+		return d.DuplicateRedisCache(redisKey, redisValue)
+	} else {
+		return false
+	}
+}
