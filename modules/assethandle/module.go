@@ -155,12 +155,15 @@ func (r *Runner) ModuleRun() error {
 					}
 				case types.RootDomain:
 					dataTmp.TaskName = r.Option.TaskName
+					dataTmp.Time = utils.Tools.GetTimeNow()
 					go results.Handler.RootDomain(&dataTmp)
 				case types.APP:
 					dataTmp.TaskName = r.Option.TaskName
+					dataTmp.Time = utils.Tools.GetTimeNow()
 					go results.Handler.APP(&dataTmp)
 				case types.MP:
 					dataTmp.TaskName = r.Option.TaskName
+					dataTmp.Time = utils.Tools.GetTimeNow()
 					go results.Handler.MP(&dataTmp)
 				}
 			}

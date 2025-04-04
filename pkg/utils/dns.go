@@ -99,14 +99,16 @@ func (d *DnsTools) DNSdataToSubdomainResult(dnsData *retryabledns.DNSData) types
 		recordType = "UNKNOWN"
 	}
 	var value []string
-	value = append(value, dnsData.CNAME...)
-	value = append(value, dnsData.MX...)
-	value = append(value, dnsData.PTR...)
-	value = append(value, dnsData.NS...)
-	value = append(value, dnsData.TXT...)
-	value = append(value, dnsData.SRV...)
-	value = append(value, dnsData.CAA...)
-	value = append(value, dnsData.AllRecords...)
+	if recordType != "A" && recordType != "AAAA" {
+		value = append(value, dnsData.CNAME...)
+		value = append(value, dnsData.MX...)
+		value = append(value, dnsData.PTR...)
+		value = append(value, dnsData.NS...)
+		value = append(value, dnsData.TXT...)
+		value = append(value, dnsData.SRV...)
+		value = append(value, dnsData.CAA...)
+		//value = append(value, dnsData.AllRecords...)
+	}
 	var ip []string
 	ip = append(ip, dnsData.A...)
 	ip = append(ip, dnsData.AAAA...)
