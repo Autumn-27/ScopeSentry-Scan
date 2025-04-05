@@ -135,9 +135,9 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		case "PageMonitoringBody":
 			name = "PageMonitoringBody"
 		case "APP":
-			name = "APP"
+			name = "app"
 		case "MP":
-			name = "MP"
+			name = "mp"
 		}
 		Results.Insert(name, buffer)
 	}
