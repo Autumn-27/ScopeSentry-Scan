@@ -490,7 +490,7 @@ func (r *request) Httpx(targets []string, resultCallback func(r types.AssetHttp)
 //   - *http.Response: 成功返回响应体指针
 //   - error: 若请求多次失败则返回最后的错误
 func (r *request) HttpGetWithRetry(requestURL string, timeout time.Duration, maxRetries int, retryInterval time.Duration, headers map[string]string, proxyURL string) (*http.Response, error) {
-	// 设置代理
+	// 配置 Transport，控制连接和响应头的超时时间
 	var transport *http.Transport
 	if proxyURL != "" {
 		proxy, err := url.Parse(proxyURL)
@@ -498,17 +498,30 @@ func (r *request) HttpGetWithRetry(requestURL string, timeout time.Duration, max
 			logger.SlogWarnLocal(fmt.Sprintf("Invalid proxy URL: %v", err))
 			return nil, err
 		}
-		// 配置代理
-		transport = &http.Transport{Proxy: http.ProxyURL(proxy)}
+		transport = &http.Transport{
+			Proxy: http.ProxyURL(proxy),
+			DialContext: (&net.Dialer{
+				Timeout:   timeout, // 连接超时
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   timeout, // TLS 握手超时
+			ResponseHeaderTimeout: timeout, // 等响应头最大时间
+		}
 	} else {
-		// 默认不使用代理
-		transport = http.DefaultTransport.(*http.Transport).Clone()
+		transport = &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   timeout, // 连接超时
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   timeout, // TLS 握手超时
+			ResponseHeaderTimeout: timeout, // 等响应头最大时间
+		}
 	}
 
-	// 创建 HTTP 客户端
+	// 创建 HTTP 客户端（不设置整体超时）
 	client := &http.Client{
-		Timeout:   timeout,
 		Transport: transport,
+		Timeout:   0, // 不限制总耗时，避免 body 读取被中断
 	}
 
 	var resp *http.Response
@@ -557,7 +570,7 @@ func (r *request) HttpGetWithRetry(requestURL string, timeout time.Duration, max
 //   - *http.Response: 成功返回响应体指针
 //   - error: 若请求多次失败则返回最后的错误
 func (r *request) HttpPostWithRetry(requestURL string, body io.Reader, timeout time.Duration, maxRetries int, retryInterval time.Duration, headers map[string]string, proxyURL string) (*http.Response, error) {
-	// 设置代理
+	// 配置 Transport，控制连接和响应头的超时时间
 	var transport *http.Transport
 	if proxyURL != "" {
 		proxy, err := url.Parse(proxyURL)
@@ -565,17 +578,30 @@ func (r *request) HttpPostWithRetry(requestURL string, body io.Reader, timeout t
 			logger.SlogWarnLocal(fmt.Sprintf("Invalid proxy URL: %v", err))
 			return nil, err
 		}
-		// 配置代理
-		transport = &http.Transport{Proxy: http.ProxyURL(proxy)}
+		transport = &http.Transport{
+			Proxy: http.ProxyURL(proxy),
+			DialContext: (&net.Dialer{
+				Timeout:   timeout, // TCP连接超时
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   timeout,
+			ResponseHeaderTimeout: timeout,
+		}
 	} else {
-		// 默认不使用代理
-		transport = http.DefaultTransport.(*http.Transport).Clone()
+		transport = &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   timeout,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   timeout,
+			ResponseHeaderTimeout: timeout,
+		}
 	}
 
-	// 创建 HTTP 客户端
+	// 创建 HTTP 客户端（不设置总请求超时）
 	client := &http.Client{
-		Timeout:   timeout,
 		Transport: transport,
+		Timeout:   0,
 	}
 
 	var resp *http.Response
@@ -583,6 +609,7 @@ func (r *request) HttpPostWithRetry(requestURL string, body io.Reader, timeout t
 
 	// 重试机制
 	for attempt := 1; attempt <= maxRetries; attempt++ {
+		// 注意：body 不能重复读取，所以如果需要重试，应在外部传入支持重复读取的 reader（如 bytes.Buffer）
 		req, reqErr := http.NewRequest("POST", requestURL, body)
 		if reqErr != nil {
 			return nil, reqErr
