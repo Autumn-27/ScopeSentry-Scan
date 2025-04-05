@@ -344,6 +344,7 @@ type APP struct {
 	BundleID    string   `bson:"bundleID"`
 	Category    string   `bson:"category"`
 	Description string   `bson:"description"`
+	APK         bool     `bson:"apk"`
 	Logo        string   `bson:"logo"`
 	Tags        []string `bson:"tags"`
 	TaskName    string   `bson:"taskName"`
