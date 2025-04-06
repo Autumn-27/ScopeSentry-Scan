@@ -348,7 +348,8 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 		notification.FlushBuffer("New Asset", &tmp)
 	} else {
 		// mongodb中存在
-		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新，如果不一样需要更新，并且不一样的时候新的icp、company、project需要不为空
+		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新
+		// 如果不一样需要更新，并且不一样的时候新的icp、company、project需要不为空
 		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project {
 			return
 		}
