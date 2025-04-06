@@ -80,3 +80,23 @@ func (r *result) Update(result *[]interface{}, name string) bool {
 	}
 	return true
 }
+
+func (r *result) UpdateNow(op types.BulkUpdateOperation, name string) bool {
+	// 将 *[]interface{} 转换为 []types.BulkUpdateOperation
+	var operations []mongo.WriteModel
+
+	// 将 BulkUpdateOperation 转换为 mongo.UpdateOneModel 并添加到 operations 中
+	updateModel := mongo.NewUpdateOneModel().
+		SetFilter(op.Selector).
+		SetUpdate(op.Update).
+		SetUpsert(true) // 设置 Upsert 为 true，如果没有匹配文档，则插入新的文档
+
+	operations = append(operations, updateModel)
+	// 调用 BulkWrite 批量写入或更新操作
+	_, err := mongodb.MongodbClient.BulkWrite(name, operations)
+	if err != nil {
+		fmt.Println("Error during bulk write:", err)
+		return false
+	}
+	return true
+}

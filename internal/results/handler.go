@@ -343,6 +343,9 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 	}
 	if err != nil {
 		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
+		// 通知新增根域名
+		tmp := fmt.Sprintf("Found a new root domain name: %v - %v - %v - %v", result.Domain, result.ICP, result.Company, result.Project)
+		notification.FlushBuffer("New Asset", &tmp)
 	} else {
 		// mongodb中存在
 		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新，如果不一样需要更新，并且不一样的时候新的icp、company、project需要不为空
@@ -366,7 +369,8 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 		Selector: selector,
 		Update:   update,
 	}
-	ResultQueues["RootDomain"].Queue <- op
+	Results.UpdateNow(op, "RootDomain")
+	//ResultQueues["RootDomain"].Queue <- op
 }
 
 func (h *handler) APP(result *types.APP) {
