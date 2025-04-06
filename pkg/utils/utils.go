@@ -334,6 +334,37 @@ func (t *UtilTools) DeleteFile(filePath string) {
 	}
 }
 
+func (t *UtilTools) DeleteFolder(folderPath string) error {
+	// 检查文件夹是否存在
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+		return fmt.Errorf("文件夹不存在: %s", folderPath)
+	}
+
+	// 遍历文件夹中的所有文件和子文件夹并删除
+	err := filepath.Walk(folderPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// 删除文件
+		if !info.IsDir() {
+			return os.Remove(path)
+		}
+		// 删除空文件夹
+		return os.Remove(path)
+	})
+	if err != nil {
+		return fmt.Errorf("删除文件夹失败: %v", err)
+	}
+
+	// 删除根文件夹
+	err = os.Remove(folderPath)
+	if err != nil {
+		return fmt.Errorf("删除文件夹失败: %v", err)
+	}
+
+	return nil
+}
+
 // GetParameter 获取指定模块指定插件的参数
 func (t *UtilTools) GetParameter(Parameters map[string]map[string]string, module string, plugin string) (string, bool) {
 	// 查找 module 是否存在
@@ -525,6 +556,7 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 
 // ExecuteCommandToChanWithTimeout 执行指定命令，命令的输出每一行会发送到 result 的通道中，支持上下文管理和超时时间。
 func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []string, result chan<- string, timeout time.Duration, ctx context.Context) {
+	logger.SlogInfo(fmt.Sprintf("ExecuteCommandToChanWithTimeout cmd: %v args %v", cmdName, args))
 	// 使用超时时间包装上下文
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -573,11 +605,13 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 		wg.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
+			txt := scanner.Text()
 			select {
 			case <-ctxWithTimeout.Done():
 				return
 			default:
-				logger.SlogWarnLocal(fmt.Sprintf("Error getting stderr: %s", scanner.Text()))
+				result <- txt
+				logger.SlogWarnLocal(fmt.Sprintf("Error getting stderr: %s", txt))
 			}
 		}
 		if err := scanner.Err(); err != nil {
@@ -600,6 +634,7 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 
 // ExecuteCommandToChan 执行指定命令，命令的输出每一行会发送到result的通道中。
 func (t *UtilTools) ExecuteCommandToChan(cmdName string, args []string, result chan<- string) {
+	logger.SlogInfo(fmt.Sprintf("ExecuteCommandToChan cmd: %v args %v", cmdName, args))
 	// 创建命令
 	cmd := exec.Command(cmdName, args...)
 

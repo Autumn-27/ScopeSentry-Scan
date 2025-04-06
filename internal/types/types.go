@@ -357,6 +357,7 @@ type MP struct {
 	Url         string   `bson:"url"`
 	ICP         string   `bson:"icp"`
 	Description string   `bson:"description"`
+	Category    string   `bson:"category"`
 	Company     string   `bson:"company"`
 	FilePath    string   `bson:"-"`
 	Tags        []string `bson:"tags"`

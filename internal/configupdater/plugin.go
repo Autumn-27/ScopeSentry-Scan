@@ -50,7 +50,7 @@ func InstallPlugin(id string) {
 
 	plugin, err := plugins.LoadCustomPlugin(plgPath, result.Module, result.Hash)
 	if err != nil {
-		logger.SlogError(fmt.Sprintf("load plugin error: %v %v %v", plgPath, result.Module, result.Hash))
+		logger.SlogError(fmt.Sprintf("load plugin error: %v %v %v %v", plgPath, result.Module, result.Hash, err))
 		return
 	}
 	plugins.GlobalPluginManager.RegisterPlugin(plugin.GetModule(), plugin.GetPluginId(), plugin)

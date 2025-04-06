@@ -137,6 +137,8 @@ func (r *Runner) ModuleRun() error {
 			//}
 			switch data.(type) {
 			case []interface{}:
+			case types.Company:
+			case types.ICP:
 			case types.RootDomain:
 				r.NextModule.GetInput() <- data
 			default:
