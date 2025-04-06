@@ -10,6 +10,7 @@ import (
 func init() {
 	Symbols["github.com/Autumn-27/ScopeSentry-Scan/internal/notification/notification"] = map[string]reflect.Value{
 		// function, constant and variable definitions
+		"FlushBuffer":            reflect.ValueOf(notification.FlushBuffer),
 		"InitializeNotification": reflect.ValueOf(notification.InitializeNotification),
 		"NotificationQueues":     reflect.ValueOf(&notification.NotificationQueues).Elem(),
 

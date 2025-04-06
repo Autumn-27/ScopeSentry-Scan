@@ -8,9 +8,11 @@
 package utils
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/md5"
 	"encoding/base64"
@@ -1127,6 +1129,67 @@ func (t *UtilTools) UnzipSrcToDest(src string, dest string) error {
 		}
 	}
 	return nil
+}
+
+func (t *UtilTools) UntarGz(src, dest string) error {
+	file, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return err
+	}
+	defer gzReader.Close()
+
+	tarReader := tar.NewReader(gzReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		targetPath := filepath.Join(dest, header.Name)
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); err != nil {
+				return err
+			}
+
+			outFile, err := os.Create(targetPath)
+			if err != nil {
+				return err
+			}
+
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				outFile.Close()
+				return err
+			}
+			outFile.Close()
+		}
+	}
+
+	return nil
+}
+
+func (t *UtilTools) UnzipFile(src, dest string) error {
+	if strings.HasSuffix(src, ".zip") {
+		return t.UnzipSrcToDest(src, dest)
+	} else if strings.HasSuffix(src, ".tar.gz") {
+		return t.UntarGz(src, dest)
+	}
+	return fmt.Errorf("unsupported file format: %s", src)
 }
 
 // RemoveStringDuplicates 数组去重

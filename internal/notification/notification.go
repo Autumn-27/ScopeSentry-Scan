@@ -73,12 +73,12 @@ func processBatch(module string, mq *NotificationQueue) {
 	}
 
 	if num > 0 {
-		flushBuffer(module, &buffer)
+		FlushBuffer(module, &buffer)
 	}
 }
 
-// flushBuffer 模拟处理队列中的数据
-func flushBuffer(module string, buffer *string) {
+// FlushBuffer 模拟处理队列中的数据
+func FlushBuffer(module string, buffer *string) {
 	// 处理消息
 	*buffer = "[" + global.AppConfig.NodeName + "][" + module + "]results:\n" + *buffer
 	for _, api := range global.NotificationApi {

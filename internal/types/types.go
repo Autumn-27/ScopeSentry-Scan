@@ -364,3 +364,11 @@ type MP struct {
 	Project     string   `bson:"project"`
 	Time        string   `bson:"time"`
 }
+
+type Company struct {
+	Name string
+}
+
+type ICP struct {
+	ICP string
+}

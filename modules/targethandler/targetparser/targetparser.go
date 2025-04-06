@@ -186,6 +186,16 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- tmpDominSkip
 		return nil, nil
 	}
+	if strings.HasPrefix(target, "CMP:") {
+		name := strings.Replace(target, "CMP:", "", 1)
+		p.Result <- types.Company{Name: name}
+		return nil, nil
+	}
+	if strings.HasPrefix(target, "ICP:") {
+		name := strings.Replace(target, "ICP:", "", 1)
+		p.Result <- types.Company{Name: name}
+		return nil, nil
+	}
 	rootDomain, err := utils.Tools.GetRootDomain(target)
 	if err == nil {
 		if net.ParseIP(rootDomain) == nil {
