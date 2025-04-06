@@ -335,33 +335,10 @@ func (t *UtilTools) DeleteFile(filePath string) {
 }
 
 func (t *UtilTools) DeleteFolder(folderPath string) error {
-	// 检查文件夹是否存在
-	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
-		return fmt.Errorf("文件夹不存在: %s", folderPath)
-	}
-
-	// 遍历文件夹中的所有文件和子文件夹并删除
-	err := filepath.Walk(folderPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// 删除文件
-		if !info.IsDir() {
-			return os.Remove(path)
-		}
-		// 删除空文件夹
-		return os.Remove(path)
-	})
+	err := os.RemoveAll(folderPath)
 	if err != nil {
 		return fmt.Errorf("删除文件夹失败: %v", err)
 	}
-
-	// 删除根文件夹
-	err = os.Remove(folderPath)
-	if err != nil {
-		return fmt.Errorf("删除文件夹失败: %v", err)
-	}
-
 	return nil
 }
 

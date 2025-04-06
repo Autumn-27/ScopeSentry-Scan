@@ -310,6 +310,7 @@ func LoadPlugin() {
 		logger.SlogErrorLocal(fmt.Sprintf("find plugin error: %v", err))
 		return
 	}
+	utils.Tools.DeleteFolder(global.PluginDir)
 	for _, r := range result {
 		plgPath := filepath.Join(global.PluginDir, r.Module, fmt.Sprintf("%v.go", r.Hash))
 		err = utils.Tools.WriteContentFile(plgPath, r.Source)
