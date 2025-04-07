@@ -3,6 +3,18 @@ FROM python:3.7-slim
 WORKDIR /apps
 COPY msyh.ttc /usr/share/fonts/
 
+# 更换国内源
+RUN rm -rf /etc/apt/sources.list.d/debian.sources && printf "%s\n" \
+"deb https://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" \
+"deb-src https://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" \
+"deb https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" \
+"deb-src https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" \
+"deb https://mirrors.aliyun.com/debian/ bookworm-backports main contrib non-free non-free-firmware" \
+"deb-src https://mirrors.aliyun.com/debian/ bookworm-backports main contrib non-free non-free-firmware" \
+"deb https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" \
+"deb-src https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" \
+> /etc/apt/sources.list
+
 # 更新软件包列表并安装必要的软件包
 RUN apt-get update && apt-get install -y \
     libexif-dev \
@@ -37,5 +49,10 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 # 设置编码
 ENV LANG C.UTF-8
 
+# 使用tini解决容器中截图及调用任何插件可能导致的僵尸进程问题，原理可参考：https://cn.linux-console.net/?p=20630
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
 # 运行golang程序的命令
-ENTRYPOINT ["/apps/ScopeSentry"]
+ENTRYPOINT ["/tini", "--", "/apps/ScopeSentry"]
