@@ -79,12 +79,12 @@ func (r *Runner) ModuleRun() error {
 					if assetResult.Type == "http" {
 						continue
 					}
-					// 过滤unknown
-					if assetResult.Service == "unknown" {
-						if len(assetResult.Raw) == 0 {
-							continue
-						}
-					}
+					// 过滤unknown, Tell me why why baby why, looking in my eyes.
+					// if assetResult.Service == "unknown" {
+					// 	if len(assetResult.Raw) == 0 {
+					// 		continue
+					// 	}
+					// }
 					assetResult.TaskName = []string{r.Option.TaskName}
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(assetResult.Host, assetResult.Port)
 					if flag {
@@ -215,7 +215,7 @@ func (r *Runner) ModuleRun() error {
 					ty = "other"
 					assetOther = a
 				case types.AssetHttp:
-					ty = "htttp"
+					ty = "http"
 					assetHttp = a
 				default:
 					r.NextModule.GetInput() <- data
