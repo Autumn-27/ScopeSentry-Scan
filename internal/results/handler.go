@@ -344,8 +344,10 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 	if err != nil {
 		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
 		// 通知新增根域名
-		tmp := fmt.Sprintf("Found a new root domain name: %v - %v - %v - %v", result.Domain, result.ICP, result.Company, result.Project)
-		notification.FlushBuffer("New Asset", &tmp)
+		if global.NotificationConfig.NewAsset {
+			tmp := fmt.Sprintf("Found a new root domain name: %v - %v - %v - %v", result.Domain, result.ICP, result.Company, result.Project)
+			notification.NotificationQueues["NewAssets"].Queue <- tmp
+		}
 	} else {
 		// mongodb中存在
 		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新
@@ -362,6 +364,7 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 		if result.Project == "" {
 			tmpData["project"] = resultEx.Project
 		}
+		tmpData["tags"] = append(resultEx.Tags, result.Tags...)
 	}
 	update := bson.M{
 		"$set": tmpData,
@@ -375,15 +378,153 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 }
 
 func (h *handler) APP(result *types.APP) {
-	var interfaceSlice interface{}
 	result.Project = h.GetAssetProject(result.ICP)
-	interfaceSlice = &result
-	ResultQueues["APP"].Queue <- interfaceSlice
+	selector := bson.M{"name": result.Name}
+	result.Project = h.GetAssetProject(result.Company)
+	var resultEx types.APP
+	tmpData := bson.M{
+		"name":        result.Name,
+		"version":     result.Version,
+		"url":         result.Url,
+		"icp":         result.ICP,
+		"company":     result.Company,
+		"bundleID":    result.BundleID,
+		"category":    result.Category,
+		"description": result.Description,
+		"apk":         result.APK,
+		"logo":        result.Logo,
+		"tags":        result.Tags,
+		"taskName":    result.TaskName,
+		"project":     result.Project,
+		"time":        result.Time,
+	}
+	err := mongodb.MongodbClient.FindOne("app", bson.M{"name": result.Name}, nil, &resultEx)
+	if err != nil {
+		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
+		// 通知新增根域名
+		if global.NotificationConfig.NewAsset {
+			tmp := fmt.Sprintf("Found a new app name: %v - %v - %v - %v", result.Name, result.ICP, result.Company, result.Project)
+			notification.NotificationQueues["NewAssets"].Queue <- tmp
+		}
+	} else {
+		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project && resultEx.BundleID == result.BundleID {
+			return
+		}
+		if result.Name == "" {
+			tmpData["name"] = resultEx.Name
+		}
+
+		if result.Version == "" {
+			tmpData["version"] = resultEx.Version
+		}
+
+		if result.Url == "" {
+			tmpData["url"] = resultEx.Url
+		}
+
+		if result.ICP == "" {
+			tmpData["icp"] = resultEx.ICP
+		}
+
+		if result.Company == "" {
+			tmpData["company"] = resultEx.Company
+		}
+
+		if result.BundleID == "" {
+			tmpData["bundleID"] = resultEx.BundleID
+		}
+
+		if result.Category == "" {
+			tmpData["category"] = resultEx.Category
+		}
+
+		if result.Description == "" {
+			tmpData["description"] = resultEx.Description
+		}
+
+		if result.APK == "" {
+			tmpData["apk"] = resultEx.APK
+		}
+
+		if result.Logo == "" {
+			tmpData["logo"] = resultEx.Logo
+		}
+
+		tmpData["tags"] = append(resultEx.Tags, result.Tags...)
+
+	}
+	update := bson.M{
+		"$set": tmpData,
+	}
+	op := types.BulkUpdateOperation{
+		Selector: selector,
+		Update:   update,
+	}
+	Results.UpdateNow(op, "app")
 }
 
 func (h *handler) MP(result *types.MP) {
-	var interfaceSlice interface{}
 	result.Project = h.GetAssetProject(result.ICP)
-	interfaceSlice = &result
-	ResultQueues["MP"].Queue <- interfaceSlice
+	selector := bson.M{"name": result.Name}
+	result.Project = h.GetAssetProject(result.Company)
+	var resultEx types.MP
+	tmpData := bson.M{
+		"name":        result.Name,
+		"url":         result.Url,
+		"icp":         result.ICP,
+		"description": result.Description,
+		"category":    result.Category,
+		"company":     result.Company,
+		"tags":        result.Tags,
+		"taskName":    result.TaskName,
+		"project":     result.Project,
+		"time":        result.Time,
+	}
+	err := mongodb.MongodbClient.FindOne("mp", bson.M{"name": result.Name}, nil, &resultEx)
+	if err != nil {
+		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
+		// 通知新增根域名
+		if global.NotificationConfig.NewAsset {
+			tmp := fmt.Sprintf("Found a new mp name: %v - %v - %v - %v", result.Name, result.ICP, result.Company, result.Project)
+			notification.NotificationQueues["NewAssets"].Queue <- tmp
+		}
+	} else {
+		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project {
+			return
+		}
+		if result.Name == "" {
+			tmpData["name"] = resultEx.Name
+		}
+
+		if result.Url == "" {
+			tmpData["url"] = resultEx.Url
+		}
+
+		if result.ICP == "" {
+			tmpData["icp"] = resultEx.ICP
+		}
+
+		if result.Company == "" {
+			tmpData["company"] = resultEx.Company
+		}
+
+		if result.Category == "" {
+			tmpData["category"] = resultEx.Category
+		}
+
+		if result.Description == "" {
+			tmpData["description"] = resultEx.Description
+		}
+
+		tmpData["tags"] = append(resultEx.Tags, result.Tags...)
+
+	}
+	update := bson.M{
+		"$set": tmpData,
+	}
+	op := types.BulkUpdateOperation{
+		Selector: selector,
+		Update:   update,
+	}
+	Results.UpdateNow(op, "mp")
 }
