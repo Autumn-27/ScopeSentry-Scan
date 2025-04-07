@@ -258,6 +258,7 @@ type NotificationConfig struct {
 	PageMonNotification           bool   `bson:"pageMonNotification"`
 	VulNotification               bool   `bson:"vulNotification"`
 	VulLevel                      string `bson:"vulLevel"`
+	NewAsset                      bool   `bson:"newAsset"`
 }
 
 type NotificationApi struct {

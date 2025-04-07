@@ -295,7 +295,7 @@ func UpdateNotification() {
 		logger.SlogError(fmt.Sprintf("UpdateNotification error notification api: %s", err))
 		return
 	}
-	if err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "notification"}, bson.M{"_id": 0, "dirScanNotification": 1, "portScanNotification": 1, "sensitiveNotification": 1, "subdomainTakeoverNotification": 1, "pageMonNotification": 1, "subdomainNotification": 1, "vulNotification": 1, "vulLevel": 1}, &global.NotificationConfig); err != nil {
+	if err := mongodb.MongodbClient.FindOne("config", bson.M{"name": "notification"}, bson.M{"_id": 0, "dirScanNotification": 1, "portScanNotification": 1, "sensitiveNotification": 1, "subdomainTakeoverNotification": 1, "pageMonNotification": 1, "subdomainNotification": 1, "vulNotification": 1, "vulLevel": 1, "newAsset": 1}, &global.NotificationConfig); err != nil {
 		logger.SlogError(fmt.Sprintf("UpdateNotification error notification config: %s", err))
 		return
 	}
