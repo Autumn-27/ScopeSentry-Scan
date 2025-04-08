@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	ssconfig "github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
@@ -19,8 +20,9 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/dlclark/regexp2"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/config"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors"
-	"github.com/trufflesecurity/trufflehog/v3/pkg/engine/defaults"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -109,8 +111,28 @@ func (p *Plugin) GetModule() string {
 	return p.Module
 }
 
+var AllScanners map[string]detectors.Detector
+
 func (p *Plugin) Install() error {
-	getAllScanners()
+	id := ssconfig.GetDictId("trufflehog", "config")
+	var Detectors []detectors.Detector
+	//Detectors = defaults.DefaultDetectors()
+	filePath := filepath.Join(global.DictPath, id)
+	if filePath != "" {
+		input, err := os.ReadFile(filePath)
+		if err != nil {
+			logger.SlogWarn(fmt.Sprintf("[%v] trufflehog get custom file error %v", p.Name, err))
+		} else {
+			customDetect, err := config.NewYAML(input)
+			if err != nil {
+				logger.SlogWarn(fmt.Sprintf("[%v] trufflehog custom file new yaml error %v", p.Name, err))
+			} else {
+				logger.SlogInfoLocal(fmt.Sprintf("[%v] init custom scanner number %v", p.Name, len(customDetect.Detectors)))
+				Detectors = append(Detectors, customDetect.Detectors...)
+			}
+		}
+	}
+	getAllScanners(Detectors)
 	logger.SlogInfoLocal(fmt.Sprintf("[%v] init scanner number %v", p.Name, len(AllScanners)))
 	return nil
 }
@@ -129,13 +151,16 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
-var AllScanners map[string]detectors.Detector
-
-func getAllScanners() {
+func getAllScanners(Detectors []detectors.Detector) {
 	AllScanners = make(map[string]detectors.Detector)
-	for _, s := range defaults.DefaultDetectors() {
+	flag := 0
+	for _, s := range Detectors {
 		secretType := reflect.Indirect(reflect.ValueOf(s)).Type().PkgPath()
 		path := strings.Split(secretType, "/")[len(strings.Split(secretType, "/"))-1]
+		if strings.Contains(path, "custom_detectors") {
+			path = fmt.Sprintf("custom_detectors_%v", flag)
+			flag += 1
+		}
 		AllScanners[path] = s
 	}
 }
@@ -145,18 +170,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("input is not types.UrlResult")
 	}
-	if data.Status != 200 || data.Body == "" {
+	if data.Body == "" {
 		return nil, nil
-	}
-	if len(global.SensitiveRules) == 0 {
-		return nil, errors.New("SensitiveRules is null")
 	}
 	//var start time.Time
 	//var end time.Time
 	//start = time.Now()
 	// 检查body是否在当前任务已经检测过
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
-	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
+	duplicateFlag := results.Duplicate.SensitiveBody(p.GetName()+respMd5, p.TaskId)
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	exclude := []string{}
 	verify := false
@@ -245,6 +267,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							Tags:     []string{p.Name},
 						}
 						for _, res := range result {
+							if res.DetectorName != "" {
+								if strings.Contains(tmpResult.SID, "custom_detectors") {
+									tmpResult.SID = res.DetectorName
+								}
+							}
 							logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
 							if verify {
 								if res.Verified {
