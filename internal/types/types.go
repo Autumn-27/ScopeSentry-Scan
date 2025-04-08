@@ -139,6 +139,7 @@ type CrawlerResult struct {
 	Method     string
 	Body       string
 	Project    string
+	ResBody    string   `bson:"-"`
 	TaskName   string   `bson:"taskName"`
 	ResultId   string   `bson:"resultId"`
 	RootDomain string   `bson:"rootDomain"`

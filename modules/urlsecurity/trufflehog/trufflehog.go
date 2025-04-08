@@ -9,7 +9,6 @@ package trufflehog
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	ssconfig "github.com/Autumn-27/ScopeSentry-Scan/internal/config"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
@@ -168,7 +167,19 @@ func getAllScanners(Detectors []detectors.Detector) {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
-		return nil, errors.New("input is not types.UrlResult")
+		tmp, ok := input.(types.CrawlerResult)
+		if !ok {
+			return nil, nil
+		}
+		data = types.UrlResult{
+			ResultId: tmp.ResultId,
+			Body:     tmp.ResBody,
+		}
+		if tmp.Method == "GET" {
+			data.Output = tmp.Url
+		} else {
+			data.Output = fmt.Sprintf("POST|%v|%v", tmp.Url, tmp.Body)
+		}
 	}
 	if data.Body == "" {
 		return nil, nil
