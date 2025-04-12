@@ -509,8 +509,46 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	// 创建命令对象，使用带上下文的 exec.CommandContext
 	cmd := exec.CommandContext(mergedCtx, command, args...)
 
-	// 执行命令，不获取输出
-	err := cmd.Run()
+	// 获取标准输出和标准错误
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get stdout: %w", err)
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get stderr: %w", err)
+	}
+
+	// 启动命令
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start command: %w", err)
+	}
+
+	// 使用 goroutine 实时读取 stdout 和 stderr 并打印
+	go func() {
+		scanner := bufio.NewScanner(stdoutPipe)
+		for scanner.Scan() {
+			logger.SlogInfo(fmt.Sprintf("%v stdout: %s", command, scanner.Text()))
+		}
+		if err := scanner.Err(); err != nil {
+			logger.SlogWarnLocal(fmt.Sprintf("%v stdout scan error: %v", command, err))
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stderrPipe)
+		for scanner.Scan() {
+			logger.SlogWarnLocal(fmt.Sprintf("%v stderr: %s", command, scanner.Text()))
+		}
+		if err := scanner.Err(); err != nil {
+			logger.SlogWarnLocal(fmt.Sprintf("%v stderr scan error: %v", command, err))
+		}
+	}()
+
+	// 等待命令完成
+	err = cmd.Wait()
+
 	if err != nil {
 		// 如果是上下文取消的错误
 		if errors.Is(mergedCtx.Err(), context.Canceled) {
@@ -579,7 +617,7 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 	wg.Add(1)
 	// 使用 goroutine 读取命令的错误输出
 	go func() {
-		wg.Done()
+		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			txt := scanner.Text()
@@ -1318,4 +1356,38 @@ func (t *UtilTools) GetPdfContent(filePath string) string {
 	buf.ReadFrom(b)
 
 	return buf.String()
+}
+
+func (t *UtilTools) MoveContents(srcDir, dstDir string) error {
+	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 忽略根目录
+		if path == srcDir {
+			return nil
+		}
+
+		// 计算目标路径
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dstDir, relPath)
+
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, info.Mode())
+		} else {
+			// 是文件就移动
+			return t.MoveFile(path, dstPath)
+		}
+	})
+}
+
+func (t *UtilTools) MoveFile(src, dst string) error {
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		return err
+	}
+	return os.Rename(src, dst) // 也可以先 copy 再删原文件，防止跨盘失败
 }
