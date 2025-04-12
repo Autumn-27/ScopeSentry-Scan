@@ -72,7 +72,10 @@ func (r *Runner) ModuleRun() error {
 					urlResult.TaskName = r.Option.TaskName
 					hash := utils.Tools.GenerateHash()
 					urlResult.ResultId = hash
-					go results.Handler.URL(&urlResult)
+					if !urlResult.IsFile {
+						// app文件不存入数据库url result
+						go results.Handler.URL(&urlResult)
+					}
 					r.NextModule.GetInput() <- urlResult
 				} else {
 					r.NextModule.GetInput() <- result

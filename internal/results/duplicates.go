@@ -171,8 +171,8 @@ func (d *duplicate) URLParams(rawUrl string) string {
 	return dupKey
 }
 
-func (d *duplicate) SensitiveBody(md5 string, taskId string) bool {
-	key := "duplicates:" + taskId + ":SensitiveBody:" + md5
+func (d *duplicate) SensitiveBody(md5 string, taskId string, tp string) bool {
+	key := "duplicates:" + taskId + fmt.Sprintf(":%v", tp) + ":SensitiveBody:" + md5
 	return d.DuplicateLocalCache(key)
 }
 

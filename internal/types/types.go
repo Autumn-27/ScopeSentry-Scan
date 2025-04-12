@@ -116,6 +116,7 @@ type UrlResult struct {
 	Time       string `json:"time"`
 	Body       string `bson:"body"`
 	Ext        string `bson:"ext"`
+	IsFile     bool   `bson:"-"`
 	Project    string
 	TaskName   string   `bson:"taskName"`
 	ResultId   string   `bson:"resultId"`

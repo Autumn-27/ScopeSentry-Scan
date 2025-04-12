@@ -184,12 +184,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if data.Body == "" {
 		return nil, nil
 	}
-	//var start time.Time
-	//var end time.Time
-	//start = time.Now()
 	// 检查body是否在当前任务已经检测过
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
-	duplicateFlag := results.Duplicate.SensitiveBody(p.GetName()+respMd5, p.TaskId)
+	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId, "truffle")
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	exclude := []string{}
 	verify := false

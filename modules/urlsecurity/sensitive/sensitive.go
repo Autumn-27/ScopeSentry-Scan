@@ -148,7 +148,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	//start = time.Now()
 	// 检查body是否在当前任务已经检测过
 	respMd5 := utils.Tools.CalculateMD5(data.Body)
-	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId)
+	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId, "sens")
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	if duplicateFlag {
 		pdfCheck := false

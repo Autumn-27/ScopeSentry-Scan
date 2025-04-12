@@ -529,10 +529,10 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	go func() {
 		scanner := bufio.NewScanner(stdoutPipe)
 		for scanner.Scan() {
-			logger.SlogInfo(fmt.Sprintf("%v stdout: %s", command, scanner.Text()))
+			logger.SlogInfo(fmt.Sprintf("%v stdout: %s", filepath.Base(command), scanner.Text()))
 		}
 		if err := scanner.Err(); err != nil {
-			logger.SlogWarnLocal(fmt.Sprintf("%v stdout scan error: %v", command, err))
+			logger.SlogWarnLocal(fmt.Sprintf("%v stdout scan error: %v", filepath.Base(command), err))
 		}
 	}()
 

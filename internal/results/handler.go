@@ -197,7 +197,16 @@ func (h *handler) Crawler(result *types.CrawlerResult) {
 
 func (h *handler) Sensitive(result *types.SensitiveResult) {
 	var interfaceSlice interface{}
-	rootDomain, err := utils.Tools.GetRootDomain(result.Url)
+	rootDomain := ""
+	var err error
+	if strings.HasPrefix(result.Url, "APP:") {
+		tmpPart := strings.Split(result.Url, ":")
+		if len(tmpPart) >= 2 {
+			rootDomain = tmpPart[1]
+		}
+	} else {
+		rootDomain, err = utils.Tools.GetRootDomain(result.Url)
+	}
 	if err != nil {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Url, err))
 	}
@@ -398,7 +407,12 @@ func (h *handler) APP(result *types.APP) {
 		"project":     result.Project,
 		"time":        result.Time,
 	}
-	err := mongodb.MongodbClient.FindOne("app", bson.M{"name": result.Name}, nil, &resultEx)
+	var err error
+	if result.Name != "" {
+		err = mongodb.MongodbClient.FindOne("app", bson.M{"name": result.Name}, nil, &resultEx)
+	} else if result.BundleID != "" {
+		err = mongodb.MongodbClient.FindOne("app", bson.M{"bundleID": result.BundleID}, nil, &resultEx)
+	}
 	if err != nil {
 		// 出现错误表示 mongodb中不存在， 不存在则不进行处理 直接更新插入
 		// 通知新增根域名
@@ -410,6 +424,7 @@ func (h *handler) APP(result *types.APP) {
 		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project && resultEx.BundleID == result.BundleID {
 			return
 		}
+
 		if result.Name == "" {
 			tmpData["name"] = resultEx.Name
 		}
