@@ -224,39 +224,32 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
+		"-j",
 		"-fs", "rdn", "-js-crawl", "-jsonl",
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
 		"-c", threads,
 		"-p", "10",
-		"-o", resultFile,
 	}
 	if proxy != "" {
 		args = append(args, "-proxy")
 		args = append(args, proxy)
 	}
 	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
+	resultChan := make(chan string, 300)
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
-	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute, ctx)
-	if err != nil {
-		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
-	}
-	resultChan := make(chan string, 100)
-
 	go func() {
-		err = utils.Tools.ReadFileLineReader(resultFile, resultChan, ctx)
-		if err != nil {
-			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
-		}
+		utils.Tools.ExecuteCommandToChanWithTimeout(cmd, args, resultChan, time.Duration(executionTimeout)*time.Minute, ctx)
 	}()
+
 	var katanaResult types.KatanaResult
 	filename := utils.Tools.CalculateMD5(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	for result := range resultChan {
-		err = json.Unmarshal([]byte(result), &katanaResult)
+		err := json.Unmarshal([]byte(result), &katanaResult)
 		if err != nil {
-			p.Log(fmt.Sprintf("[%v]JSON解析错误:%v", result, err), "e")
+			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
 			continue
 		}
 		// 去重
