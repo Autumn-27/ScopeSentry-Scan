@@ -219,8 +219,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	start := time.Now()
 	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
-	resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
-	defer utils.Tools.DeleteFile(resultFile)
+	//resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
+	//defer utils.Tools.DeleteFile(resultFile)
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
@@ -235,7 +235,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		args = append(args, "-proxy")
 		args = append(args, proxy)
 	}
-	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
+	//logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
 	resultChan := make(chan string, 300)
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	go func() {

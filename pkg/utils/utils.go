@@ -602,16 +602,21 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 	// 使用 goroutine 读取命令的标准输出
 	go func() {
 		defer wg.Done()
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
+		reader := bufio.NewReader(stdout)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				logger.SlogWarnLocal(fmt.Sprintf("Error reading stdout: %v", err))
+				break
+			}
 			select {
-			case result <- scanner.Text():
+			case result <- strings.TrimRight(line, "\n"):
 			case <-ctxWithTimeout.Done():
 				return
 			}
-		}
-		if err := scanner.Err(); err != nil {
-			logger.SlogWarnLocal(fmt.Sprintf("Error getting reading stdout: %v", err))
 		}
 	}()
 	wg.Add(1)
