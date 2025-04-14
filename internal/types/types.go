@@ -9,7 +9,6 @@ package types
 import (
 	"encoding/json"
 	"github.com/dlclark/regexp2"
-	"github.com/projectdiscovery/katana/pkg/navigation"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
 	"regexp"
@@ -295,11 +294,23 @@ type DomainResolve struct {
 }
 
 type KatanaResult struct {
-	Timestamp        time.Time
-	Request          *navigation.Request
-	Response         *navigation.Response
-	PassiveReference *navigation.PassiveReference
-	Error            string
+	Timestamp time.Time
+	Request   *Request
+	Response  *Response
+	Error     string
+}
+
+type Request struct {
+	Method    string `json:"method,omitempty"`
+	URL       string `json:"endpoint,omitempty"`
+	Body      string `json:"body,omitempty"`
+	Attribute string `json:"attribute,omitempty"`
+	Source    string `json:"source,omitempty"`
+}
+
+type Response struct {
+	StatusCode int    `json:"status_code,omitempty"`
+	Body       string `json:"body,omitempty"`
 }
 
 type PageMonit struct {

@@ -602,7 +602,7 @@ func (t *UtilTools) ExecuteCommandToChanWithTimeout(cmdName string, args []strin
 	// 使用 goroutine 读取命令的标准输出
 	go func() {
 		defer wg.Done()
-		reader := bufio.NewReader(stdout)
+		reader := bufio.NewReaderSize(stdout, 7340032)
 		for {
 			line, err := reader.ReadString('\n')
 			if err != nil {
