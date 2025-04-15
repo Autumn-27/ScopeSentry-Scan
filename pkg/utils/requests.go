@@ -37,6 +37,12 @@ var Requests *request
 var HttpClient *fasthttp.Client
 var Wappalyzer *wappalyzer.Wappalyze
 
+type HttpResponse struct {
+	StatusCode int
+	Headers    map[string]string
+	Body       []byte
+}
+
 func InitializeRequests() {
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelWarning) // increase the verbosity (optional)
 	tlsConfig := &tls.Config{
@@ -115,7 +121,7 @@ func (r *request) HttpGetByte(uri string) ([]byte, error) {
 	return tmp, nil
 }
 
-func (r *request) HttpPost(uri string, requestBody []byte, ct string) (error, *fasthttp.Response) {
+func (r *request) HttpPost(uri string, requestBody []byte, ct string) (error, HttpResponse) {
 	req, resp := fasthttp.AcquireRequest(), fasthttp.AcquireResponse()
 	defer func() {
 		fasthttp.ReleaseRequest(req)
@@ -129,9 +135,18 @@ func (r *request) HttpPost(uri string, requestBody []byte, ct string) (error, *f
 	req.SetBody(requestBody)
 
 	if err := HttpClient.Do(req, resp); err != nil {
-		return err, nil
+		return err, HttpResponse{}
 	}
-	return nil, resp
+	headers := make(map[string]string)
+	resp.Header.VisitAll(func(key, value []byte) {
+		headers[string(key)] = string(value)
+	})
+	res := HttpResponse{
+		StatusCode: resp.StatusCode(),
+		Headers:    headers,
+		Body:       append([]byte(nil), resp.Body()...),
+	}
+	return nil, res
 }
 
 func (r *request) HttpGetWithCustomHeader(uri string, customHeaders []string) (types.HttpResponse, error) {
@@ -211,7 +226,7 @@ func (r *request) HttpGetByteWithCustomHeader(uri string, customHeaders []string
 	return tmp, nil
 }
 
-func (r *request) HttpPostWithCustomHeader(uri string, requestBody []byte, ct string, customHeaders []string) (error, *fasthttp.Response) {
+func (r *request) HttpPostWithCustomHeader(uri string, requestBody []byte, ct string, customHeaders []string) (error, HttpResponse) {
 	req, resp := fasthttp.AcquireRequest(), fasthttp.AcquireResponse()
 	defer func() {
 		fasthttp.ReleaseRequest(req)
@@ -234,9 +249,18 @@ func (r *request) HttpPostWithCustomHeader(uri string, requestBody []byte, ct st
 	req.SetBody(requestBody)
 
 	if err := HttpClient.Do(req, resp); err != nil {
-		return err, nil
+		return err, HttpResponse{}
 	}
-	return nil, resp
+	headers := make(map[string]string)
+	resp.Header.VisitAll(func(key, value []byte) {
+		headers[string(key)] = string(value)
+	})
+	res := HttpResponse{
+		StatusCode: resp.StatusCode(),
+		Headers:    headers,
+		Body:       append([]byte(nil), resp.Body()...),
+	}
+	return nil, res
 }
 
 func (r *request) HttpGetNoRes(uri string) error {
