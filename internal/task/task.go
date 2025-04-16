@@ -220,7 +220,7 @@ func RunRedisTask() {
 				// 删除任务上下文
 				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
-			logger.SlogInfo(fmt.Sprintf("Task end: %v", runnerOption.ID))
+			logger.SlogInfo(fmt.Sprintf("Task end: %v - %v", runnerOption.ID, runnerOption.TaskName))
 			handler.CloseNucleiEngine()
 			// 目标运行完毕 删除任务信息
 			// 删除本地缓存任务信息

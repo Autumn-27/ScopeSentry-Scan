@@ -226,6 +226,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Log(fmt.Sprintf("PortRange is nul, parameter:%v", parameter), "e")
 		return nil, nil
 	}
+	start := time.Now()
 	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
 	rustScanExecPath := filepath.Join(filepath.Join(global.ExtDir, "rustscan"), p.RustFileName)
 	// 假设你已经有获取 TaskID 的逻辑
@@ -235,7 +236,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	timeout := time.Duration(executionTimeout) * time.Minute // 例如，设置为30分钟超时
 	ctx, cancel := context.WithTimeout(taskContext, timeout)
 	defer cancel()
-
+	logger.SlogInfoLocal(fmt.Sprintf("[Plugin %v]begin scan %v", p.GetName(), domainSkip.Domain))
 	cmd := exec.CommandContext(ctx, rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
 	defer stdout.Close()
@@ -292,6 +293,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						Port: match[2], // 端口
 					}
 				}
+				logger.SlogInfoLocal(fmt.Sprintf("%v %v Port alive: %v", domainSkip.Domain, match[1], match[2]))
 				p.Result <- result
 				continue
 			} else {
@@ -311,6 +313,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						Port: openPort[1], // 端口
 					}
 				}
+				logger.SlogInfoLocal(fmt.Sprintf("%v %v Port alive: %v", domainSkip.Domain, openPort[0], openPort[1]))
 				p.Result <- result
 				continue
 			}
@@ -331,6 +334,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		logger.SlogDebugLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domainSkip.Domain, err))
 	}
 	wg.Wait()
+	end := time.Now()
+	duration := end.Sub(start)
+	p.Log(fmt.Sprintf("target %v running time:%v", domainSkip.Domain, duration))
 	return nil, nil
 }
 
