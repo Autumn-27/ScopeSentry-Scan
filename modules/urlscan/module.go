@@ -123,7 +123,7 @@ func (r *Runner) ModuleRun() error {
 				return nil
 			}
 			// 将原始数据发送到下个模块，这里的输入为 types.AssetOther 、 types.AssetHttp
-			r.NextModule.GetInput() <- data
+			resultChan <- data
 
 			if !firstData {
 				start = time.Now()
