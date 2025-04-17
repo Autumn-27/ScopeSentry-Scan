@@ -196,17 +196,18 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		p.Result <- types.Company{Name: name}
 		return nil, nil
 	}
-	if strings.HasPrefix(target, "APP:") {
-		name := strings.Replace(target, "APP:", "", 1)
-		p.Result <- types.APP{
-			Name: name,
-		}
-		return nil, nil
-	}
+
 	if strings.HasPrefix(target, "APP-ID:") {
 		id := strings.Replace(target, "APP-ID:", "", 1)
 		p.Result <- types.APP{
 			BundleID: id,
+		}
+		return nil, nil
+	}
+	if strings.HasPrefix(target, "APP:") {
+		name := strings.Replace(target, "APP:", "", 1)
+		p.Result <- types.APP{
+			Name: name,
 		}
 		return nil, nil
 	}
