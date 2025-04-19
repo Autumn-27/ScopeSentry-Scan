@@ -203,7 +203,7 @@ func (r *Runner) ModuleRun() error {
 					urlFile := types.UrlFile{
 						Filepath: urlFilePath,
 					}
-					r.NextModule.GetInput() <- urlFile
+					resultChan <- urlFile
 
 				} else {
 					// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
@@ -219,7 +219,7 @@ func (r *Runner) ModuleRun() error {
 					urlFile := types.UrlFile{
 						Filepath: urlFilePath,
 					}
-					r.NextModule.GetInput() <- urlFile
+					resultChan <- urlFile
 				}
 
 			}(data)
