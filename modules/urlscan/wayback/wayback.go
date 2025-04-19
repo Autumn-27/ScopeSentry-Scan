@@ -19,6 +19,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"net/url"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -107,6 +108,19 @@ func (p *Plugin) GetModule() string {
 }
 
 func (p *Plugin) Install() error {
+	flag := utils.Tools.CommandExists("uro")
+	if !flag {
+		cmd := exec.Command("pip", "install", "uro")
+
+		// 执行命令并获取输出
+		output, err := cmd.CombinedOutput()
+
+		// 如果有错误，打印错误信息
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("install uro error: %v\n", err))
+		}
+		fmt.Println(string(output))
+	}
 	return nil
 }
 
