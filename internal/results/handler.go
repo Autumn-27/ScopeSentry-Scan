@@ -340,6 +340,12 @@ func (h *handler) PageMonitoringInsertBody(result *types.PageMonitBody) {
 func (h *handler) RootDomain(result *types.RootDomain) {
 	selector := bson.M{"domain": result.Domain}
 	result.Project = h.GetAssetProject(result.Domain)
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.ICP)
+	}
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.Company)
+	}
 	var resultEx types.RootDomain
 	err := mongodb.MongodbClient.FindOne("RootDomain", bson.M{"domain": result.Domain}, nil, &resultEx)
 	tmpData := bson.M{
@@ -361,7 +367,7 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 		// mongodb中存在
 		// 查询mongodb中是否存在该domain 如果存在 则判断icp、company、project是否一样 如果一样就不需要更新
 		// 如果不一样需要更新，并且不一样的时候新的icp、company、project需要不为空
-		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project {
+		if result.ICP == resultEx.ICP && result.Company == resultEx.Company && result.Project == resultEx.Project && utils.Tools.EqualStringSlices(result.Tags, resultEx.Tags) && resultEx.TaskName == result.TaskName {
 			return
 		}
 		if result.ICP == "" {
@@ -373,6 +379,7 @@ func (h *handler) RootDomain(result *types.RootDomain) {
 		if result.Project == "" {
 			tmpData["project"] = resultEx.Project
 		}
+		tmpData["taskName"] = result.TaskName
 		tmpData["tags"] = append(resultEx.Tags, result.Tags...)
 	}
 	update := bson.M{
@@ -390,6 +397,12 @@ func (h *handler) APP(result *types.APP) {
 	result.Project = h.GetAssetProject(result.ICP)
 	selector := bson.M{"name": result.Name}
 	result.Project = h.GetAssetProject(result.Company)
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.ICP)
+	}
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.Company)
+	}
 	var resultEx types.APP
 	tmpData := bson.M{
 		"name":        result.Name,
@@ -482,6 +495,12 @@ func (h *handler) MP(result *types.MP) {
 	result.Project = h.GetAssetProject(result.ICP)
 	selector := bson.M{"name": result.Name}
 	result.Project = h.GetAssetProject(result.Company)
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.ICP)
+	}
+	if result.Project == "" {
+		result.Project = h.GetAssetProject(result.Company)
+	}
 	var resultEx types.MP
 	tmpData := bson.M{
 		"name":        result.Name,

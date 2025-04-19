@@ -1396,3 +1396,15 @@ func (t *UtilTools) MoveFile(src, dst string) error {
 	}
 	return os.Rename(src, dst) // 也可以先 copy 再删原文件，防止跨盘失败
 }
+
+func (t *UtilTools) EqualStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
