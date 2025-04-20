@@ -191,7 +191,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	threads := "5"
 	timeout := "5"
 	maxDepth := "5"
-	executionTimeout := 60
+	executionTimeout := 20
 	proxy := ""
 	if parameter != "" {
 		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy")
@@ -221,31 +221,36 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	start := time.Now()
 	cmd := filepath.Join(filepath.Join(global.ExtDir, "katana"), p.KatanaFileName)
-	//resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
-	//defer utils.Tools.DeleteFile(resultFile)
+	resultFile := filepath.Join(filepath.Join(filepath.Join(global.ExtDir, "katana"), "result"), utils.Tools.GenerateRandomString(16))
+	defer utils.Tools.DeleteFile(resultFile)
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
-		"-j",
 		"-mrs", "20971520",
-		"-xhr-extraction", "true",
 		"-fs", "rdn", "-js-crawl", "-jsonl",
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
 		"-c", threads,
 		"-p", "10",
+		"-o", resultFile,
 	}
 	if proxy != "" {
 		args = append(args, "-proxy")
 		args = append(args, proxy)
 	}
-	//logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
-	resultChan := make(chan string, 300)
+	logger.SlogDebugLocal(fmt.Sprintf("katana target:%v result:%v", data.URL, resultFile))
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+	err := utils.Tools.ExecuteCommandWithTimeout(cmd, args, time.Duration(executionTimeout)*time.Minute, ctx)
+	if err != nil {
+		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
+	}
+	resultChan := make(chan string, 100)
 	go func() {
-		utils.Tools.ExecuteCommandToChanWithTimeout(cmd, args, resultChan, time.Duration(executionTimeout)*time.Minute, ctx)
+		err = utils.Tools.ReadFileLineReader(resultFile, resultChan, ctx)
+		if err != nil {
+			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
+		}
 	}()
-
 	var katanaResult types.KatanaResult
 	filename := utils.Tools.CalculateMD5(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)

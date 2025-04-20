@@ -508,46 +508,33 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	}()
 	// 创建命令对象，使用带上下文的 exec.CommandContext
 	cmd := exec.CommandContext(mergedCtx, command, args...)
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
 
-	// 获取标准输出和标准错误
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to get stdout: %w", err)
-	}
-
-	stderrPipe, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("failed to get stderr: %w", err)
-	}
+	go io.Copy(io.Discard, stdout)
+	go io.Copy(io.Discard, stderr)
+	//stderrPipe, err := cmd.StderrPipe()
+	//if err != nil {
+	//	return fmt.Errorf("failed to get stderr: %w", err)
+	//}
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
-
-	// 使用 goroutine 实时读取 stdout 和 stderr 并打印
-	go func() {
-		scanner := bufio.NewScanner(stdoutPipe)
-		for scanner.Scan() {
-			logger.SlogInfo(fmt.Sprintf("%v stdout: %s", filepath.Base(command), scanner.Text()))
-		}
-		if err := scanner.Err(); err != nil {
-			logger.SlogWarnLocal(fmt.Sprintf("%v stdout scan error: %v", filepath.Base(command), err))
-		}
-	}()
-
-	go func() {
-		scanner := bufio.NewScanner(stderrPipe)
-		for scanner.Scan() {
-			logger.SlogWarnLocal(fmt.Sprintf("%v stderr: %s", command, scanner.Text()))
-		}
-		if err := scanner.Err(); err != nil {
-			logger.SlogWarnLocal(fmt.Sprintf("%v stderr scan error: %v", command, err))
-		}
-	}()
+	//
+	//go func() {
+	//	scanner := bufio.NewScanner(stderrPipe)
+	//	for scanner.Scan() {
+	//		logger.SlogWarnLocal(fmt.Sprintf("%v stderr: %s", command, scanner.Text()))
+	//	}
+	//	if err := scanner.Err(); err != nil {
+	//		logger.SlogWarnLocal(fmt.Sprintf("%v stderr scan error: %v", command, err))
+	//	}
+	//}()
 
 	// 等待命令完成
-	err = cmd.Wait()
+	err := cmd.Wait()
 
 	if err != nil {
 		// 如果是上下文取消的错误
@@ -872,7 +859,7 @@ func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string, 
 	defer file.Close()
 
 	// 使用大缓冲区来提高读取性能
-	reader := bufio.NewReaderSize(file, 16*1024) // 16KB 缓冲区
+	reader := bufio.NewReaderSize(file, 30*1024) // 30KB 缓冲区
 
 	// 循环按行读取文件
 	for {

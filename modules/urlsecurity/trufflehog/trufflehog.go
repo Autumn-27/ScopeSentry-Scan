@@ -165,6 +165,38 @@ func getAllScanners(Detectors []detectors.Detector) {
 	}
 }
 
+type matchCollector struct {
+	mu       sync.Mutex
+	matchMap map[string][]string // rule.Name -> []match
+}
+
+func newMatchCollector() *matchCollector {
+	return &matchCollector{
+		matchMap: make(map[string][]string),
+	}
+}
+
+// Add 方法使用锁保护
+func (mc *matchCollector) Add(ruleName, match string) {
+	mc.mu.Lock()         // 上锁
+	defer mc.mu.Unlock() // 解锁
+
+	existList := mc.matchMap[ruleName]
+	for _, m := range existList {
+		if m == match {
+			return
+		}
+	}
+	mc.matchMap[ruleName] = append(mc.matchMap[ruleName], match)
+}
+
+func (mc *matchCollector) GetAll() map[string][]string {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+
+	return mc.matchMap
+}
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
@@ -243,63 +275,69 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 		chunkSize := 5120
 		overlapSize := 100
-		findFlag := false
-		sem := make(chan struct{}, thread)
-		var wg sync.WaitGroup
-		for name, scanner := range AllScanners {
-			sem <- struct{}{} // 占用一个并发槽位
-			wg.Add(1)
-			go func(name string, scanner detectors.Detector) {
-				defer func() {
-					<-sem // 释放并发槽位
-					wg.Done()
-				}()
-				select {
-				case <-ctx.Done():
-					return
-				default:
-					result, err := processInChunks(scanner, data.Body, chunkSize, overlapSize, ctx, verify)
-					if err != nil {
-						return
-					}
-					if len(result) != 0 {
-						var tmpResult types.SensitiveResult
-						tmpResult = types.SensitiveResult{
-							Url:      data.Output,
-							UrlId:    data.ResultId,
-							SID:      name,
-							Time:     utils.Tools.GetTimeNow(),
-							Color:    "red",
-							Md5:      respMd5,
-							TaskName: p.TaskName,
-							Status:   1,
-							Tags:     []string{p.Name},
-						}
-						for _, res := range result {
-							if res.DetectorName != "" {
-								if strings.Contains(tmpResult.SID, "custom_detectors") {
-									tmpResult.SID = res.DetectorName
-								}
-							}
-							logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
-							if verify {
-								if res.Verified {
-									tmpResult.Match = append(tmpResult.Match, string(res.Raw))
-								}
-							} else {
-								tmpResult.Match = append(tmpResult.Match, string(res.Raw))
-							}
-						}
-						if len(tmpResult.Match) != 0 {
-							go results.Handler.Sensitive(&tmpResult)
-							findFlag = true
-						}
+		chunkChan := GenerateChunks(data.Body, chunkSize, overlapSize, thread)
+		collector := newMatchCollector()
+		if strings.Contains(data.Output, "app/dist/app-main.bundle.js") {
+			fmt.Println("ddd")
+
+		}
+		for chunk := range chunkChan {
+			select {
+			case <-ctx.Done():
+				return nil, nil
+			default:
+			}
+			str := strings.ToLower(chunk)
+			for name, scanner := range AllScanners {
+				foundKeyword := false
+				for _, kw := range scanner.Keywords() {
+					if strings.Contains(str, kw) {
+						foundKeyword = true
 					}
 				}
-			}(name, scanner)
+				if !foundKeyword {
+					continue
+				}
+
+				result, err := scanner.FromData(context.Background(), verify, []byte(chunk))
+				if err != nil {
+					logger.SlogWarnLocal(fmt.Sprintf("[trufflehog] %v scanner.FromData error %v", scanner.Description(), err))
+					continue
+				}
+				resName := name
+				for _, res := range result {
+					if res.DetectorName != "" {
+						if strings.Contains(resName, "custom_detectors") {
+							resName = res.DetectorName
+						}
+					}
+					logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
+					if verify {
+						if res.Verified {
+							collector.Add(resName, string(res.Raw))
+						}
+					} else {
+						collector.Add(resName, string(res.Raw))
+					}
+				}
+			}
 		}
-		wg.Wait()
-		if findFlag {
+		if len(collector.matchMap) > 0 {
+			for ruleName, matchList := range collector.GetAll() {
+				tmpResult := types.SensitiveResult{
+					Url:      data.Output,
+					UrlId:    data.ResultId,
+					SID:      ruleName,
+					Match:    matchList,
+					Time:     utils.Tools.GetTimeNow(),
+					Color:    "red",
+					Md5:      respMd5,
+					TaskName: p.TaskName,
+					Status:   1,
+					Tags:     []string{p.Name},
+				}
+				go results.Handler.Sensitive(&tmpResult)
+			}
 			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
@@ -307,6 +345,31 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	//duration := end.Sub(start)
 	//logger.SlogDebugLocal(fmt.Sprintf("[Plugins %v] target %v run time: %v", p.Name, data.Output, duration))
 	return nil, nil
+}
+
+func GenerateChunks(text string, chunkSize, overlapSize int, thread int) <-chan string {
+	ch := make(chan string, thread)
+
+	go func() {
+		defer close(ch)
+
+		textLen := len(text)
+		for start := 0; start < textLen; start += chunkSize {
+			end := start + chunkSize
+			if end > textLen {
+				end = textLen
+			}
+
+			chunkEnd := end
+			if end+overlapSize < textLen {
+				chunkEnd = end + overlapSize
+			}
+			chunk := text[start:chunkEnd]
+			ch <- chunk
+		}
+	}()
+
+	return ch
 }
 
 func processInChunks(scanner detectors.Detector, text string, chunkSize int, overlapSize int, ctx context.Context, verify bool) ([]detectors.Result, error) {
