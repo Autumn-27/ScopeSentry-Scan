@@ -298,34 +298,6 @@ func GenerateChunks(text string, chunkSize, overlapSize int) <-chan string {
 	return ch
 }
 
-func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) ([]string, error) {
-	var result []string
-	for start := 0; start < len(text); start += chunkSize {
-		end := start + chunkSize
-		if end > len(text) {
-			end = len(text)
-		}
-
-		chunkEnd := end
-		if end+overlapSize < len(text) {
-			chunkEnd = end + overlapSize
-		}
-
-		matches, err := findMatchesInChunk(regex, text[start:chunkEnd])
-		if err != nil {
-			return []string{}, err
-		}
-
-		if len(matches) > 0 {
-			result = append(result, matches...)
-		}
-	}
-	if len(result) != 0 {
-		result = uniqueStrings(result)
-	}
-	return result, nil
-}
-
 func findMatchesInChunk(regex *regexp2.Regexp, text string) ([]string, error) {
 	var matches []string
 	m, _ := regex.FindStringMatch(text)
