@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -226,6 +228,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-depth", maxDepth,
 		"-j",
 		"-mrs", "20971520",
+		"-xhr-extraction", "true",
 		"-fs", "rdn", "-js-crawl", "-jsonl",
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
@@ -247,24 +250,63 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	filename := utils.Tools.CalculateMD5(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
+	params := make(map[string]map[string]struct{})
+	var mu sync.Mutex
 	for result := range resultChan {
 		err := json.Unmarshal([]byte(result), &katanaResult)
 		if err != nil {
 			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
 			continue
 		}
+		parsedURL, err := url.Parse(katanaResult.Request.URL)
+		paramMap := url.Values{}
+		urlPath := ""
+		if err != nil {
+			urlPath = katanaResult.Request.URL
+		} else {
+			urlPath = parsedURL.Path
+			if !strings.Contains(parsedURL.RawQuery, "=") {
+			} else {
+				paramMap = parsedURL.Query()
+			}
+		}
+		if katanaResult.Request.Method == "POST" {
+			key := ""
+			postKey := results.Duplicate.URLParams(katanaResult.Request.URL)
+			if katanaResult.Request.Body != "" {
+				bodyKeyV := strings.Split(katanaResult.Request.Body, "&")
+				for _, part := range bodyKeyV {
+					bodyKey := strings.Split(part, "=")
+					if len(bodyKey) > 1 {
+						postKey += bodyKey[0]
+						paramMap.Add(bodyKey[0], bodyKey[1])
+					}
+				}
+			}
+			key = results.Duplicate.URLParams(postKey)
+			taskId := p.GetTaskId()
+			dFlag := results.Duplicate.Crawler(key, taskId)
+			if !dFlag {
+				continue
+			}
+			crawlerResult := types.CrawlerResult{
+				Url:    katanaResult.Request.URL,
+				Method: katanaResult.Request.Method,
+				Body:   katanaResult.Request.Body,
+				Tags:   []string{"katana"},
+			}
+			p.Result <- crawlerResult
+		}
+		rootDomain, err := utils.Tools.GetRootDomain(katanaResult.Request.URL)
+		if err != nil {
+			logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", katanaResult.Request.URL, err))
+			rootDomain = parsedURL.Hostname()
+		}
 		// 去重
 		flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
 		if flag {
 			urlNumber += 1
 			var r types.UrlResult
-			parsedURL, err := url.Parse(katanaResult.Request.URL)
-			urlPath := ""
-			if err != nil {
-				urlPath = katanaResult.Request.URL
-			} else {
-				urlPath = parsedURL.Path
-			}
 			r.Ext = path.Ext(urlPath)
 			r.Ext = path.Ext(parsedURL.Path)
 			r.Input = data.URL
@@ -275,11 +317,20 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			r.Length = len(katanaResult.Response.Body)
 			r.Body = katanaResult.Response.Body
 			r.Time = utils.Tools.GetTimeNow()
+			r.RootDomain = rootDomain
 			err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
 			if err != nil {
 			}
 			p.Result <- r
 		}
+		mu.Lock()
+		if _, ok := params[rootDomain]; !ok {
+			params[rootDomain] = make(map[string]struct{})
+		}
+		for param := range paramMap {
+			params[rootDomain][param] = struct{}{}
+		}
+		mu.Unlock()
 	}
 	end := time.Now()
 	duration := end.Sub(start)
@@ -291,6 +342,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	} else if osType == "linux" {
 		// Linux 系统处理
 		utils.Tools.HandleLinuxTemp()
+	}
+	for domain, paramSet := range params {
+		var paramSlice []interface{}
+		for param := range paramSet {
+			paramSlice = append(paramSlice, param)
+		}
+		go results.Handler.AddParam(domain, paramSlice)
 	}
 	p.Log(fmt.Sprintf("target %v all url number %v running time:%v", data.URL, urlNumber, duration))
 	return nil, nil

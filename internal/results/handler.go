@@ -8,10 +8,12 @@
 package results
 
 import (
+	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/notification"
+	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
@@ -149,12 +151,14 @@ func (h *handler) AssetHttpInsert(result *types.AssetHttp) {
 
 func (h *handler) URL(result *types.UrlResult) {
 	var interfaceSlice interface{}
-	rootDomain, err := utils.Tools.GetRootDomain(result.Input)
-	if err != nil {
-		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Input, err))
+	if result.RootDomain == "" {
+		rootDomain, err := utils.Tools.GetRootDomain(result.Output)
+		if err != nil {
+			logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", result.Input, err))
+		}
+		result.RootDomain = rootDomain
 	}
-	result.RootDomain = rootDomain
-	result.Project = h.GetAssetProject(rootDomain)
+	result.Project = h.GetAssetProject(result.RootDomain)
 	if result.Time == "" {
 		result.Time = utils.Tools.GetTimeNow()
 	}
@@ -561,4 +565,18 @@ func (h *handler) MP(result *types.MP) {
 		Update:   update,
 	}
 	Results.UpdateNow(op, "mp")
+}
+
+func (h *handler) AddParam(domain string, values []interface{}) (int64, error) {
+	if len(values) == 0 {
+		return 0, nil
+	}
+
+	// SAdd 批量添加
+	addedCount, err := redis.RedisClient.SAdd(context.Background(), fmt.Sprintf("param:%v", domain), values...)
+	if err != nil {
+		return 0, err
+	}
+
+	return addedCount, nil
 }

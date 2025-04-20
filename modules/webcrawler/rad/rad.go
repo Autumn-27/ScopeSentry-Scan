@@ -19,11 +19,13 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -239,6 +241,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogErrorLocal(fmt.Sprintf("%v", err))
 		}
 	}()
+	params := make(map[string]map[string]struct{})
+	var mu sync.Mutex
 	for result := range resultChan {
 		result = strings.TrimSpace(result)
 		if result == "[" || result == "]" {
@@ -251,7 +255,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogErrorLocal(fmt.Sprintf("解析 JSON 错误: %s", err))
 			continue
 		}
+		parsedURL, err := url.Parse(req.URL)
+		paramMap := url.Values{}
 		body := ""
+		if err == nil {
+			if !strings.Contains(parsedURL.RawQuery, "=") {
+			} else {
+				paramMap = parsedURL.Query()
+			}
+		}
 		if req.B64Body != "" {
 			decodedBytes, err := base64.StdEncoding.DecodeString(req.B64Body)
 			if err != nil {
@@ -265,13 +277,29 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		} else {
 			postKey := results.Duplicate.URLParams(req.URL)
 			if body != "" {
-				bodyKeyV := strings.Split(body, "&")
-				for _, part := range bodyKeyV {
-					bodyKey := strings.Split(part, "=")
-					if len(bodyKey) > 1 {
-						postKey += bodyKey[0]
+				if strings.HasPrefix(body, "{") {
+					var jsonData map[string]interface{}
+					decoder := json.NewDecoder(strings.NewReader(body))
+					if err := decoder.Decode(&jsonData); err != nil {
+					} else {
+						// 遍历JSON中的key
+						for bdkey := range jsonData {
+							postKey += bdkey + ", "
+							paramMap.Add(bdkey, "")
+						}
+					}
+
+				} else {
+					bodyKeyV := strings.Split(body, "&")
+					for _, part := range bodyKeyV {
+						bodyKey := strings.Split(part, "=")
+						if len(bodyKey) > 1 {
+							postKey += bodyKey[0]
+							paramMap.Add(bodyKey[0], bodyKey[1])
+						}
 					}
 				}
+
 			}
 			key = results.Duplicate.URLParams(postKey)
 		}
@@ -286,6 +314,18 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			Method: req.Method,
 			Body:   body,
 		}
+		rootDomain, err := utils.Tools.GetRootDomain(crawlerResult.Url)
+		if err == nil {
+			crawlerResult.RootDomain = rootDomain
+			mu.Lock()
+			if _, ok := params[rootDomain]; !ok {
+				params[rootDomain] = make(map[string]struct{})
+			}
+			for param := range paramMap {
+				params[rootDomain][param] = struct{}{}
+			}
+			mu.Unlock()
+		}
 		p.Result <- crawlerResult
 	}
 	end := time.Now()
@@ -297,6 +337,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	} else if osType == "linux" {
 		// Linux 系统处理
 		utils.Tools.HandleLinuxTemp()
+	}
+	for domain, paramSet := range params {
+		var paramSlice []interface{}
+		for param := range paramSet {
+			paramSlice = append(paramSlice, param)
+		}
+		go results.Handler.AddParam(domain, paramSlice)
 	}
 	p.Log(fmt.Sprintf("target file %v get result %v time %v", data.Filepath, resultNumber, duration))
 	return nil, nil

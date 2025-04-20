@@ -188,7 +188,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, errors.New("input is not types.DomainSkip")
 	}
 	parameter := p.GetParameter()
-	PortBatchSize := "1000"
+	PortBatchSize := "1500"
 	PortTimeout := "3000"
 	// 如果没有找到端口 默认扫描top1000
 	executionTimeout := 15

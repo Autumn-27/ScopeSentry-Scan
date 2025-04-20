@@ -327,7 +327,7 @@ func processInChunks(scanner detectors.Detector, text string, chunkSize int, ove
 		foundKeyword := false
 		str := strings.ToLower(text[start:chunkEnd])
 		for _, kw := range scanner.Keywords() {
-			if strings.Contains(str, strings.ToLower(kw)) {
+			if strings.Contains(str, kw) {
 				foundKeyword = true
 			}
 		}

@@ -20,6 +20,7 @@ import (
 	"github.com/dlclark/regexp2"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type Plugin struct {
@@ -120,6 +121,38 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
+type matchCollector struct {
+	mu       sync.Mutex
+	matchMap map[string][]string // rule.Name -> []match
+}
+
+func newMatchCollector() *matchCollector {
+	return &matchCollector{
+		matchMap: make(map[string][]string),
+	}
+}
+
+// Add 方法使用锁保护
+func (mc *matchCollector) Add(ruleName, match string) {
+	mc.mu.Lock()         // 上锁
+	defer mc.mu.Unlock() // 解锁
+
+	existList := mc.matchMap[ruleName]
+	for _, m := range existList {
+		if m == match {
+			return
+		}
+	}
+	mc.matchMap[ruleName] = append(mc.matchMap[ruleName], match)
+}
+
+func (mc *matchCollector) GetAll() map[string][]string {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+
+	return mc.matchMap
+}
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
@@ -186,42 +219,51 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		}
 		chunkSize := 5120
 		overlapSize := 100
-		findFlag := false
-		for _, rule := range global.SensitiveRules {
-			//start := time.Now()
+		chunkChan := GenerateChunks(data.Body, chunkSize, overlapSize)
+		collector := newMatchCollector()
+		matchColorMap := make(map[string]string)
+		for chunk := range chunkChan {
 			select {
 			case <-ctx.Done():
 				return nil, nil
 			default:
-				if rule.State {
-					if rule.RuleCompile == nil {
-						p.Log(fmt.Sprintf("Error compiling sensitive regex pattern:- %s - %v", rule.ID, rule.Regular), "e")
-						continue
-					}
-					result, err := processInChunks(rule.RuleCompile, data.Body, chunkSize, overlapSize)
-					if err != nil {
-						p.Log(fmt.Sprintf("\"Error processing chunks: %s\", err"), "e")
-					}
-					if len(result) != 0 {
-						var tmpResult types.SensitiveResult
-						tmpResult = types.SensitiveResult{
-							Url:      data.Output,
-							UrlId:    data.ResultId,
-							SID:      rule.Name,
-							Match:    result,
-							Time:     utils.Tools.GetTimeNow(),
-							Color:    rule.Color,
-							Md5:      respMd5,
-							TaskName: p.TaskName,
-							Status:   1,
-						}
-						go results.Handler.Sensitive(&tmpResult)
-						findFlag = true
-					}
+			}
+			for _, rule := range global.SensitiveRules {
+				if !rule.State || rule.RuleCompile == nil {
+					continue
+				}
+				matches, err := findMatchesInChunk(rule.RuleCompile, chunk)
+				if err != nil {
+					p.Log(fmt.Sprintf("Error matching rule %s: %v", rule.ID, err), "e")
+					continue
+				}
+				for _, match := range matches {
+					collector.Add(rule.Name, match)
+				}
+				if len(matches) != 0 {
+					matchColorMap[rule.Name] = rule.Color
 				}
 			}
 		}
-		if findFlag {
+		if len(collector.matchMap) > 0 {
+			for ruleName, matchList := range collector.GetAll() {
+				color, exists := matchColorMap[ruleName]
+				if !exists {
+					color = ""
+				}
+				tmpResult := types.SensitiveResult{
+					Url:      data.Output,
+					UrlId:    data.ResultId,
+					SID:      ruleName,
+					Match:    matchList,
+					Time:     utils.Tools.GetTimeNow(),
+					Color:    color,
+					Md5:      respMd5,
+					TaskName: p.TaskName,
+					Status:   1,
+				}
+				go results.Handler.Sensitive(&tmpResult)
+			}
 			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
@@ -229,6 +271,31 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	//duration := end.Sub(start)
 	//p.Log(fmt.Sprintf("target %v run time: %v", data.Output, duration))
 	return nil, nil
+}
+
+func GenerateChunks(text string, chunkSize, overlapSize int) <-chan string {
+	ch := make(chan string)
+
+	go func() {
+		defer close(ch)
+
+		textLen := len(text)
+		for start := 0; start < textLen; start += chunkSize {
+			end := start + chunkSize
+			if end > textLen {
+				end = textLen
+			}
+
+			chunkEnd := end
+			if end+overlapSize < textLen {
+				chunkEnd = end + overlapSize
+			}
+			chunk := text[start:chunkEnd]
+			ch <- chunk
+		}
+	}()
+
+	return ch
 }
 
 func processInChunks(regex *regexp2.Regexp, text string, chunkSize int, overlapSize int) ([]string, error) {

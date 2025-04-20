@@ -166,15 +166,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
+	params := make(map[string]map[string]struct{})
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		var urllist []string
-		defer func() {
-			if len(urllist) > 0 {
-				p.Result <- urllist
-			}
-		}()
+		var mu sync.Mutex
 		for result := range waybackResults {
 			isMatch := utils.Tools.IsMatchingFilter(global.DisallowedURLFilters, []byte(result.URL))
 			if isMatch {
@@ -186,11 +182,16 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				// 没有重复
 				var r types.UrlResult
 				parsedURL, err := url.Parse(result.URL)
+				paramMap := url.Values{}
 				urlPath := ""
 				if err != nil {
 					urlPath = result.URL
 				} else {
 					urlPath = parsedURL.Path
+					if !strings.Contains(parsedURL.RawQuery, "=") {
+					} else {
+						paramMap = parsedURL.Query()
+					}
 				}
 				r.Ext = path.Ext(urlPath)
 				r.Input = data.URL
@@ -213,12 +214,24 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					r.Body = response.Body
 				}
 				r.Time = utils.Tools.GetTimeNow()
-				p.Result <- r
-				if r.Status == 200 || r.Status == 0 {
-					err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL+"\n")
-					if err != nil {
-					}
+				rootDomain, err := utils.Tools.GetRootDomain(r.Output)
+				if err != nil {
+					logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", r.Output, err))
+					rootDomain = parsedURL.Hostname()
 				}
+				r.RootDomain = rootDomain
+				p.Result <- r
+				err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL+"\n")
+				if err != nil {
+				}
+				mu.Lock()
+				if _, ok := params[rootDomain]; !ok {
+					params[rootDomain] = make(map[string]struct{})
+				}
+				for param := range paramMap {
+					params[rootDomain][param] = struct{}{}
+				}
+				mu.Unlock()
 			}
 		}
 	}()
@@ -244,6 +257,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	p.Log(fmt.Sprintf("target %v all waybvack number %v running time:%v", urlWithoutHTTPS, resultNumber, duration))
 	close(waybackResults)
 	wg.Wait()
+	for domain, paramSet := range params {
+		var paramSlice []interface{}
+		for param := range paramSet {
+			paramSlice = append(paramSlice, param)
+		}
+		go results.Handler.AddParam(domain, paramSlice)
+	}
 	return nil, nil
 }
 
