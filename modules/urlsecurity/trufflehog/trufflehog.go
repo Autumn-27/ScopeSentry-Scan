@@ -21,6 +21,7 @@ import (
 	"github.com/dlclark/regexp2"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/config"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors"
+	"github.com/trufflesecurity/trufflehog/v3/pkg/engine/defaults"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -115,7 +116,7 @@ var AllScanners map[string]detectors.Detector
 func (p *Plugin) Install() error {
 	id := ssconfig.GetDictId("trufflehog", "config")
 	var Detectors []detectors.Detector
-	//Detectors = defaults.DefaultDetectors()
+	Detectors = defaults.DefaultDetectors()
 	filePath := filepath.Join(global.DictPath, id)
 	if filePath != "" {
 		input, err := os.ReadFile(filePath)
@@ -190,7 +191,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	exclude := []string{}
 	verify := false
-	start := time.Now()
+	//start := time.Now()
 	thread := 5
 	if duplicateFlag {
 		pdfCheck := false
@@ -302,9 +303,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			results.Handler.SensitiveBody(data.Body, respMd5)
 		}
 	}
-	end := time.Now()
-	duration := end.Sub(start)
-	logger.SlogDebugLocal(fmt.Sprintf("[Plugins %v] target %v run time: %v", p.Name, data.Output, duration))
+	//end := time.Now()
+	//duration := end.Sub(start)
+	//logger.SlogDebugLocal(fmt.Sprintf("[Plugins %v] target %v run time: %v", p.Name, data.Output, duration))
 	return nil, nil
 }
 

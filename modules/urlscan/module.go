@@ -20,6 +20,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -78,7 +79,39 @@ func (r *Runner) ModuleRun() error {
 					}
 					r.NextModule.GetInput() <- urlResult
 				} else {
-					r.NextModule.GetInput() <- result
+					if urlFileResult, ok := result.(types.UrlFile); ok {
+						var uroWg sync.WaitGroup
+						uroWg.Add(1)
+						go func() {
+							defer func() {
+								r.NextModule.GetInput() <- urlFileResult
+								uroWg.Done()
+							}()
+
+							sem := utils.GetSemaphore("uro", int64(1))
+							err := sem.Acquire(contextmanager.GlobalContextManagers.GetContext(r.Option.ID), 1)
+							if err != nil {
+								logger.SlogWarnLocal(fmt.Sprintf("uro sem.Acquire get error: %v", err))
+								return
+							}
+							defer sem.Release(1)
+							flag := utils.Tools.CommandExists("uro")
+							if flag {
+								cmd := exec.Command("uro", "-i", urlFileResult.Filepath, "-o", fmt.Sprintf("%v.dup", urlFileResult.Filepath))
+								// 执行命令并获取输出
+								_, err := cmd.CombinedOutput()
+								// 如果有错误，打印错误信息
+								if err != nil {
+									logger.SlogErrorLocal(fmt.Sprintf("%v run uro error: %v\n", urlFileResult.Filepath, err))
+								} else {
+									urlFileResult.Filepath = fmt.Sprintf("%v.dup", urlFileResult.Filepath)
+								}
+							}
+						}()
+						uroWg.Wait()
+					} else {
+						r.NextModule.GetInput() <- result
+					}
 				}
 			}
 		}
