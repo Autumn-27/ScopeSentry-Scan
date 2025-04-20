@@ -133,9 +133,18 @@ func (r *Runner) ModuleRun() error {
 							changeData.AssetId = id
 							go results.Handler.AssetChangeLog(&changeData)
 						}
+						if dataTmp.Screenshot == "" {
+							dataTmp.Screenshot = oldAssetHttp.Screenshot
+						}
+						t := ""
+						if oldAssetHttp.Time == "" {
+							t = dataTmp.Time
+						} else {
+							t = oldAssetHttp.Time
+						}
 						// 对资产进行更新,设置最新的扫描时间
 						dataTmp.LastScanTime = dataTmp.Time
-						dataTmp.Time = oldAssetHttp.Time
+						dataTmp.Time = t
 						dataTmp.Project = oldAssetHttp.Project
 						dataTmp.RootDomain = oldAssetHttp.RootDomain
 						dataTmp.TaskName = append(dataTmp.TaskName, oldAssetHttp.TaskName...)
