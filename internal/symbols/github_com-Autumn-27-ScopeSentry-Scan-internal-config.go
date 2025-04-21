@@ -11,6 +11,7 @@ func init() {
 	Symbols["github.com/Autumn-27/ScopeSentry-Scan/internal/config/config"] = map[string]reflect.Value{
 		// function, constant and variable definitions
 		"CreateDir":         reflect.ValueOf(config.CreateDir),
+		"GetDictId":         reflect.ValueOf(config.GetDictId),
 		"InitFilterUrlRe":   reflect.ValueOf(config.InitFilterUrlRe),
 		"Initialize":        reflect.ValueOf(config.Initialize),
 		"LoadConfig":        reflect.ValueOf(config.LoadConfig),

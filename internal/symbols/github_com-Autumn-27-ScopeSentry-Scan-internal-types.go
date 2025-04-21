@@ -35,6 +35,8 @@ func init() {
 		"PortAlive":            reflect.ValueOf((*types.PortAlive)(nil)),
 		"PortDict":             reflect.ValueOf((*types.PortDict)(nil)),
 		"Project":              reflect.ValueOf((*types.Project)(nil)),
+		"Request":              reflect.ValueOf((*types.Request)(nil)),
+		"Response":             reflect.ValueOf((*types.Response)(nil)),
 		"RootDomain":           reflect.ValueOf((*types.RootDomain)(nil)),
 		"SecretResults":        reflect.ValueOf((*types.SecretResults)(nil)),
 		"SensitiveResult":      reflect.ValueOf((*types.SensitiveResult)(nil)),
