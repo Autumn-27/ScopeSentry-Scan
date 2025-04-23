@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     libpcap-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install uro
+RUN apt install default-jdk -y
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
 RUN chmod +x /apps/ScopeSentry
