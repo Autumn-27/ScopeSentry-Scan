@@ -8,6 +8,7 @@
 package fingerprintx
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/interfaces"
@@ -171,7 +172,13 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		asset.TLS = fingerResult.TLS
 		asset.Transport = fingerResult.Transport
 		asset.Version = fingerResult.Version
-		asset.Raw = fingerResult.Raw
+		var banner string
+		if err := json.Unmarshal(fingerResult.Raw, &banner); err != nil {
+			fmt.Println("Error:", err)
+		} else {
+			escaped := strconv.QuoteToASCII(banner)
+			asset.Banner = escaped
+		}
 		asset.Time = utils.Tools.GetTimeNow()
 		asset.LastScanTime = asset.Time
 		return nil, nil

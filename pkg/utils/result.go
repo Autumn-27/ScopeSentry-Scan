@@ -63,11 +63,11 @@ func (r *Result) CompareAssetOther(old, new types.AssetOther) types.AssetChangeL
 			New:       new.Transport,
 		})
 	}
-	if !bytes.Equal(old.Raw, new.Raw) {
+	if !bytes.Equal([]byte(old.Banner), []byte(new.Banner)) {
 		Change.Change = append(Change.Change, types.ChangeLog{
 			FieldName: "Banner",
-			Old:       string(old.Raw),
-			New:       string(new.Raw),
+			Old:       old.Banner,
+			New:       new.Banner,
 		})
 	}
 	if len(Change.Change) != 0 {

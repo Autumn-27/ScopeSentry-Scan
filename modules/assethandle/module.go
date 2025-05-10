@@ -82,7 +82,7 @@ func (r *Runner) ModuleRun() error {
 					}
 					// 过滤unknown
 					if dataTmp.Service == "unknown" {
-						if len(dataTmp.Raw) == 0 {
+						if len(dataTmp.Banner) == 0 {
 							continue
 						}
 					}

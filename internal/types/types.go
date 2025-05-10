@@ -7,7 +7,6 @@
 package types
 
 import (
-	"encoding/json"
 	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -45,7 +44,7 @@ type AssetHttp struct {
 	Screenshot    string                 `bson:"screenshot"`
 	FavIconMMH3   string                 `bson:"faviconmmh3" csv:"favicon"`
 	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
-	RawHeaders    string                 `bson:"rawheaders" csv:"raw_header"`
+	Banner        string                 `bson:"banner" csv:"banner"`
 	Jarm          string                 `bson:"jarm" csv:"jarm"`
 	Technologies  []string               `bson:"technologies" csv:"tech"`
 	StatusCode    int                    `bson:"statuscode" csv:"status_code"`
@@ -75,22 +74,22 @@ type Project struct {
 }
 
 type AssetOther struct {
-	Time         string          `bson:"time" csv:"time"`
-	LastScanTime string          `bson:"lastScanTime"`
-	Host         string          `bson:"host"`
-	IP           string          `bson:"ip"`
-	Port         string          `bson:"port"`
-	Service      string          `bson:"service"`
-	TLS          bool            `bson:"tls"`
-	Transport    string          `bson:"transport"`
-	Version      string          `bson:"version"`
-	Raw          json.RawMessage `bson:"metadata"`
-	Project      string          `bson:"project"`
-	Type         string          `bson:"type"`
-	Tags         []string        `bson:"tags"`
-	TaskName     []string        `bson:"taskName"`
-	RootDomain   string          `bson:"rootDomain"`
-	UrlPath      string          `bson:"urlPath"`
+	Time         string   `bson:"time" csv:"time"`
+	LastScanTime string   `bson:"lastScanTime"`
+	Host         string   `bson:"host"`
+	IP           string   `bson:"ip"`
+	Port         string   `bson:"port"`
+	Service      string   `bson:"service"`
+	TLS          bool     `bson:"tls"`
+	Transport    string   `bson:"transport"`
+	Version      string   `bson:"version"`
+	Banner       string   `bson:"banner"`
+	Project      string   `bson:"project"`
+	Type         string   `bson:"type"`
+	Tags         []string `bson:"tags"`
+	TaskName     []string `bson:"taskName"`
+	RootDomain   string   `bson:"rootDomain"`
+	UrlPath      string   `bson:"urlPath"`
 }
 
 type ChangeLog struct {
