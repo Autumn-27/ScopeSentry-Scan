@@ -580,3 +580,12 @@ func (h *handler) AddParam(domain string, values []interface{}) (int64, error) {
 
 	return addedCount, nil
 }
+
+func (h *handler) GetParams(domain string) ([]string, error) {
+	// 使用 Redis 的 SMembers 命令获取 Set 中的所有成员
+	values, err := redis.RedisClient.SMembers(context.Background(), fmt.Sprintf("param:%v", domain))
+	if err != nil {
+		return nil, err
+	}
+	return values, nil
+}

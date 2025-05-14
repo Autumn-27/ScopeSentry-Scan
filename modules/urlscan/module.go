@@ -231,14 +231,18 @@ func (r *Runner) ModuleRun() error {
 						}
 					}
 					// 调用url去重工具 对url数据进行去重
+					rootDomain, _ := utils.Tools.GetRootDomain(httpData.Host)
 
 					// 发送urlfile
 					urlFile := types.UrlFile{
-						Filepath: urlFilePath,
+						Host:       httpData.Host,
+						Filepath:   urlFilePath,
+						RootDomain: rootDomain,
 					}
 					resultChan <- urlFile
 
 				} else {
+					rootDomain, _ := utils.Tools.GetRootDomain(httpData.Host)
 					// 如果没有开启 把http转一个urlresult发往下个模块 用于检测首页的敏感信息泄露
 					r.NextModule.GetInput() <- types.UrlResult{
 						Input:      httpData.URL,
@@ -250,7 +254,9 @@ func (r *Runner) ModuleRun() error {
 					}
 					// 发送urlfile
 					urlFile := types.UrlFile{
-						Filepath: urlFilePath,
+						Host:       httpData.Host,
+						Filepath:   urlFilePath,
+						RootDomain: rootDomain,
 					}
 					resultChan <- urlFile
 				}

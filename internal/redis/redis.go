@@ -131,6 +131,10 @@ func (r *Client) SAdd(ctx context.Context, key string, members ...interface{}) (
 	return r.client.SAdd(ctx, key, members...).Result()
 }
 
+func (r *Client) SMembers(ctx context.Context, key string) ([]string, error) {
+	return r.client.SMembers(ctx, key).Result()
+}
+
 // LLen 获取列表的长度
 func (r *Client) LLen(ctx context.Context, key string) (int64, error) {
 	if r.client == nil {

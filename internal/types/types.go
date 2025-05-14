@@ -123,7 +123,9 @@ type UrlResult struct {
 }
 
 type UrlFile struct {
-	Filepath string
+	Filepath   string
+	Host       string
+	RootDomain string
 }
 
 type SecretResults struct {
