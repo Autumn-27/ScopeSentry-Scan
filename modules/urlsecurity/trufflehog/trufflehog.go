@@ -197,6 +197,20 @@ func (mc *matchCollector) GetAll() map[string][]string {
 	return mc.matchMap
 }
 
+var scannerLocks = sync.Map{}
+
+func getScannerLock(name string) *sync.Mutex {
+	// 尝试从 map 中获取已有锁
+	if lock, ok := scannerLocks.Load(name); ok {
+		return lock.(*sync.Mutex)
+	}
+
+	// 否则创建一个新的锁，并原子保存（只存一次）
+	newLock := &sync.Mutex{}
+	actual, _ := scannerLocks.LoadOrStore(name, newLock)
+	return actual.(*sync.Mutex)
+}
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
@@ -298,8 +312,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				if !foundKeyword {
 					continue
 				}
+				result, err := func() ([]detectors.Result, error) {
+					scannerLock := getScannerLock(name)
+					scannerLock.Lock()
+					defer scannerLock.Unlock()
 
-				result, err := scanner.FromData(context.Background(), verify, []byte(chunk))
+					// 只保护 wasm 调用这段
+					return scanner.FromData(context.Background(), verify, []byte(chunk))
+				}()
 				if err != nil {
 					logger.SlogWarnLocal(fmt.Sprintf("[trufflehog] %v scanner.FromData error %v", scanner.Description(), err))
 					continue

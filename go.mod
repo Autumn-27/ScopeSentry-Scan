@@ -2,8 +2,6 @@ module github.com/Autumn-27/ScopeSentry-Scan
 
 go 1.23.1
 
-toolchain go1.23.7
-
 replace git.cs.nctu.edu.tw/calee/sctp => git.cs.nycu.edu.tw/calee/sctp v1.1.0
 
 replace github.com/praetorian-inc/fingerprintx => ./libs/fingerprintx

@@ -117,7 +117,7 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		case "SubdomainScan":
 			name = "subdomain"
 		case "SubdomainSecurity":
-			name = "SubdoaminTakerResult"
+			name = "SubdomainTakerResult"
 		case "AssetChangeLog":
 			name = "AssetChangeLog"
 		case "URLScan":
