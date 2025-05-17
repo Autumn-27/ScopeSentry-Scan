@@ -7,6 +7,7 @@
 package types
 
 import (
+	"github.com/PuerkitoBio/goquery"
 	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -309,9 +310,25 @@ type Request struct {
 	Source    string `json:"source,omitempty"`
 }
 
+type Headers map[string]string
+
 type Response struct {
-	StatusCode int    `json:"status_code,omitempty"`
-	Body       string `json:"body,omitempty"`
+	StatusCode         int       `json:"status_code,omitempty"`
+	Headers            Headers   `json:"headers,omitempty"`
+	Body               string    `json:"body,omitempty"`
+	ContentLength      int64     `json:"content_length,omitempty"`
+	Technologies       []string  `json:"technologies,omitempty"`
+	Raw                string    `json:"raw,omitempty"`
+	Forms              []Form    `json:"forms,omitempty"`
+	XhrRequests        []Request `json:"xhr_requests,omitempty"`
+	StoredResponsePath string    `json:"stored_response_path,omitempty"`
+}
+
+type Form struct {
+	Method     string   `json:"method,omitempty"`
+	Action     string   `json:"action,omitempty"`
+	Enctype    string   `json:"enctype,omitempty"`
+	Parameters []string `json:"parameters,omitempty"`
 }
 
 type PageMonit struct {
