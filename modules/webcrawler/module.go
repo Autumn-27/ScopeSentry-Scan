@@ -41,7 +41,7 @@ func (r *Runner) ModuleRun() error {
 	var resultWg sync.WaitGroup
 	var nextModuleRun sync.WaitGroup
 	// 创建一个共享的 result 通道
-	resultChan := make(chan interface{}, 2000)
+	resultChan := make(chan interface{}, 1000)
 	go func() {
 		nextModuleRun.Add(1)
 		defer nextModuleRun.Done()
