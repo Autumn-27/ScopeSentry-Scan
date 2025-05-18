@@ -97,6 +97,7 @@ func (r *Runner) ModuleRun() error {
 							defer sem.Release(1)
 							flag := utils.Tools.CommandExists("uro")
 							if flag {
+								utils.Tools.DeleteFile(fmt.Sprintf("%v.dup", urlFileResult.Filepath))
 								cmd := exec.Command("uro", "-i", urlFileResult.Filepath, "-o", fmt.Sprintf("%v.dup", urlFileResult.Filepath))
 								// 执行命令并获取输出
 								_, err := cmd.CombinedOutput()

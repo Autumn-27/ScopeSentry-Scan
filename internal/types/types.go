@@ -7,7 +7,6 @@
 package types
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
