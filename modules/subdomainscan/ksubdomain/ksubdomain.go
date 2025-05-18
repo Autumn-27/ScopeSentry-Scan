@@ -246,7 +246,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				// 如果subdomainResult.IP中的某个IP存在于泛解析记录中，跳过
 				if isIPInWildcard(subdomainResult.IP, wildcardSubdomainResults) {
 					// 发现存在泛解析记录中的IP，跳过该结果
-					p.Log(fmt.Sprintf("%v 发现泛解析域名, 子域名: %v  IP: %v", target, subdomainResult.Host, subdomainResult.IP))
+					logger.SlogWarnLocal(fmt.Sprintf("%v 发现泛解析域名, 子域名: %v  IP: %v", target, subdomainResult.Host, subdomainResult.IP))
 					continue
 				}
 			}

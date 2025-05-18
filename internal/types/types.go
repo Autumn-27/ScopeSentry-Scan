@@ -302,11 +302,12 @@ type KatanaResult struct {
 }
 
 type Request struct {
-	Method    string `json:"method,omitempty"`
-	URL       string `json:"endpoint,omitempty"`
-	Body      string `json:"body,omitempty"`
-	Attribute string `json:"attribute,omitempty"`
-	Source    string `json:"source,omitempty"`
+	Method    string            `json:"method,omitempty"`
+	URL       string            `json:"endpoint,omitempty"`
+	Body      string            `json:"body,omitempty"`
+	Attribute string            `json:"attribute,omitempty"`
+	Source    string            `json:"source,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
 }
 
 type Headers map[string]string

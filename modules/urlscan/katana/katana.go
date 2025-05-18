@@ -226,7 +226,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
-		"-mrs", "20971520",
+		"-mrs", "20971520", "-hl", "-xhr",
 		"-fs", "rdn", "-js-crawl", "-jsonl",
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
@@ -256,86 +256,86 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
-	var mu sync.Mutex
 	for result := range resultChan {
 		err := json.Unmarshal([]byte(result), &katanaResult)
 		if err != nil {
 			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
 			continue
 		}
-		parsedURL, err := url.Parse(katanaResult.Request.URL)
-		paramMap := url.Values{}
-		urlPath := ""
-		if err != nil {
-			urlPath = katanaResult.Request.URL
-		} else {
-			urlPath = parsedURL.Path
-			if !strings.Contains(parsedURL.RawQuery, "=") {
-			} else {
-				paramMap = parsedURL.Query()
-			}
-		}
-		if katanaResult.Request.Method == "POST" {
-			key := ""
-			postKey := results.Duplicate.URLParams(katanaResult.Request.URL)
-			if katanaResult.Request.Body != "" {
-				bodyKeyV := strings.Split(katanaResult.Request.Body, "&")
-				for _, part := range bodyKeyV {
-					bodyKey := strings.Split(part, "=")
-					if len(bodyKey) > 1 {
-						postKey += bodyKey[0]
-						paramMap.Add(bodyKey[0], bodyKey[1])
-					}
-				}
-			}
-			key = results.Duplicate.URLParams(postKey)
-			taskId := p.GetTaskId()
-			dFlag := results.Duplicate.Crawler(key, taskId)
-			if !dFlag {
-				continue
-			}
-			crawlerResult := types.CrawlerResult{
-				Url:    katanaResult.Request.URL,
-				Method: katanaResult.Request.Method,
-				Body:   katanaResult.Request.Body,
-				Tags:   []string{"katana"},
-			}
-			p.Result <- crawlerResult
-		}
-		rootDomain, err := utils.Tools.GetRootDomain(katanaResult.Request.URL)
-		if err != nil {
-			logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", katanaResult.Request.URL, err))
-			rootDomain = parsedURL.Hostname()
-		}
-		// 去重
-		flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
-		if flag {
-			urlNumber += 1
-			var r types.UrlResult
-			r.Ext = path.Ext(urlPath)
-			r.Ext = path.Ext(parsedURL.Path)
-			r.Input = data.URL
-			r.Source = katanaResult.Request.Source
-			r.Output = katanaResult.Request.URL
-			r.OutputType = katanaResult.Request.Attribute
-			r.Status = katanaResult.Response.StatusCode
-			r.Length = len(katanaResult.Response.Body)
-			r.Body = katanaResult.Response.Body
-			r.Time = utils.Tools.GetTimeNow()
-			r.RootDomain = rootDomain
-			err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
-			if err != nil {
-			}
-			p.Result <- r
-		}
-		mu.Lock()
-		if _, ok := params[rootDomain]; !ok {
-			params[rootDomain] = make(map[string]struct{})
-		}
-		for param := range paramMap {
-			params[rootDomain][param] = struct{}{}
-		}
-		mu.Unlock()
+		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
+		//parsedURL, err := url.Parse(katanaResult.Request.URL)
+		//paramMap := url.Values{}
+		//urlPath := ""
+		//if err != nil {
+		//	urlPath = katanaResult.Request.URL
+		//} else {
+		//	urlPath = parsedURL.Path
+		//	if !strings.Contains(parsedURL.RawQuery, "=") {
+		//	} else {
+		//		paramMap = parsedURL.Query()
+		//	}
+		//}
+		//if katanaResult.Request.Method == "POST" {
+		//	key := ""
+		//	postKey := results.Duplicate.URLParams(katanaResult.Request.URL)
+		//	if katanaResult.Request.Body != "" {
+		//		bodyKeyV := strings.Split(katanaResult.Request.Body, "&")
+		//		for _, part := range bodyKeyV {
+		//			bodyKey := strings.Split(part, "=")
+		//			if len(bodyKey) > 1 {
+		//				postKey += bodyKey[0]
+		//				paramMap.Add(bodyKey[0], bodyKey[1])
+		//			}
+		//		}
+		//	}
+		//	key = results.Duplicate.URLParams(postKey)
+		//	taskId := p.GetTaskId()
+		//	dFlag := results.Duplicate.Crawler(key, taskId)
+		//	if !dFlag {
+		//		continue
+		//	}
+		//	crawlerResult := types.CrawlerResult{
+		//		Url:    katanaResult.Request.URL,
+		//		Method: katanaResult.Request.Method,
+		//		Body:   katanaResult.Request.Body,
+		//		Tags:   []string{"katana"},
+		//	}
+		//	p.Result <- crawlerResult
+		//}
+		//rootDomain, err := utils.Tools.GetRootDomain(katanaResult.Request.URL)
+		//if err != nil {
+		//	logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", katanaResult.Request.URL, err))
+		//	rootDomain = parsedURL.Hostname()
+		//}
+		//// 去重
+		//flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
+		//if flag {
+		//	urlNumber += 1
+		//	var r types.UrlResult
+		//	r.Ext = path.Ext(urlPath)
+		//	r.Ext = path.Ext(parsedURL.Path)
+		//	r.Input = data.URL
+		//	r.Source = katanaResult.Request.Source
+		//	r.Output = katanaResult.Request.URL
+		//	r.OutputType = katanaResult.Request.Attribute
+		//	r.Status = katanaResult.Response.StatusCode
+		//	r.Length = len(katanaResult.Response.Body)
+		//	r.Body = katanaResult.Response.Body
+		//	r.Time = utils.Tools.GetTimeNow()
+		//	r.RootDomain = rootDomain
+		//	err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
+		//	if err != nil {
+		//	}
+		//	p.Result <- r
+		//}
+		//mu.Lock()
+		//if _, ok := params[rootDomain]; !ok {
+		//	params[rootDomain] = make(map[string]struct{})
+		//}
+		//for param := range paramMap {
+		//	params[rootDomain][param] = struct{}{}
+		//}
+		//mu.Unlock()
 	}
 	end := time.Now()
 	duration := end.Sub(start)
@@ -357,6 +357,114 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	p.Log(fmt.Sprintf("target %v all url number %v running time:%v", data.URL, urlNumber, duration))
 	return nil, nil
+}
+
+func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, urlNumber *int, input string, urlFilePath string, params map[string]map[string]struct{}) {
+	var mu sync.Mutex
+	parsedURL, err := url.Parse(katanaResult.Request.URL)
+	paramMap := url.Values{}
+	urlPath := ""
+	if err != nil {
+		urlPath = katanaResult.Request.URL
+	} else {
+		urlPath = parsedURL.Path
+		if !strings.Contains(parsedURL.RawQuery, "=") {
+		} else {
+			paramMap = parsedURL.Query()
+		}
+	}
+	if katanaResult.Request.Method == "POST" {
+		key := ""
+		postKey := results.Duplicate.URLParams(katanaResult.Request.URL)
+		if katanaResult.Request.Body != "" {
+			bodyKeyV := strings.Split(katanaResult.Request.Body, "&")
+			for _, part := range bodyKeyV {
+				bodyKey := strings.Split(part, "=")
+				if len(bodyKey) > 1 {
+					postKey += bodyKey[0]
+					paramMap.Add(bodyKey[0], bodyKey[1])
+				}
+			}
+		}
+		key = results.Duplicate.URLParams(postKey)
+		dFlag := results.Duplicate.Crawler(key, taskId)
+		if dFlag {
+			*urlNumber++
+			crawlerResult := types.CrawlerResult{
+				Url:    katanaResult.Request.URL,
+				Method: katanaResult.Request.Method,
+				Body:   katanaResult.Request.Body,
+				Tags:   []string{"katana"},
+			}
+			p.Result <- crawlerResult
+		}
+	}
+	rootDomain, err := utils.Tools.GetRootDomain(katanaResult.Request.URL)
+	if err != nil {
+		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", katanaResult.Request.URL, err))
+		rootDomain = parsedURL.Hostname()
+	}
+	// 去重
+	flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)
+	if flag {
+		*urlNumber++
+		var r types.UrlResult
+		r.Ext = path.Ext(urlPath)
+		r.Ext = path.Ext(parsedURL.Path)
+		r.Input = input
+		r.Source = katanaResult.Request.Source
+		r.Output = katanaResult.Request.URL
+		r.OutputType = katanaResult.Request.Attribute
+		r.Status = katanaResult.Response.StatusCode
+		r.Length = len(katanaResult.Response.Body)
+		r.Body = katanaResult.Response.Body
+		r.Time = utils.Tools.GetTimeNow()
+		r.RootDomain = rootDomain
+		err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")
+		if err != nil {
+		}
+		p.Result <- r
+	}
+	mu.Lock()
+	if _, ok := params[rootDomain]; !ok {
+		params[rootDomain] = make(map[string]struct{})
+	}
+	for param := range paramMap {
+		params[rootDomain][param] = struct{}{}
+	}
+	mu.Unlock()
+	for _, req := range katanaResult.Response.XhrRequests {
+		tmpResult := types.KatanaResult{
+			Request: &req,
+		}
+		custHeader := []string{}
+		ct := ""
+		for _, head := range req.Headers {
+			custHeader = append(custHeader, fmt.Sprintf("%v:%v", head, req.Headers[head]))
+			if strings.ToLower(head) == "content-type" {
+				if strings.Contains(req.Headers[head], "json") {
+					ct = "json"
+				}
+			}
+		}
+
+		if req.Method == "POST" {
+			err, h := utils.Requests.HttpPostWithCustomHeader(req.URL, []byte(req.Body), ct, custHeader)
+			if err == nil {
+				tmpResult.Response.Body = string(h.Body)
+				tmpResult.Response.StatusCode = h.StatusCode
+				tmpResult.Response.ContentLength = int64(len(tmpResult.Response.Body))
+			}
+		} else {
+			h, err := utils.Requests.HttpGetWithCustomHeader(req.URL, custHeader)
+			if err == nil {
+				tmpResult.Response.Body = h.Body
+				tmpResult.Response.StatusCode = h.StatusCode
+				tmpResult.Response.ContentLength = int64(len(tmpResult.Response.Body))
+			}
+		}
+		p.ParseResult(&tmpResult, taskId, urlNumber, input, urlFilePath, params)
+	}
 }
 
 //func (p *Plugin) Execute(input interface{}) (interface{}, error) {
