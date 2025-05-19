@@ -391,10 +391,11 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		if dFlag {
 			*urlNumber++
 			crawlerResult := types.CrawlerResult{
-				Url:    katanaResult.Request.URL,
-				Method: katanaResult.Request.Method,
-				Body:   katanaResult.Request.Body,
-				Tags:   []string{"katana"},
+				Url:      katanaResult.Request.URL,
+				Method:   katanaResult.Request.Method,
+				Body:     katanaResult.Request.Body,
+				Tags:     []string{"katana"},
+				ResultId: utils.Tools.GenerateHash(),
 			}
 			p.Result <- crawlerResult
 		}

@@ -44,7 +44,7 @@ type AssetHttp struct {
 	Screenshot    string                 `bson:"screenshot"`
 	FavIconMMH3   string                 `bson:"faviconmmh3" csv:"favicon"`
 	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
-	Banner        string                 `bson:"banner" csv:"banner"`
+	Banner        string                 `bson:"rawheaders" csv:"rawheaders"`
 	Jarm          string                 `bson:"jarm" csv:"jarm"`
 	Technologies  []string               `bson:"technologies" csv:"tech"`
 	StatusCode    int                    `bson:"statuscode" csv:"status_code"`
@@ -83,7 +83,7 @@ type AssetOther struct {
 	TLS          bool     `bson:"tls"`
 	Transport    string   `bson:"transport"`
 	Version      string   `bson:"version"`
-	Banner       string   `bson:"banner"`
+	Banner       string   `bson:"metadata"`
 	Project      string   `bson:"project"`
 	Type         string   `bson:"type"`
 	Tags         []string `bson:"tags"`
