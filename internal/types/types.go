@@ -44,7 +44,7 @@ type AssetHttp struct {
 	Screenshot    string                 `bson:"screenshot"`
 	FavIconMMH3   string                 `bson:"faviconmmh3" csv:"favicon"`
 	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
-	Banner        string                 `bson:"rawheaders" csv:"rawheaders"`
+	RawHeaders    string                 `bson:"rawheaders" csv:"rawheaders"`
 	Jarm          string                 `bson:"jarm" csv:"jarm"`
 	Technologies  []string               `bson:"technologies" csv:"tech"`
 	StatusCode    int                    `bson:"statuscode" csv:"status_code"`
@@ -146,6 +146,7 @@ type CrawlerResult struct {
 	RootDomain string   `bson:"rootDomain"`
 	Time       string   `json:"time"`
 	Tags       []string `bson:"tags"`
+	Source     string   `json:"source"`
 }
 
 type PortDict struct {

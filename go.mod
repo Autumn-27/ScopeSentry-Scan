@@ -70,7 +70,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/traefik/yaegi v0.16.1
-	github.com/trufflesecurity/trufflehog/v3 v3.88.29
+	github.com/trufflesecurity/trufflehog/v3 v3.88.30
 	github.com/valyala/fasthttp v1.52.0
 	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/zap v1.27.0
@@ -393,7 +393,7 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/wasilibs/go-re2 v1.9.0 // indirect
+	github.com/wasilibs/go-re2 v1.10.0 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/weppos/publicsuffix-go v0.30.2 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect

@@ -126,10 +126,11 @@ func (r *Runner) ModuleRun() error {
 			}
 			// 该模块接收的数据为[]string、types.UrlResult、types.AssetOther 、 types.AssetHttp
 			// 该模块只处理types.UrlFile 其余全部发送到下个模块
-			if _, ok := data.(types.UrlFile); !ok {
-				resultChan <- data
-				continue
-			}
+			//if _, ok := data.(types.UrlFile); !ok {
+			//	resultChan <- data
+			//	continue
+			//}
+			resultChan <- data
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.WebCrawler))

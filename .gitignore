@@ -8,3 +8,5 @@ module.xray.yaml
 plugin.xray.yaml
 xray.yaml
 /*.stat
+/*license
+/*xss.md

@@ -185,7 +185,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							}
 						}
 					case "header", "header!":
-						if strings.Contains(httpResult.Banner, value) {
+						if strings.Contains(httpResult.RawHeaders, value) {
 							if key == "header" {
 								tmpExp = append(tmpExp, true)
 							} else { // key == "title!"
@@ -199,7 +199,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 							}
 						}
 					case "banner", "banner!":
-						if strings.Contains(httpResult.Banner, value) {
+						if strings.Contains(httpResult.RawHeaders, value) {
 							if key == "banner" {
 								tmpExp = append(tmpExp, true)
 							} else { // key == "title!"

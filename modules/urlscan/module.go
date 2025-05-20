@@ -22,6 +22,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -83,12 +84,11 @@ func (r *Runner) ModuleRun() error {
 						var uroWg sync.WaitGroup
 						uroWg.Add(1)
 						go func() {
+							sem := utils.GetSemaphore("uro", int64(1))
 							defer func() {
-								r.NextModule.GetInput() <- urlFileResult
 								uroWg.Done()
 							}()
 
-							sem := utils.GetSemaphore("uro", int64(1))
 							err := sem.Acquire(contextmanager.GlobalContextManagers.GetContext(r.Option.ID), 1)
 							if err != nil {
 								logger.SlogWarnLocal(fmt.Sprintf("uro sem.Acquire get error: %v", err))
@@ -110,6 +110,7 @@ func (r *Runner) ModuleRun() error {
 							}
 						}()
 						uroWg.Wait()
+						r.NextModule.GetInput() <- urlFileResult
 					} else {
 						r.NextModule.GetInput() <- result
 					}
@@ -175,7 +176,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 对http资产在当前任务进行去重判断
 
-				filename := utils.Tools.CalculateMD5(httpData.URL)
+				filename := utils.Tools.CalculateMD5(strings.Replace(strings.Replace(httpData.URL, "http://", "", -1), "https://", "", -1))
 				//if !r.Option.IsStart {
 				//	flag := results.Duplicate.DuplicateUrlFileKey(filename, r.Option.ID)
 				//	if !flag {
@@ -183,6 +184,11 @@ func (r *Runner) ModuleRun() error {
 				//		return
 				//	}
 				//}
+				flag := results.Duplicate.DuplicateUrlFileKey(filename, r.Option.ID)
+				if !flag {
+					// 重复 已经扫过了
+					return
+				}
 				// 将原始url写入文件中
 				urlFilePath := filepath.Join(global.TmpDir, filename)
 				err := utils.Tools.WriteContentFileAppend(urlFilePath, httpData.URL+"\n")

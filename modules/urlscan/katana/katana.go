@@ -251,15 +251,19 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
 		}
 	}()
-	var katanaResult types.KatanaResult
 	filename := utils.Tools.CalculateMD5(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
 	for result := range resultChan {
+		var katanaResult types.KatanaResult
 		err := json.Unmarshal([]byte(result), &katanaResult)
 		if err != nil {
 			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
+			continue
+		}
+		if katanaResult.Request == nil {
+			logger.SlogWarnLocal(fmt.Sprintf("katanaResult.Request is nil"))
 			continue
 		}
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
@@ -361,6 +365,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 
 func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, urlNumber *int, input string, urlFilePath string, params map[string]map[string]struct{}) {
 	var mu sync.Mutex
+	if katanaResult.Response == nil {
+		katanaResult.Response = &types.Response{}
+	}
 	parsedURL, err := url.Parse(katanaResult.Request.URL)
 	paramMap := url.Values{}
 	urlPath := ""
@@ -396,6 +403,7 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 				Body:     katanaResult.Request.Body,
 				Tags:     []string{"katana"},
 				ResultId: utils.Tools.GenerateHash(),
+				Source:   katanaResult.Request.Source,
 			}
 			p.Result <- crawlerResult
 		}
@@ -436,7 +444,8 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 	mu.Unlock()
 	for _, req := range katanaResult.Response.XhrRequests {
 		tmpResult := types.KatanaResult{
-			Request: &req,
+			Request:  &req,
+			Response: &types.Response{},
 		}
 		custHeader := []string{}
 		ct := ""
@@ -464,6 +473,8 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 				tmpResult.Response.ContentLength = int64(len(tmpResult.Response.Body))
 			}
 		}
+		tmpResult.Request.Attribute = "xhr_requests"
+		tmpResult.Request.Source = katanaResult.Request.URL
 		p.ParseResult(&tmpResult, taskId, urlNumber, input, urlFilePath, params)
 	}
 }
