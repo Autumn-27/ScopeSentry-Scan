@@ -11,9 +11,15 @@ RUN apt-get update && apt-get install -y \
     vim \
     tzdata \
     libpcap-dev \
+    default-jdk \
+    tini \
     && rm -rf /var/lib/apt/lists/*
+
+# 设置 tini 作为 init 进程（PID 1）
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+
 RUN pip install uro
-RUN apt install default-jdk -y
 # 拷贝当前目录下的可执行文件到容器中
 COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
 RUN chmod +x /apps/ScopeSentry
@@ -40,4 +46,4 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 ENV LANG C.UTF-8
 
 # 运行golang程序的命令
-ENTRYPOINT ["/apps/ScopeSentry"]
+CMD ["/apps/ScopeSentry"]
