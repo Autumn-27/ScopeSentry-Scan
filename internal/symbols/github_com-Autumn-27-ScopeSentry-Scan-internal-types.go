@@ -22,6 +22,8 @@ func init() {
 		"DirResult":            reflect.ValueOf((*types.DirResult)(nil)),
 		"DomainResolve":        reflect.ValueOf((*types.DomainResolve)(nil)),
 		"DomainSkip":           reflect.ValueOf((*types.DomainSkip)(nil)),
+		"Form":                 reflect.ValueOf((*types.Form)(nil)),
+		"Headers":              reflect.ValueOf((*types.Headers)(nil)),
 		"HttpResponse":         reflect.ValueOf((*types.HttpResponse)(nil)),
 		"HttpSample":           reflect.ValueOf((*types.HttpSample)(nil)),
 		"ICP":                  reflect.ValueOf((*types.ICP)(nil)),

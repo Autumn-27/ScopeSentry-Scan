@@ -31,6 +31,7 @@ import (
 	"github.com/projectdiscovery/httpx/runner"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+	"golang.org/x/net/idna"
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/yaml.v3"
 	"image"
@@ -134,7 +135,7 @@ func (t *UtilTools) ToBase62(num int64) string {
 // GenerateHash 生成唯一hash
 func (t *UtilTools) GenerateHash() string {
 	timestamp := time.Now().Unix()
-	secondsSince2000 := timestamp - 1792022400
+	secondsSince2000 := timestamp - 1747958400
 	base62Timestamp := t.ToBase62(secondsSince2000)
 
 	randoms := t.GenerateRandomString(4)
@@ -355,49 +356,140 @@ func (t *UtilTools) GetParameter(Parameters map[string]map[string]string, module
 	return "", false
 }
 
-// GetRootDomain 获取域名的根域名
+//// GetRootDomain 获取域名的根域名
+//func (t *UtilTools) GetRootDomain(input string) (string, error) {
+//	input = strings.TrimPrefix(input, "http://")
+//	input = strings.TrimPrefix(input, "https://")
+//	input = strings.Trim(input, "/")
+//	ip := net.ParseIP(input)
+//	if ip != nil {
+//		return ip.String(), nil
+//	}
+//	input = "https://" + input
+//
+//	// 尝试解析为 URL
+//	u, err := url.Parse(input)
+//	if err == nil && u.Hostname() != "" {
+//		ipHost := net.ParseIP(u.Hostname())
+//		if ipHost != nil {
+//			return ipHost.String(), nil
+//		}
+//		eTLDPlusOne, err := publicsuffix.EffectiveTLDPlusOne(u.Hostname())
+//		if err != nil {
+//			return input, fmt.Errorf("根域名解析错误")
+//		}
+//		return eTLDPlusOne, nil
+//		//hostParts := strings.Split(u.Hostname(), ".")
+//		//if len(hostParts) < 2 {
+//		//	return "", fmt.Errorf("域名格式不正确")
+//		//}
+//		//if len(hostParts) == 2 {
+//		//	return u.Hostname(), nil
+//		//}
+//		//// 检查是否为复合域名
+//		//if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
+//		//	return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+//		//}
+//		//
+//		//// 如果域名以 www 开头，特殊处理
+//		//if hostParts[0] == "www" {
+//		//	return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+//		//}
+//		//
+//		//return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+//	}
+//	return input, fmt.Errorf("输入既不是有效的 URL，也不是有效的 IP 地址: %v", input)
+//}
+
+// GetRootDomain 提取输入中的根域名或 IP 地址
 func (t *UtilTools) GetRootDomain(input string) (string, error) {
-	input = strings.TrimPrefix(input, "http://")
-	input = strings.TrimPrefix(input, "https://")
-	input = strings.Trim(input, "/")
-	ip := net.ParseIP(input)
-	if ip != nil {
+	u, err := t.SafeParseURL(input)
+	if err != nil {
+		return input, fmt.Errorf("URL 解析失败: %w", err)
+	}
+
+	hostname := u.Hostname()
+	if hostname == "" {
+		return input, fmt.Errorf("无法获取 Hostname")
+	}
+
+	// 是 IP 则直接返回
+	if ip := net.ParseIP(hostname); ip != nil {
 		return ip.String(), nil
 	}
-	input = "https://" + input
 
-	// 尝试解析为 URL
-	u, err := url.Parse(input)
-	if err == nil && u.Hostname() != "" {
-		ipHost := net.ParseIP(u.Hostname())
-		if ipHost != nil {
-			return ipHost.String(), nil
-		}
-		eTLDPlusOne, err := publicsuffix.EffectiveTLDPlusOne(u.Hostname())
-		if err != nil {
-			return input, fmt.Errorf("根域名解析错误")
-		}
-		return eTLDPlusOne, nil
-		//hostParts := strings.Split(u.Hostname(), ".")
-		//if len(hostParts) < 2 {
-		//	return "", fmt.Errorf("域名格式不正确")
-		//}
-		//if len(hostParts) == 2 {
-		//	return u.Hostname(), nil
-		//}
-		//// 检查是否为复合域名
-		//if _, ok := compoundDomains[hostParts[len(hostParts)-2]+"."+hostParts[len(hostParts)-1]]; ok {
-		//	return hostParts[len(hostParts)-3] + "." + hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
-		//}
-		//
-		//// 如果域名以 www 开头，特殊处理
-		//if hostParts[0] == "www" {
-		//	return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
-		//}
-		//
-		//return hostParts[len(hostParts)-2] + "." + hostParts[len(hostParts)-1], nil
+	// 提取有效根域名
+	rootDomain, err := publicsuffix.EffectiveTLDPlusOne(hostname)
+	if err != nil {
+		return input, fmt.Errorf("根域名解析错误: %w", err)
 	}
-	return input, fmt.Errorf("输入既不是有效的 URL，也不是有效的 IP 地址")
+
+	return rootDomain, nil
+}
+
+// SafeParseURL 安全解析 URL，处理非法 %、中文域名、空格等问题
+func (t *UtilTools) SafeParseURL(input string) (*url.URL, error) {
+	if input == "" {
+		return nil, fmt.Errorf("输入为空")
+	}
+
+	input = strings.TrimSpace(input)
+	input = sanitizePercent(input)
+	input = strings.ReplaceAll(input, " ", "%20")
+
+	// 补充协议头
+	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
+		input = "https://" + input
+	}
+
+	u, err := url.Parse(input)
+	if err != nil {
+		return nil, fmt.Errorf("URL 解析失败: %w", err)
+	}
+
+	// IDNA 处理中文域名
+	asciiHost, err := idna.ToASCII(u.Hostname())
+	if err != nil {
+		return nil, fmt.Errorf("域名 IDNA 转换失败: %w", err)
+	}
+
+	// 补上端口（如有）
+	u.Host = asciiHost + portSuffix(u.Host)
+
+	return u, nil
+}
+
+// sanitizePercent 修复非法的 % 编码
+func sanitizePercent(input string) string {
+	var builder strings.Builder
+	for i := 0; i < len(input); i++ {
+		if input[i] == '%' {
+			if i+2 >= len(input) || !isHexDigit(input[i+1]) || !isHexDigit(input[i+2]) {
+				builder.WriteString("%25")
+			} else {
+				builder.WriteByte('%')
+			}
+		} else {
+			builder.WriteByte(input[i])
+		}
+	}
+	return builder.String()
+}
+
+// 判断是否为合法十六进制字符
+func isHexDigit(b byte) bool {
+	return ('0' <= b && b <= '9') || ('a' <= b && b <= 'f') || ('A' <= b && b <= 'F')
+}
+
+// 提取原 host 的端口号（如有）
+func portSuffix(host string) string {
+	if colon := strings.LastIndex(host, ":"); colon != -1 && colon < len(host)-1 {
+		port := host[colon+1:]
+		if _, err := fmt.Sscanf(port, "%d", new(int)); err == nil {
+			return ":" + port
+		}
+	}
+	return ""
 }
 
 var compoundDomains = map[string]bool{

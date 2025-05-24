@@ -217,7 +217,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				rootDomain, err := utils.Tools.GetRootDomain(r.Output)
 				if err != nil {
 					logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", r.Output, err))
-					rootDomain = parsedURL.Hostname()
+					rootDomain = ""
 				}
 				r.RootDomain = rootDomain
 				p.Result <- r

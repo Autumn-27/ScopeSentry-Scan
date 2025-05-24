@@ -411,7 +411,7 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 	rootDomain, err := utils.Tools.GetRootDomain(katanaResult.Request.URL)
 	if err != nil {
 		logger.SlogInfoLocal(fmt.Sprintf("%v GetRootDomain error: %v", katanaResult.Request.URL, err))
-		rootDomain = parsedURL.Hostname()
+		rootDomain = ""
 	}
 	// 去重
 	flag := results.Duplicate.URL(katanaResult.Request.URL, p.TaskId)

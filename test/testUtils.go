@@ -15,7 +15,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"strconv"
 )
 
 func ToBase62(num int64) string {
@@ -139,16 +138,16 @@ func main() {
 	//	fmt.Println(res.StatusCode)
 	//}
 	//wg.Wait()
-	portUint64, err := strconv.ParseUint("8083", 10, 16)
-	if err != nil {
-		logger.SlogError(fmt.Sprintf("端口转换错误: %v", err))
-	} else {
-		rev, err := utils.Requests.TcpRecv("59.82.132.140", uint16(portUint64))
-		if err == nil {
-			rawResponse := string(rev)
-			fmt.Println(rawResponse)
-		} else {
-		}
-	}
-
+	//portUint64, err := strconv.ParseUint("8083", 10, 16)
+	//if err != nil {
+	//	logger.SlogError(fmt.Sprintf("端口转换错误: %v", err))
+	//} else {
+	//	rev, err := utils.Requests.TcpRecv("59.82.132.140", uint16(portUint64))
+	//	if err == nil {
+	//		rawResponse := string(rev)
+	//		fmt.Println(rawResponse)
+	//	} else {
+	//	}
+	//}
+	fmt.Println(utils.Tools.GenerateHash())
 }
