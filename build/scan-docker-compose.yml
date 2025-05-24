@@ -10,7 +10,7 @@ services:
         soft: 0
         hard: 0
     environment:
-      NodeName: node-test
+      NodeName: ${NodeName}
       TimeZoneName: Asia/Shanghai
       MONGODB_IP: ${MONGODB_IP}
       MONGODB_PORT: ${MONGODB_PORT}
