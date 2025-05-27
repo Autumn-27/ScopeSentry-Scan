@@ -192,9 +192,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	timeout := "5"
 	maxDepth := "5"
 	executionTimeout := 20
+	pValue := "5"
 	proxy := ""
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy")
+		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy", "p")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -210,6 +211,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						executionTimeout, _ = strconv.Atoi(value)
 					case "proxy":
 						proxy = value
+					case "p":
+						pValue = value
 
 					default:
 						continue
@@ -231,7 +234,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
 		"-c", threads,
-		"-p", "10",
+		"-p", pValue,
 		"-o", resultFile,
 	}
 	if proxy != "" {
