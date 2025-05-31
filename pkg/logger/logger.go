@@ -11,11 +11,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"time"
 )
 
 type Logger struct {
@@ -59,6 +60,9 @@ func NewLogger() error {
 	if err != nil {
 		return fmt.Errorf("log 初始化失败: %v", err)
 	}
+
+	go processLogBuffer()
+
 	return nil
 }
 
@@ -151,11 +155,94 @@ func PluginsLog(msg string, tp string, module string, id string) {
 	SendPluginLogToRedis(key, fmt.Sprintf("[%v] [%v] %v", global.AppConfig.NodeName, GetTimeNow(), msg))
 }
 
-func SendPluginLogToRedis(key string, msg string) {
+// 修改缓冲队列相关的结构体和变量
+type logEntry struct {
+	key string
+	msg string
+}
+
+type logBuffer struct {
+	entries map[string][]string // key -> messages
+	count   int                 // 总消息数
+}
+
+var (
+	logChan       = make(chan logEntry, 1000) // 缓冲通道
+	bufferSize    = 100                       // 单个key的批量写入大小
+	totalSize     = 200                       // 总消息数阈值
+	flushInterval = 30 * time.Second          // 刷新间隔
+	currentBuffer = &logBuffer{
+		entries: make(map[string][]string),
+		count:   0,
+	}
+)
+
+// 处理日志缓冲
+func processLogBuffer() {
+	ticker := time.NewTicker(flushInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case entry := <-logChan:
+			// 添加到当前缓冲区
+			if _, exists := currentBuffer.entries[entry.key]; !exists {
+				currentBuffer.entries[entry.key] = make([]string, 0, bufferSize)
+			}
+			currentBuffer.entries[entry.key] = append(currentBuffer.entries[entry.key], entry.msg)
+			currentBuffer.count++
+
+			// 检查是否需要刷新
+			if currentBuffer.count >= totalSize {
+				flushBuffer()
+			}
+		case <-ticker.C:
+			if currentBuffer.count > 0 {
+				flushBuffer()
+			}
+		}
+	}
+}
+
+// 批量刷新缓冲
+func flushBuffer() {
 	ctx := context.Background()
-	_, err := redis.RedisClient.SAdd(ctx, key, msg)
-	if err != nil {
-		SlogError(fmt.Sprintf("SendPluginLogToRedis sadd error %v", err))
+
+	// 遍历每个key的消息
+	for key, messages := range currentBuffer.entries {
+		if len(messages) > 0 {
+			// 将[]string转换为[]interface{}
+			args := make([]interface{}, len(messages))
+			for i, msg := range messages {
+				args[i] = msg
+			}
+			// 使用SADD批量添加消息
+			_, err := redis.RedisClient.SAdd(ctx, key, args...)
+			if err != nil {
+				SlogError(fmt.Sprintf("批量写入日志到Redis失败 (key: %s): %v", key, err))
+			}
+		}
+	}
+
+	// 重置缓冲区
+	currentBuffer = &logBuffer{
+		entries: make(map[string][]string),
+		count:   0,
+	}
+}
+
+// 修改SendPluginLogToRedis函数
+func SendPluginLogToRedis(key string, msg string) {
+	select {
+	case logChan <- logEntry{key: key, msg: msg}:
+		// 成功写入缓冲
+	default:
+		// 缓冲已满，直接写入
+		ctx := context.Background()
+		_, err := redis.RedisClient.SAdd(ctx, key, msg)
+		if err != nil {
+			SlogError(fmt.Sprintf("SendPluginLogToRedis sadd error %v", err))
+		}
 	}
 }
 
