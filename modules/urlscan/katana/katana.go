@@ -8,6 +8,7 @@
 package katana
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -258,9 +259,14 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
+	var buf bytes.Buffer
 	for result := range resultChan {
+		buf.Reset() // 清空缓冲区
+		buf.WriteString(result)
+
+		decoder := json.NewDecoder(&buf)
 		var katanaResult types.KatanaResult
-		err := json.Unmarshal([]byte(result), &katanaResult)
+		err := decoder.Decode(&katanaResult)
 		if err != nil {
 			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
 			continue
@@ -430,6 +436,7 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		r.Status = katanaResult.Response.StatusCode
 		r.Length = len(katanaResult.Response.Body)
 		r.Body = katanaResult.Response.Body
+		katanaResult.Response.Body = ""
 		r.Time = utils.Tools.GetTimeNow()
 		r.RootDomain = rootDomain
 		err = utils.Tools.WriteContentFileAppend(urlFilePath, katanaResult.Request.URL+"\n")

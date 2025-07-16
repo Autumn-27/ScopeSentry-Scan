@@ -314,15 +314,12 @@ type Request struct {
 type Headers map[string]string
 
 type Response struct {
-	StatusCode         int       `json:"status_code,omitempty"`
-	Headers            Headers   `json:"headers,omitempty"`
-	Body               string    `json:"body,omitempty"`
-	ContentLength      int64     `json:"content_length,omitempty"`
-	Technologies       []string  `json:"technologies,omitempty"`
-	Raw                string    `json:"raw,omitempty"`
-	Forms              []Form    `json:"forms,omitempty"`
-	XhrRequests        []Request `json:"xhr_requests,omitempty"`
-	StoredResponsePath string    `json:"stored_response_path,omitempty"`
+	StatusCode    int       `json:"status_code,omitempty"`
+	Headers       Headers   `json:"headers,omitempty"`
+	Body          string    `json:"body,omitempty"`
+	ContentLength int64     `json:"content_length,omitempty"`
+	Forms         []Form    `json:"forms,omitempty"`
+	XhrRequests   []Request `json:"xhr_requests,omitempty"`
 }
 
 type Form struct {
