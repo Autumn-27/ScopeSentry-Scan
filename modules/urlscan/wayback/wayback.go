@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/urlscan/wayback/source"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"io"
 	"net/url"
 	"os/exec"
 	"path"
@@ -166,6 +167,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
+	client, err := utils.GetClient(proxy, 3*time.Second)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("wayback utils.GetClient error: %v\n", err))
+		return nil, err
+	}
 	params := make(map[string]map[string]struct{})
 	wg.Add(1)
 	go func() {
@@ -198,20 +204,27 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				r.Source = result.Source
 				r.Output = result.URL
 				r.OutputType = ""
-				var response types.HttpResponse
-				if proxy != "" {
-					response, err = utils.ProxyRequests.HttpGetProxy(result.URL, proxy)
-				} else {
-					response, err = utils.Requests.HttpGet(result.URL)
-				}
+				//var response types.HttpResponse
+				//if proxy != "" {
+				//	response, err = utils.ProxyRequests.HttpGetProxy(result.URL, proxy)
+				//} else {
+				//	response, err = utils.Requests.HttpGet(result.URL)
+				//}
+				response, err := client.Get(result.URL)
 				if err != nil {
 					r.Status = 0
 					r.Length = 0
 					r.Body = ""
 				} else {
 					r.Status = response.StatusCode
-					r.Length = len(response.Body)
-					r.Body = response.Body
+					bodyBytes, err := io.ReadAll(response.Body)
+					if err != nil {
+						r.Length = 0
+						r.Body = ""
+					} else {
+						r.Body = string(bodyBytes)
+						r.Length = len(r.Body)
+					}
 				}
 				r.Time = utils.Tools.GetTimeNow()
 				rootDomain, err := utils.Tools.GetRootDomain(r.Output)
@@ -220,6 +233,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					rootDomain = ""
 				}
 				r.RootDomain = rootDomain
+				r.OutputType = "wayback"
 				p.Result <- r
 				err = utils.Tools.WriteContentFileAppend(urlFilePath, result.URL+"\n")
 				if err != nil {

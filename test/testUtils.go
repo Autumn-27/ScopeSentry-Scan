@@ -15,6 +15,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/redis"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"io/ioutil"
+	"time"
 )
 
 func ToBase62(num int64) string {
@@ -149,5 +151,40 @@ func main() {
 	//	} else {
 	//	}
 	//}
-	fmt.Println(utils.Tools.GenerateHash())
+	//fmt.Println(utils.Tools.GenerateHash())
+	client, err := utils.GetClient("", 10*time.Second)
+	if err != nil {
+		panic(err)
+	}
+
+	urls := []string{
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/",
+		"https://www.baidu.com/", "https://www.baidu.com/", "https://www.baidu.com/", "https://www.baidu.com/", "https://www.baidu.com/", "https://www.baidu.com/",
+	}
+
+	for i, u := range urls {
+		resp, err := client.Get(u)
+		if err != nil {
+			fmt.Printf("请求 %d 失败: %v\n", i, err)
+			continue
+		}
+		// 确保关闭响应体，避免资源泄漏
+
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("读取响应体失败: %v\n", err)
+			resp.Body.Close()
+			continue
+		}
+		resp.Body.Close()
+
+		fmt.Printf("请求 %d 成功: %s %v\n响应体: %s\n", i, u, resp.Status, string(bodyBytes))
+	}
 }

@@ -432,6 +432,9 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		r.Input = input
 		r.Source = katanaResult.Request.Source
 		r.Output = katanaResult.Request.URL
+		if katanaResult.Request.Attribute == "" {
+			katanaResult.Request.Attribute = "katana"
+		}
 		r.OutputType = katanaResult.Request.Attribute
 		r.Status = katanaResult.Response.StatusCode
 		r.Length = len(katanaResult.Response.Body)
