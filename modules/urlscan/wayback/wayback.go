@@ -146,7 +146,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	p.Log(fmt.Sprintf("target %v running", data.URL))
 	waybackResults := make(chan source.Result, 100)
 	var wg sync.WaitGroup
-	filename := utils.Tools.CalculateMD5(data.URL)
+	filename := utils.Tools.HashXX64String(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	proxy := ""
 	parameter := p.GetParameter()

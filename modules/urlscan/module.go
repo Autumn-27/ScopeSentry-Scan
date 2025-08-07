@@ -176,7 +176,7 @@ func (r *Runner) ModuleRun() error {
 				}
 				// 对http资产在当前任务进行去重判断
 
-				filename := utils.Tools.CalculateMD5(strings.Replace(strings.Replace(httpData.URL, "http://", "", -1), "https://", "", -1))
+				filename := utils.Tools.HashXX64String(strings.Replace(strings.Replace(httpData.URL, "http://", "", -1), "https://", "", -1))
 				//if !r.Option.IsStart {
 				//	flag := results.Duplicate.DuplicateUrlFileKey(filename, r.Option.ID)
 				//	if !flag {

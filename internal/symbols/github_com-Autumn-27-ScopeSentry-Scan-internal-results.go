@@ -17,6 +17,8 @@ func init() {
 		"InitializeHandler":     reflect.ValueOf(results.InitializeHandler),
 		"InitializeResultQueue": reflect.ValueOf(results.InitializeResultQueue),
 		"InitializeResults":     reflect.ValueOf(results.InitializeResults),
+		"PathInt":               reflect.ValueOf(&results.PathInt).Elem(),
+		"PathIntReg":            reflect.ValueOf(&results.PathIntReg).Elem(),
 		"ResultQueues":          reflect.ValueOf(&results.ResultQueues).Elem(),
 		"Results":               reflect.ValueOf(&results.Results).Elem(),
 

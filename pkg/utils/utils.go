@@ -24,6 +24,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/cespare/xxhash/v2"
 	"github.com/hbollon/go-edlib"
 	"github.com/ledongthuc/pdf"
 	"github.com/nfnt/resize"
@@ -1491,4 +1492,67 @@ func (t *UtilTools) EqualStringSlices(a, b []string) bool {
 func (t *UtilTools) CommandExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
+}
+
+func (t *UtilTools) IsJson(str string) bool {
+	// JSON 字符串通常以 `{` 开始，以 `}` 结束
+	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return false
+	}
+
+	// 简单检查是否以 `{` 开始，以 `}` 结束
+	if str[0] == '{' && str[len(str)-1] == '}' {
+		var js map[string]interface{}
+		// 尝试将字符串解析为 JSON 对象
+		if err := json.Unmarshal([]byte(str), &js); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *UtilTools) ModifyJSONValues(jsonStr string, value string) (string, error) {
+	// 解析 JSON 为 interface{}
+	var data interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return "", err
+	}
+
+	// 替换所有值为 "test"
+	updatedData := t.ReplaceValuesWithTest(data, value)
+
+	// 将修改后的数据重新编码为 JSON 字符串
+	updatedJSON, err := json.Marshal(updatedData)
+	if err != nil {
+		return "", err
+	}
+
+	return string(updatedJSON), nil
+}
+
+func (t *UtilTools) ReplaceValuesWithTest(data interface{}, value string) interface{} {
+	// 如果是 map 类型（JSON 对象），直接遍历并替换每个值
+	if m, ok := data.(map[string]interface{}); ok {
+		for key := range m {
+			m[key] = value // 替换为 "test"
+		}
+		return m
+	}
+
+	// 如果是 slice 类型（JSON 数组），直接遍历并替换每个值
+	if arr, ok := data.([]interface{}); ok {
+		for i := range arr {
+			arr[i] = value // 替换为 "test"
+		}
+		return arr
+	}
+
+	// 如果是其他类型（比如 string），直接返回 "test"
+	return value
+}
+
+func (t *UtilTools) HashXX64String(input string) string {
+	hash := xxhash.Sum64String(input)
+	return fmt.Sprintf("%x", hash)
 }

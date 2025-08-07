@@ -51,6 +51,7 @@ require github.com/spaolacci/murmur3 v1.1.0 // indirect
 require (
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/cckuailong/simHtml v0.0.0-20200120101524-76ba3d3f7f65
+	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396
 	github.com/cloudflare/cfssl v1.6.4
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/dlclark/regexp2 v1.11.4

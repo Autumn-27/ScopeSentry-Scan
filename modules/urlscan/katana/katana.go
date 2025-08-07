@@ -9,6 +9,7 @@ package katana
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -181,6 +182,17 @@ func (p *Plugin) GetParameter() string {
 	return p.Parameter
 }
 
+var cfg = utils.HttpClientConfig{
+	Timeout:             3 * time.Second,
+	MaxIdleConns:        60,
+	MaxIdleConnsPerHost: 50,
+	IdleConnTimeout:     60 * time.Second,
+	TLSClientConfig:     &tls.Config{InsecureSkipVerify: false},
+	FollowRedirect:      false,
+}
+
+var client = utils.GetNetHttpByConfig(cfg)
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.AssetHttp)
 	if !ok {
@@ -255,7 +267,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
 		}
 	}()
-	filename := utils.Tools.CalculateMD5(data.URL)
+	filename := utils.Tools.HashXX64String(data.URL)
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
@@ -437,8 +449,15 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		}
 		r.OutputType = katanaResult.Request.Attribute
 		r.Status = katanaResult.Response.StatusCode
-		r.Length = len(katanaResult.Response.Body)
 		r.Body = katanaResult.Response.Body
+		if r.Status == 0 {
+			h, err := client.HttpGetWithCustomHeader(katanaResult.Request.URL, []string{})
+			if err == nil {
+				r.Body = h.Body
+				r.Status = h.StatusCode
+			}
+		}
+		r.Length = len(r.Body)
 		katanaResult.Response.Body = ""
 		r.Time = utils.Tools.GetTimeNow()
 		r.RootDomain = rootDomain
@@ -472,14 +491,14 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		}
 
 		if req.Method == "POST" {
-			err, h := utils.Requests.HttpPostWithCustomHeader(req.URL, []byte(req.Body), ct, custHeader)
+			err, h := client.HttpPostWithCustomHeader(req.URL, []byte(req.Body), ct, custHeader)
 			if err == nil {
 				tmpResult.Response.Body = string(h.Body)
 				tmpResult.Response.StatusCode = h.StatusCode
 				tmpResult.Response.ContentLength = int64(len(tmpResult.Response.Body))
 			}
 		} else {
-			h, err := utils.Requests.HttpGetWithCustomHeader(req.URL, custHeader)
+			h, err := client.HttpGetWithCustomHeader(req.URL, custHeader)
 			if err == nil {
 				tmpResult.Response.Body = h.Body
 				tmpResult.Response.StatusCode = h.StatusCode

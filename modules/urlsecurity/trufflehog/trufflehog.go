@@ -18,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"github.com/cloudflare/ahocorasick"
 	"github.com/dlclark/regexp2"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/config"
 	"github.com/trufflesecurity/trufflehog/v3/pkg/detectors"
@@ -29,6 +30,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 type Plugin struct {
@@ -133,8 +135,27 @@ func (p *Plugin) Install() error {
 		}
 	}
 	getAllScanners(Detectors)
+	BuildKeywordMatcher()
 	logger.SlogInfoLocal(fmt.Sprintf("[%v] init scanner number %v", p.Name, len(AllScanners)))
 	return nil
+}
+
+var matcher *ahocorasick.Matcher
+var keywordIndexToScanners map[int][]string
+
+func BuildKeywordMatcher() {
+	var allKeywords []string
+	keywordIndexToScanners = make(map[int][]string)
+	index := 0
+	for scannerName, scanner := range AllScanners {
+		for _, kw := range scanner.Keywords() {
+			kw = strings.ToLower(kw)
+			allKeywords = append(allKeywords, kw)
+			keywordIndexToScanners[index] = append(keywordIndexToScanners[index], scannerName)
+			index++
+		}
+	}
+	matcher = ahocorasick.NewStringMatcher(allKeywords)
 }
 
 func (p *Plugin) Check() error {
@@ -211,6 +232,10 @@ func getScannerLock(name string) *sync.Mutex {
 	return actual.(*sync.Mutex)
 }
 
+func stringToBytes(s string) []byte {
+	return unsafe.Slice(unsafe.StringData(s), len(s))
+}
+
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlResult)
 	if !ok {
@@ -232,7 +257,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	// 检查body是否在当前任务已经检测过
-	respMd5 := utils.Tools.CalculateMD5(data.Body)
+	respMd5 := utils.Tools.HashXX64String(data.Body)
 	duplicateFlag := results.Duplicate.SensitiveBody(respMd5, p.TaskId, "truffle")
 	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
 	exclude := []string{}
@@ -287,14 +312,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 			logger.SlogInfoLocal(fmt.Sprintf("[%v] scanner number %v", p.Name, len(AllScanners)))
 		}
-		chunkSize := 5120
-		overlapSize := 100
+		chunkSize := 8192
+		overlapSize := 150
 		chunkChan := GenerateChunks(data.Body, chunkSize, overlapSize, thread)
 		collector := newMatchCollector()
-		if strings.Contains(data.Output, "app/dist/app-main.bundle.js") {
-			fmt.Println("ddd")
-
-		}
 		for chunk := range chunkChan {
 			select {
 			case <-ctx.Done():
@@ -302,36 +323,35 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			default:
 			}
 			str := strings.ToLower(chunk)
-			for name, scanner := range AllScanners {
-				foundKeyword := false
-				for _, kw := range scanner.Keywords() {
-					if strings.Contains(str, kw) {
-						foundKeyword = true
-					}
+			matches := matcher.Match([]byte(str)) // 一次性找出所有关键词出现的位置（下标）
+			matchedScanners := make(map[string]bool)
+			for _, idx := range matches {
+				scannerNames := keywordIndexToScanners[idx]
+				for _, scannerName := range scannerNames {
+					matchedScanners[scannerName] = true
 				}
-				if !foundKeyword {
-					continue
-				}
+			}
+			for scannerName := range matchedScanners {
+				scanner := AllScanners[scannerName]
 				result, err := func() ([]detectors.Result, error) {
-					scannerLock := getScannerLock(name)
+					scannerLock := getScannerLock(scannerName)
 					scannerLock.Lock()
 					defer scannerLock.Unlock()
 
-					// 只保护 wasm 调用这段
-					return scanner.FromData(context.Background(), verify, []byte(chunk))
+					return scanner.FromData(context.Background(), verify, stringToBytes(chunk))
 				}()
 				if err != nil {
 					logger.SlogWarnLocal(fmt.Sprintf("[trufflehog] %v scanner.FromData error %v", scanner.Description(), err))
 					continue
 				}
-				resName := name
+				resName := scannerName
 				for _, res := range result {
 					if res.DetectorName != "" {
 						if strings.Contains(resName, "custom_detectors") {
 							resName = res.DetectorName
 						}
 					}
-					logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, name, string(res.Raw)))
+					logger.SlogInfoLocal(fmt.Sprintf("[%v] %v %v %v", p.Name, data.Output, resName, string(res.Raw)))
 					if verify {
 						if res.Verified {
 							collector.Add(resName, string(res.Raw))

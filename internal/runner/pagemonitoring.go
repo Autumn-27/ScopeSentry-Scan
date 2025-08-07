@@ -67,7 +67,7 @@ func Handler(pageMonitResult types.PageMonit, wg *sync.WaitGroup) {
 	if response.Body == "" {
 		newHash = ""
 	} else {
-		newHash = utils.Tools.CalculateMD5(response.Body)
+		newHash = utils.Tools.HashXX64String(response.Body)
 	}
 	if len(pageMonitResult.Hash) == 0 {
 		rootDomain, err := utils.Tools.GetRootDomain(pageMonitResult.Url)

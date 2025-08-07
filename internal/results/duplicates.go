@@ -21,6 +21,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
+	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -156,7 +158,7 @@ func (d *duplicate) Crawler(value string, taskId string) bool {
 
 func (d *duplicate) URLParams(rawUrl string) string {
 	parsedURL, err := url.Parse(rawUrl)
-	dupKey := utils.Tools.CalculateMD5(strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(rawUrl, "/"), "http://"), "https://"))
+	dupKey := utils.Tools.HashXX64String(strings.TrimPrefix(strings.TrimPrefix(strings.TrimSuffix(rawUrl, "/"), "http://"), "https://"))
 	if err != nil {
 	} else {
 		queryParams := parsedURL.Query()
@@ -165,7 +167,7 @@ func (d *duplicate) URLParams(rawUrl string) string {
 			for key, _ := range queryParams {
 				paramskey += key
 			}
-			dupKey = utils.Tools.CalculateMD5(paramskey)
+			dupKey = utils.Tools.HashXX64String(paramskey)
 		}
 	}
 	return dupKey
@@ -204,4 +206,32 @@ func (d *duplicate) Custom(locakKey string, redisKey string, redisValue string) 
 	} else {
 		return false
 	}
+}
+
+var PathInt = `/\d+`
+var PathIntReg = regexp.MustCompile(PathInt)
+
+func (d *duplicate) UrlDuplicate(urlRaw string) (bool, []string, string) {
+	parsedURL, err := url.Parse(urlRaw)
+	if err != nil {
+		return false, []string{}, ""
+	}
+	newPath := PathIntReg.ReplaceAllString(parsedURL.Path, "")
+	queryParams := parsedURL.Query()
+	keys := make([]string, 0, len(queryParams))
+	for key := range queryParams {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var sb string
+	for _, key := range keys {
+		sb += key
+	}
+	key := "ssrf:" + utils.Tools.HashXX64String(parsedURL.Scheme+parsedURL.Host+newPath+sb)
+	flag := d.DuplicateLocalCache(key)
+	if flag {
+		// 不重复
+		return flag, keys, parsedURL.Scheme + "://" + parsedURL.Host + parsedURL.Path
+	}
+	return false, []string{}, ""
 }

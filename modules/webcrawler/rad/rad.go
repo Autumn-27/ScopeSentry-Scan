@@ -198,7 +198,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	var targetFileName string
 	timeRandom := utils.Tools.GetTimeNow()
 	strRandom := utils.Tools.GenerateRandomString(8)
-	targetFileName = utils.Tools.CalculateMD5(timeRandom + strRandom)
+	targetFileName = utils.Tools.HashXX64String(timeRandom + strRandom)
 	resultPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "result", targetFileName)
 	radConfigPath := filepath.Join(filepath.Join(global.ExtDir, "rad"), "rad_config.yml")
 	defer utils.Tools.DeleteFile(resultPath)

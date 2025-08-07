@@ -155,10 +155,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			data.Length = 0
 		}
 	}
-	urlMd5 := utils.Tools.CalculateMD5(data.Output)
+	urlMd5 := utils.Tools.HashXX64String(data.Output)
 	bodyHash := ""
 	if data.Status != 0 {
-		bodyHash = utils.Tools.CalculateMD5(data.Body)
+		bodyHash = utils.Tools.HashXX64String(data.Body)
 	}
 	pageMonit := types.PageMonit{
 		Url:        data.Output,
