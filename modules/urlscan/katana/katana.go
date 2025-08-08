@@ -207,8 +207,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	executionTimeout := 20
 	pValue := "5"
 	proxy := ""
+	hl := false
+	xhr := false
+	pc := false
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy", "p")
+		args, err := utils.Tools.ParseArgs(parameter, "t", "timeout", "depth", "et", "proxy", "p", "hl", "xhr", "pc")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -226,7 +229,18 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						proxy = value
 					case "p":
 						pValue = value
-
+					case "hl":
+						if value != "flase" {
+							hl = true
+						}
+					case "xhr":
+						if value != "flase" {
+							xhr = true
+						}
+					case "pc":
+						if value != "flase" {
+							pc = true
+						}
 					default:
 						continue
 					}
@@ -242,14 +256,26 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	args := []string{
 		"-u", data.URL,
 		"-depth", maxDepth,
-		"-mrs", "20971520", "-hl", "-xhr",
+		"-mrs", "20971520",
+	}
+	if hl {
+		args = append(args, "-hl")
+	}
+	if xhr {
+		args = append(args, "-xhr")
+	}
+	if pc {
+		args = append(args, "-pc")
+	}
+	args = append(args, []string{
 		"-fs", "rdn", "-js-crawl", "-jsonl",
 		"-ef", "png,apng,bmp,gif,ico,cur,jpg,jpeg,jfif,pjp,pjpeg,svg,tif,tiff,webp,xbm,3gp,aac,flac,mpg,mpeg,mp3,mp4,m4a,m4v,m4p,oga,ogg,ogv,mov,wav,webm,eot,woff,woff2,ttf,otf",
 		"-kf", "all", "-timeout", timeout,
 		"-c", threads,
 		"-p", pValue,
 		"-o", resultFile,
-	}
+	}...)
+
 	if proxy != "" {
 		args = append(args, "-proxy")
 		args = append(args, proxy)
