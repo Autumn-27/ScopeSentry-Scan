@@ -194,8 +194,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	executionTimeout := 15
 	PortRange := ""
 	maxPort := 200
+	excludePorts := ""
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port", "et", "maxport")
+		args, err := utils.Tools.ParseArgs(parameter, "b", "t", "port", "et", "maxport", "e")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -215,6 +216,8 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						executionTimeout, _ = strconv.Atoi(value)
 					case "maxport":
 						maxPort, _ = strconv.Atoi(value)
+					case "e":
+						excludePorts = value
 					default:
 						continue
 					}
@@ -227,7 +230,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		return nil, nil
 	}
 	start := time.Now()
-	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scripts", "None"}
+	args := []string{"-b", PortBatchSize, "-t", PortTimeout, "-a", domainSkip.Domain, "-r", PortRange, "--accessible", "--scan-order", "Random", "--scripts", "None"}
+	if excludePorts != "" {
+		args = append(args, "--exclude-ports", excludePorts)
+	}
 	rustScanExecPath := filepath.Join(filepath.Join(global.ExtDir, "rustscan"), p.RustFileName)
 	// 假设你已经有获取 TaskID 的逻辑
 	taskContext := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
