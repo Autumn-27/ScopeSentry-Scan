@@ -477,7 +477,7 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 		r.Status = katanaResult.Response.StatusCode
 		r.Body = katanaResult.Response.Body
 		if r.Status == 0 {
-			h, err := client.HttpGetWithCustomHeader(katanaResult.Request.URL, []string{})
+			h, err := client.HttpGetWithCustomHeader(katanaResult.Request.URL, map[string]string{})
 			if err == nil {
 				r.Body = h.Body
 				r.Status = h.StatusCode
@@ -505,12 +505,12 @@ func (p *Plugin) ParseResult(katanaResult *types.KatanaResult, taskId string, ur
 			Request:  &req,
 			Response: &types.Response{},
 		}
-		custHeader := []string{}
+		custHeader := map[string]string{}
 		ct := ""
-		for _, head := range req.Headers {
-			custHeader = append(custHeader, fmt.Sprintf("%v:%v", head, req.Headers[head]))
-			if strings.ToLower(head) == "content-type" {
-				if strings.Contains(req.Headers[head], "json") {
+		for key, value := range req.Headers {
+			custHeader[key] = value
+			if strings.ToLower(key) == "content-type" {
+				if strings.Contains(value, "json") {
 					ct = "json"
 				}
 			}

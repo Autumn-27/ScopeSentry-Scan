@@ -101,7 +101,7 @@ func RunRedisTask() {
 			}
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 
-			logger.SlogInfo(fmt.Sprintf("Task begin: %v", runnerOption.ID))
+			logger.SlogInfo(fmt.Sprintf("Task begin: %v %v", runnerOption.ID, runnerOption.TaskName))
 			if runnerOption.Type == "page_monitoring" {
 				// 运行页面监控程序
 				go func() {

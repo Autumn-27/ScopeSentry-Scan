@@ -84,7 +84,7 @@ func InstallPlugin(id string) {
 		logger.SlogErrorLocal(fmt.Sprintf("send plginfo error 4: %s", plgInfoErr))
 	}
 
-	logger.SlogInfoLocal(fmt.Sprintf("load plugin end:%v", id))
+	logger.SlogInfoLocal(fmt.Sprintf("load plugin end:%v", plugin.GetName()))
 }
 
 func DeletePlugin(data string) {

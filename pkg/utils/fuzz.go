@@ -11,12 +11,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 )
 
 func GetKeyValue(key string, id string, tp string, dnslog string) string {
-	return key + "=http://" + id + "." + key + "." + tp + "." + dnslog
+	return key + "=" + url.QueryEscape("http://"+id+"."+key+"."+tp+"."+dnslog)
 }
 
 func GetJsonValue(key string, id string, dnslog string) string {
@@ -34,7 +35,7 @@ var cfg = HttpClientConfig{
 
 var client = GetNetHttpByConfig(cfg)
 
-func FuzzGet(uri string, id string, header []string, wg *sync.WaitGroup, testParam []string, dnslog string) {
+func FuzzGet(uri string, id string, header map[string]string, wg *sync.WaitGroup, testParam []string, dnslog string) {
 	defer wg.Done()
 	var parameterVal string
 	for _, key := range testParam {
@@ -58,7 +59,7 @@ func FuzzGet(uri string, id string, header []string, wg *sync.WaitGroup, testPar
 	}
 }
 
-func FuzzPostJson(uri string, id string, header []string, wg *sync.WaitGroup, testParam []string, dnslog string) {
+func FuzzPostJson(uri string, id string, header map[string]string, wg *sync.WaitGroup, testParam []string, dnslog string) {
 	defer wg.Done()
 	params := make(map[string]string)
 	for _, key := range testParam {
@@ -78,7 +79,7 @@ func FuzzPostJson(uri string, id string, header []string, wg *sync.WaitGroup, te
 	}()
 }
 
-func FuzzPost(uri string, id string, header []string, wg *sync.WaitGroup, testParam []string, dnslog string) {
+func FuzzPost(uri string, id string, header map[string]string, wg *sync.WaitGroup, testParam []string, dnslog string) {
 	defer wg.Done()
 	var parameterVal string
 	for _, key := range testParam {
@@ -102,13 +103,13 @@ func FuzzPost(uri string, id string, header []string, wg *sync.WaitGroup, testPa
 	}
 }
 
-func FuzzHttpGetNoResWithCustomHeader(url string, header []string) {
+func FuzzHttpGetNoResWithCustomHeader(url string, header map[string]string) {
 	err := client.HttpGetNoResWithCustomHeader(url, header)
 	if err != nil {
 	}
 }
 
-func FuzzHttpPostNoResWithCustomHeader(url string, body []byte, contentType string, customHeaders []string) {
+func FuzzHttpPostNoResWithCustomHeader(url string, body []byte, contentType string, customHeaders map[string]string) {
 	err := client.HttpPostNoResWithCustomHeader(url, body, contentType, customHeaders)
 	if err != nil {
 	}

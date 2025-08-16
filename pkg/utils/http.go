@@ -12,6 +12,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"io"
 	"net/http"
 	"net/url"
@@ -124,21 +125,19 @@ func GetNetHttpByConfig(cfg HttpClientConfig) *Nethttp {
 	return instance
 }
 
-func (n *Nethttp) HttpGetNoResWithCustomHeader(url string, customHeaders []string) error {
+func (n *Nethttp) HttpGetNoResWithCustomHeader(url string, customHeaders map[string]string) error {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
 
-	for _, h := range customHeaders {
-		parts := strings.SplitN(h, ":", 2)
-		if len(parts) == 2 {
-			req.Header.Set(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
-		}
+	for k, v := range customHeaders {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := n.Client.Do(req)
 	if err != nil {
+		//logger.SlogErrorLocal(fmt.Sprintf("HttpGetNoResWithCustomHeader func error: %v", err))
 		return err
 	}
 	defer resp.Body.Close()
@@ -148,7 +147,7 @@ func (n *Nethttp) HttpGetNoResWithCustomHeader(url string, customHeaders []strin
 	return nil
 }
 
-func (n *Nethttp) HttpPostNoResWithCustomHeader(url string, body []byte, contentType string, customHeaders []string) error {
+func (n *Nethttp) HttpPostNoResWithCustomHeader(url string, body []byte, contentType string, customHeaders map[string]string) error {
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
@@ -156,17 +155,17 @@ func (n *Nethttp) HttpPostNoResWithCustomHeader(url string, body []byte, content
 
 	if contentType == "json" {
 		req.Header.Set("Content-Type", "application/json")
+	} else {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
-	for _, h := range customHeaders {
-		parts := strings.SplitN(h, ":", 2)
-		if len(parts) == 2 {
-			req.Header.Set(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
-		}
+	for k, v := range customHeaders {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := n.Client.Do(req)
 	if err != nil {
+		//logger.SlogErrorLocal(fmt.Sprintf("HttpPostNoResWithCustomHeader func error: %v", err))
 		return err
 	}
 	defer resp.Body.Close()
@@ -176,7 +175,7 @@ func (n *Nethttp) HttpPostNoResWithCustomHeader(url string, body []byte, content
 	return nil
 }
 
-func (n *Nethttp) HttpGetWithCustomHeader(uri string, customHeaders []string) (types.HttpResponse, error) {
+func (n *Nethttp) HttpGetWithCustomHeader(uri string, customHeaders map[string]string) (types.HttpResponse, error) {
 	// 创建请求
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
@@ -184,11 +183,8 @@ func (n *Nethttp) HttpGetWithCustomHeader(uri string, customHeaders []string) (t
 	}
 
 	// 添加自定义 Header
-	for _, header := range customHeaders {
-		parts := strings.SplitN(header, ":", 2)
-		if len(parts) == 2 {
-			req.Header.Set(parts[0], parts[1])
-		}
+	for k, v := range customHeaders {
+		req.Header.Set(k, v)
 	}
 	// 发起请求
 	resp, err := n.Client.Do(req)
@@ -207,6 +203,7 @@ func (n *Nethttp) HttpGetWithCustomHeader(uri string, customHeaders []string) (t
 	// 读取响应体
 	bodyBytes, err := io.ReadAll(limitedReader)
 	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("HttpGetWithCustomHeader func error: %v", err))
 		return types.HttpResponse{}, err
 	}
 	tmp.Body = string(bodyBytes)
@@ -224,7 +221,7 @@ func (n *Nethttp) HttpGetWithCustomHeader(uri string, customHeaders []string) (t
 	return tmp, nil
 }
 
-func (n *Nethttp) HttpPostWithCustomHeader(uri string, requestBody []byte, ct string, customHeaders []string) (error, HttpResponse) {
+func (n *Nethttp) HttpPostWithCustomHeader(uri string, requestBody []byte, ct string, customHeaders map[string]string) (error, HttpResponse) {
 	// 创建 POST 请求
 	req, err := http.NewRequest(http.MethodPost, uri, bytes.NewReader(requestBody))
 	if err != nil {
@@ -237,15 +234,13 @@ func (n *Nethttp) HttpPostWithCustomHeader(uri string, requestBody []byte, ct st
 	}
 
 	// 设置自定义 Header
-	for _, header := range customHeaders {
-		parts := strings.SplitN(header, ":", 2)
-		if len(parts) == 2 {
-			req.Header.Set(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
-		}
+	for k, v := range customHeaders {
+		req.Header.Set(k, v)
 	}
 
 	resp, err := n.Client.Do(req)
 	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("HttpPostWithCustomHeader func error: %v", err))
 		return err, HttpResponse{}
 	}
 	defer resp.Body.Close()

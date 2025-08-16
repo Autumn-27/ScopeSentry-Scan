@@ -167,7 +167,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 		}
 	}
-	client, err := utils.GetClient(proxy, 3*time.Second)
+	client, err := utils.GetClient(proxy, 5*time.Second)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("wayback utils.GetClient error: %v\n", err))
 		return nil, err
@@ -212,6 +212,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				//}
 				response, err := client.Get(result.URL)
 				if err != nil {
+					logger.SlogWarnLocal(fmt.Sprintf("wayback.Get error: %v\n", err))
 					r.Status = 0
 					r.Length = 0
 					r.Body = ""
