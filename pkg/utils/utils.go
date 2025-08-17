@@ -986,6 +986,64 @@ func (t *UtilTools) ReadFileLineReader(filePath string, lineChan chan<- string, 
 	}
 }
 
+func (t *UtilTools) ReadFileLineReaderBytes(filePath string, lineChan chan<- []byte, ctx context.Context) error {
+	defer close(lineChan)
+
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// 打开文件
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 使用大缓冲区提高读取性能
+	reader := bufio.NewReaderSize(file, 30*1024) // 30KB 缓冲区
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 读取一行，ReadLine 返回 []byte
+			lineBytes, isPrefix, err := reader.ReadLine()
+			if err != nil && err != io.EOF {
+				return err
+			}
+			if err == io.EOF && len(lineBytes) == 0 {
+				return nil
+			}
+
+			// 如果行太长被分段，循环合并
+			fullLine := append([]byte(nil), lineBytes...) // 可选择深拷贝，避免被复用覆盖
+			for isPrefix {
+				lineBytes, isPrefix, _ = reader.ReadLine()
+				fullLine = append(fullLine, lineBytes...)
+			}
+
+			// 去除首尾空格
+			fullLine = bytes.TrimSpace(fullLine)
+
+			// 发送到 channel
+			select {
+			case lineChan <- fullLine:
+			case <-ctx.Done():
+				return nil
+			}
+
+			if err == io.EOF {
+				return nil
+			}
+		}
+	}
+}
+
 func (t *UtilTools) CdnCheck(host string) (bool, string) {
 	ip := net.ParseIP(host)
 	matched, val, err := t.CdnCheckClient.CheckCDN(ip)

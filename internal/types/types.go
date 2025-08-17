@@ -7,6 +7,7 @@
 package types
 
 import (
+	"encoding/json"
 	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -113,6 +114,7 @@ type UrlResult struct {
 	Length     int    `json:"length"`
 	Time       string `json:"time"`
 	Body       string `bson:"body"`
+	BodyByte   []byte `bson:"-"`
 	Ext        string `bson:"ext"`
 	IsFile     bool   `bson:"-"`
 	Project    string
@@ -314,12 +316,13 @@ type Request struct {
 type Headers map[string]string
 
 type Response struct {
-	StatusCode    int       `json:"status_code,omitempty"`
-	Headers       Headers   `json:"headers,omitempty"`
-	Body          string    `json:"body,omitempty"`
-	ContentLength int64     `json:"content_length,omitempty"`
-	Forms         []Form    `json:"forms,omitempty"`
-	XhrRequests   []Request `json:"xhr_requests,omitempty"`
+	StatusCode    int             `json:"status_code,omitempty"`
+	Headers       Headers         `json:"headers,omitempty"`
+	Body          string          `json:"-"`
+	BodyBytes     json.RawMessage `json:"body,omitempty"`
+	ContentLength int64           `json:"content_length,omitempty"`
+	Forms         []Form          `json:"forms,omitempty"`
+	XhrRequests   []Request       `json:"xhr_requests,omitempty"`
 }
 
 type Form struct {

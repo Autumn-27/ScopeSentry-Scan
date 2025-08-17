@@ -29,6 +29,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 type Plugin struct {
@@ -286,9 +287,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("%v ExecuteCommandWithTimeout error: %v", p.GetName(), err))
 	}
-	resultChan := make(chan string, 100)
+	resultChan := make(chan []byte, 100)
 	go func() {
-		err = utils.Tools.ReadFileLineReader(resultFile, resultChan, ctx)
+		err = utils.Tools.ReadFileLineReaderBytes(resultFile, resultChan, ctx)
 		if err != nil {
 			logger.SlogErrorLocal(fmt.Sprintf("ReadFileLineReader %v", err))
 		}
@@ -297,21 +298,21 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	urlFilePath := filepath.Join(global.TmpDir, filename)
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
-	var buf bytes.Buffer
 	for result := range resultChan {
-		buf.Reset() // 清空缓冲区
-		buf.WriteString(result)
-
-		decoder := json.NewDecoder(&buf)
+		decoder := json.NewDecoder(bytes.NewReader(result))
 		var katanaResult types.KatanaResult
 		err := decoder.Decode(&katanaResult)
 		if err != nil {
-			logger.SlogWarnLocal(fmt.Sprintf("[%v]JSON parse error:%v", result, err))
+			logger.SlogWarnLocal(fmt.Sprintf("JSON parse error: %v", err))
 			continue
 		}
-		if katanaResult.Request == nil {
-			logger.SlogWarnLocal(fmt.Sprintf("katanaResult.Request is nil"))
-			continue
+
+		r := katanaResult.Response // r 类型是 *Response
+		if r != nil && r.BodyBytes != nil {
+			// 零拷贝 string
+			r.Body = *(*string)(unsafe.Pointer(&r.BodyBytes))
+		} else if r != nil {
+			r.Body = ""
 		}
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
 		//parsedURL, err := url.Parse(katanaResult.Request.URL)

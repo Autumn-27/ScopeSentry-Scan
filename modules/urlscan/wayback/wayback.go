@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 type Plugin struct {
@@ -217,15 +218,21 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 					r.Length = 0
 					r.Body = ""
 				} else {
-					r.Status = response.StatusCode
-					bodyBytes, err := io.ReadAll(response.Body)
-					if err != nil {
-						r.Length = 0
-						r.Body = ""
-					} else {
-						r.Body = string(bodyBytes)
-						r.Length = len(r.Body)
-					}
+					func() {
+						defer response.Body.Close()
+
+						r.Status = response.StatusCode
+						bodyBytes, err := io.ReadAll(response.Body)
+						if err != nil {
+							r.Length = 0
+							r.Body = ""
+						} else {
+							r.BodyByte = bodyBytes
+							// 零拷贝把 []byte 转 string
+							r.Body = *(*string)(unsafe.Pointer(&bodyBytes))
+							r.Length = len(bodyBytes)
+						}
+					}()
 				}
 				r.Time = utils.Tools.GetTimeNow()
 				rootDomain, err := utils.Tools.GetRootDomain(r.Output)
