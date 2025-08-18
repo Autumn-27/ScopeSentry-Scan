@@ -12,16 +12,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
 
-func GetKeyValue(key string, id string, tp string, dnslog string) string {
-	return key + "=" + url.QueryEscape("http://"+id+"."+key+"."+tp+"."+dnslog)
+func GetKeyValue(key, id, tp, dnslog string) string {
+	var sb strings.Builder
+	sb.WriteString(key)
+	sb.WriteByte('=')
+	sb.WriteString("http://")
+	sb.WriteString(id)
+	sb.WriteByte('.')
+	sb.WriteString(key)
+	sb.WriteByte('.')
+	sb.WriteString(tp)
+	sb.WriteByte('.')
+	sb.WriteString(dnslog)
+	return url.QueryEscape(sb.String())
 }
 
-func GetJsonValue(key string, id string, dnslog string) string {
-	return "http://" + id + "." + key + ".3." + dnslog
+func GetJsonValue(key, id, dnslog string) string {
+	var sb strings.Builder
+	sb.WriteString("http://")
+	sb.WriteString(id)
+	sb.WriteByte('.')
+	sb.WriteString(key)
+	sb.WriteString(".3.")
+	sb.WriteString(dnslog)
+	return sb.String()
 }
 
 var cfg = HttpClientConfig{
@@ -37,25 +56,29 @@ var client = GetNetHttpByConfig(cfg)
 
 func FuzzGet(uri string, id string, header map[string]string, wg *sync.WaitGroup, testParam []string, dnslog string) {
 	defer wg.Done()
-	var parameterVal string
+	var builder strings.Builder
 	for _, key := range testParam {
 		if key == "" {
 			continue
 		}
-		parameterVal += "&" + GetKeyValue(key, id, "1", dnslog)
-		if len(parameterVal) > 1000 {
-			parameterValTmp := parameterVal[1:]
-			go func() {
-				FuzzHttpGetNoResWithCustomHeader(uri+"?"+parameterValTmp, header)
-			}()
-			parameterVal = ""
+		builder.WriteByte('&')
+		builder.WriteString(GetKeyValue(key, id, "1", dnslog))
+
+		if builder.Len() > 1000 {
+			// 去掉首个 '&'
+			paramStr := builder.String()[1:]
+			go func(p string) {
+				FuzzHttpGetNoResWithCustomHeader(uri+"?"+p, header)
+			}(paramStr)
+			builder.Reset() // 重用 builder，避免新分配
 		}
 	}
-	if parameterVal != "" {
-		parameterValTmp := parameterVal[1:]
-		go func() {
-			FuzzHttpGetNoResWithCustomHeader(uri+"?"+parameterValTmp, header)
-		}()
+
+	if builder.Len() > 0 {
+		paramStr := builder.String()[1:]
+		go func(p string) {
+			FuzzHttpGetNoResWithCustomHeader(uri+"?"+p, header)
+		}(paramStr)
 	}
 }
 
@@ -81,25 +104,33 @@ func FuzzPostJson(uri string, id string, header map[string]string, wg *sync.Wait
 
 func FuzzPost(uri string, id string, header map[string]string, wg *sync.WaitGroup, testParam []string, dnslog string) {
 	defer wg.Done()
-	var parameterVal string
+
+	var builder strings.Builder
+
 	for _, key := range testParam {
 		if key == "" {
 			continue
 		}
-		parameterVal += "&" + GetKeyValue(key, id, "2", dnslog)
-		if len(parameterVal) > 1024*1020 {
-			parameterValTmp := parameterVal[1:]
-			go func() {
-				FuzzHttpPostNoResWithCustomHeader(uri, []byte(parameterValTmp), "url", header)
-			}()
-			parameterVal = ""
+
+		builder.WriteByte('&')
+		builder.WriteString(GetKeyValue(key, id, "2", dnslog))
+
+		// 当参数长度超过阈值就发送
+		if builder.Len() > 1024*1020 {
+			paramStr := builder.String()[1:] // 去掉首个 '&'
+			go func(p string) {
+				FuzzHttpPostNoResWithCustomHeader(uri, []byte(p), "url", header)
+			}(paramStr)
+			builder.Reset() // 重用 builder 内存
 		}
 	}
-	if parameterVal != "" {
-		parameterValTmp := parameterVal[1:]
-		go func() {
-			FuzzHttpPostNoResWithCustomHeader(uri, []byte(parameterValTmp), "url", header)
-		}()
+
+	// 发送剩余参数
+	if builder.Len() > 0 {
+		paramStr := builder.String()[1:]
+		go func(p string) {
+			FuzzHttpPostNoResWithCustomHeader(uri, []byte(p), "url", header)
+		}(paramStr)
 	}
 }
 
