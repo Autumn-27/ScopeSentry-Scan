@@ -23,6 +23,7 @@ var (
 	AppConfig             Config
 	DisallowedURLFilters  []*regexp.Regexp
 	VERSION               string
+	TaskName              string
 	FirstRun              bool
 	DictPath              string
 	ExtDir                string

@@ -92,6 +92,7 @@ func RunRedisTask() {
 				logger.SlogError(fmt.Sprintf("GetTask info error: %v", err))
 				continue
 			}
+
 			logger.SlogInfo(fmt.Sprintf("Get a new task: %v", taskInfo))
 			var runnerOption options.TaskOptions
 			err = json.Unmarshal([]byte(taskInfo), &runnerOption)
@@ -99,6 +100,9 @@ func RunRedisTask() {
 				logger.SlogError(fmt.Sprintf("Task parse error: %s", err))
 				continue
 			}
+			// 运行一些任务初始化的方法
+			global.TaskName = runnerOption.TaskName
+
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v %v", runnerOption.ID, runnerOption.TaskName))
@@ -239,6 +243,7 @@ func RunRedisTask() {
 			CleanGlobal()
 			// 清空文件锁
 			utils.Tools.ClearAllLocks()
+			// 运行任务结束相关的方法
 			logger.SlogInfo(fmt.Sprintf("Task clean end: %v", runnerOption.ID))
 		}
 	}
