@@ -101,6 +101,7 @@ func RunRedisTask() {
 				continue
 			}
 			// 运行一些任务初始化的方法
+			InitTaskOption(runnerOption)
 			global.TaskName = runnerOption.TaskName
 
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)

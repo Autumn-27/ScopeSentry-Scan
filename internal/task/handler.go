@@ -15,6 +15,8 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/pool"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/runner"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -76,4 +78,54 @@ func RunPebbleTarget(runnerOption options.TaskOptions) {
 	}
 	time.Sleep(3 * time.Second)
 	wg.Wait()
+}
+
+func InitTaskOption(runnerOption options.TaskOptions) {
+	// 初始化httpx
+	parameter, _ := utils.Tools.GetParameter(runnerOption.Parameters, "AssetMapping", "3a0d994a12305cb15a5cb7104d819623")
+	initHttpx(parameter)
+}
+
+func initHttpx(parameter string) {
+	cdncheck := "false"
+	screenshot := false
+	tlsprobe := false
+	FollowRedirects := true
+	bypassHeader := false
+	screenshotTimeout := 10
+	if parameter != "" {
+		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh")
+		if err != nil {
+		} else {
+			for key, value := range args {
+				if value != "" {
+					switch key {
+					case "cdncheck":
+						cdncheck = value
+					case "screenshot":
+						if value == "true" {
+							screenshot = true
+						}
+					case "tlsprobe":
+						if value == "true" {
+							tlsprobe = true
+						}
+					case "st":
+						screenshotTimeout, _ = strconv.Atoi(value)
+					case "fr":
+						if value == "false" {
+							FollowRedirects = false
+						}
+					case "bh":
+						if value == "true" {
+							bypassHeader = true
+						}
+					default:
+						continue
+					}
+				}
+			}
+		}
+	}
+	utils.InitHttpx(cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, bypassHeader)
 }

@@ -8,16 +8,17 @@
 package utils
 
 import (
-	"context"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/projectdiscovery/httpx/runner"
 	"math"
 	"time"
 )
 
-func InitHttpx(targets []string, resultCallback func(r types.AssetHttp), cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, ctx context.Context, executionTimeout int, bypassHeader bool) {
+var HttpxRun *runner.Runner
 
+func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, bypassHeader bool) {
 	customHeaders := []string{}
 	if bypassHeader {
 		customHeaders = []string{
@@ -45,7 +46,6 @@ func InitHttpx(targets []string, resultCallback func(r types.AssetHttp), cdnchec
 		TLSProbe:                  tLSProbe,
 		Threads:                   30,
 		RateLimit:                 100,
-		InputTargetHost:           targets,
 		Favicon:                   true,
 		ExtractTitle:              true,
 		TechDetect:                true,
@@ -70,5 +70,19 @@ func InitHttpx(targets []string, resultCallback func(r types.AssetHttp), cdnchec
 		Wappalyzer:                Wappalyzer,
 		DisableStdout:             true,
 	}
-	fmt.Println(options)
+	var err error
+	HttpxRun, err = runner.New(&options)
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("httpx get error: %v", err))
+	}
+	//defer httpxRunner.Close()
+	//fmt.Println(options)
+}
+
+func RunAnalyze(target string, resultCallback func(r types.AssetHttp)) {
+	resuFunc := func(r runner.Result) {
+		ah := Tools.HttpxResultToAssetHttp(r)
+		resultCallback(ah)
+	}
+	HttpxRun.RunAnalyze(target, HttpxRun.HTTPX(), resuFunc)
 }

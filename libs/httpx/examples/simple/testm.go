@@ -31,5 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer httpxRunner.Close()
-	httpxRunner.RunAnalyze("https://baidu.com", httpxRunner.HTTPX())
+	httpxRunner.RunAnalyze("https://baidu.com", httpxRunner.HTTPX(), func(result runner.Result) {
+
+	})
 }

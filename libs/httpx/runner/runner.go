@@ -722,7 +722,7 @@ func (r *Runner) Close() {
 	}
 }
 
-func (r *Runner) RunAnalyze(k string, hp *httpx.HTTPX) {
+func (r *Runner) RunAnalyze(k string, hp *httpx.HTTPX, resultCallback OnResultCallback) {
 	protocol := r.options.protocol
 	// attempt to parse url as is
 	if u, err := r.parseURL(k); err == nil {
