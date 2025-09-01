@@ -117,7 +117,7 @@ func InitFilterUrlRe() {
 }
 
 func Initialize() {
-	global.VERSION = "1.8.2"
+	global.VERSION = "1.8.3"
 	fmt.Printf("version %v\n", global.VERSION)
 	global.AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	global.ConfigDir = filepath.Join(global.AbsolutePath, "config")

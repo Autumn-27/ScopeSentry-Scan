@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"github.com/projectdiscovery/httpx/runner"
 	"log"
+	"net/url"
+	"strings"
 )
 
 func main() {
@@ -31,7 +33,17 @@ func main() {
 		log.Fatal(err)
 	}
 	defer httpxRunner.Close()
-	httpxRunner.RunAnalyze("https://baidu.com", httpxRunner.HTTPX(), func(result runner.Result) {
+	httpxRunner.RunAnalyze("docs.babel.baidu.com", httpxRunner.HTTPX(), func(result runner.Result) {
+		// 解析 URL
+		parsedUrl, err := url.Parse(result.URL)
+		if err != nil {
+		}
+
+		// 提取域名
+		domain := parsedUrl.Host
+
+		// 去掉端口号（如果有）
+		domain = strings.Split(domain, ":")[0]
 
 	})
 }

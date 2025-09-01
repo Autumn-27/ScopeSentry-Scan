@@ -15,7 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
-	"strconv"
+	"sync"
 )
 
 type Plugin struct {
@@ -142,55 +142,73 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogInfoLocal(fmt.Sprintf("httpx run target: %v", url))
 		}
 	}
-	parameter := p.GetParameter()
-	cdncheck := "false"
-	screenshot := false
-	tlsprobe := false
-	FollowRedirects := true
-	bypassHeader := false
-	screenshotTimeout := 10
-	executionTimeout := 10
-	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh")
-		if err != nil {
-		} else {
-			for key, value := range args {
-				if value != "" {
-					switch key {
-					case "cdncheck":
-						cdncheck = value
-					case "screenshot":
-						if value == "true" {
-							screenshot = true
-						}
-					case "tlsprobe":
-						if value == "true" {
-							tlsprobe = true
-						}
-					case "st":
-						screenshotTimeout, _ = strconv.Atoi(value)
-					case "fr":
-						if value == "false" {
-							FollowRedirects = false
-						}
-					case "et":
-						executionTimeout, _ = strconv.Atoi(value)
-					case "bh":
-						if value == "true" {
-							bypassHeader = true
-						}
-					default:
-						continue
-					}
-				}
-			}
-		}
-	}
+	var wg sync.WaitGroup
 	httpxResultsHandler := func(r types.AssetHttp) {
 		p.Result <- r
 	}
-
-	utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()), executionTimeout, bypassHeader)
+	ctx := contextmanager.GlobalContextManagers.GetContext(p.GetTaskId())
+	for _, target := range targetList {
+		wg.Add(1)
+		go func(t string) {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				// context 已经结束，直接退出
+				return
+			default:
+				// 正常逻辑，只跑一次
+				utils.RunAnalyze(t, httpxResultsHandler)
+			}
+		}(target)
+	}
+	wg.Wait()
+	//parameter := p.GetParameter()
+	//cdncheck := "false"
+	//screenshot := false
+	//tlsprobe := false
+	//FollowRedirects := true
+	//bypassHeader := false
+	//screenshotTimeout := 10
+	//executionTimeout := 10
+	//if parameter != "" {
+	//	args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh")
+	//	if err != nil {
+	//	} else {
+	//		for key, value := range args {
+	//			if value != "" {
+	//				switch key {
+	//				case "cdncheck":
+	//					cdncheck = value
+	//				case "screenshot":
+	//					if value == "true" {
+	//						screenshot = true
+	//					}
+	//				case "tlsprobe":
+	//					if value == "true" {
+	//						tlsprobe = true
+	//					}
+	//				case "st":
+	//					screenshotTimeout, _ = strconv.Atoi(value)
+	//				case "fr":
+	//					if value == "false" {
+	//						FollowRedirects = false
+	//					}
+	//				case "et":
+	//					executionTimeout, _ = strconv.Atoi(value)
+	//				case "bh":
+	//					if value == "true" {
+	//						bypassHeader = true
+	//					}
+	//				default:
+	//					continue
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//
+	//
+	//utils.Requests.Httpx(targetList, httpxResultsHandler, cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, contextmanager.GlobalContextManagers.GetContext(p.GetTaskId()), executionTimeout, bypassHeader)
 	return nil, nil
 }
 

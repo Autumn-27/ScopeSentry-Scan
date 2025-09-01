@@ -741,9 +741,9 @@ func (r *Runner) RunAnalyze(k string, hp *httpx.HTTPX, resultCallback OnResultCa
 			for _, method := range scanopts.Methods {
 				for _, prot := range protocols {
 					// sleep for delay time
-					time.Sleep(r.options.Delay)
 					result := r.analyze(hp, prot, target, method, k, scanopts)
-					fmt.Println(result)
+
+					resultCallback(result)
 				}
 			}
 		}

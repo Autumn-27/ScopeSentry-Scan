@@ -1076,7 +1076,9 @@ func (t *UtilTools) GetDomain(rawUrl string) string {
 
 	// 提取域名
 	domain := parsedUrl.Host
-
+	if domain == "" {
+		return rawUrl
+	}
 	// 去掉端口号（如果有）
 	domain = strings.Split(domain, ":")[0]
 

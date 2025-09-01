@@ -79,7 +79,7 @@ func InitializeNetHttp() {
 	GlobalNetHttp.Client = GetHttpClient(HttpClientConfig{
 		Timeout:             5 * time.Second,
 		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 50,
+		MaxIdleConnsPerHost: 500,
 		IdleConnTimeout:     60 * time.Second,
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: false},
 	})
@@ -142,8 +142,6 @@ func (n *Nethttp) HttpGetNoResWithCustomHeader(url string, customHeaders map[str
 	}
 	defer resp.Body.Close()
 
-	// 丢弃响应体数据以复用连接
-	io.Copy(io.Discard, resp.Body)
 	return nil
 }
 
@@ -170,8 +168,6 @@ func (n *Nethttp) HttpPostNoResWithCustomHeader(url string, body []byte, content
 	}
 	defer resp.Body.Close()
 
-	// 丢弃响应体数据以复用连接
-	io.Copy(io.Discard, resp.Body)
 	return nil
 }
 

@@ -240,6 +240,8 @@ func RunRedisTask() {
 			}
 			// 弹出任务信息
 			_ = handler.TaskHandle.PopTaskId(runnerOption.ID)
+			// 任务结束运行关闭方法
+			OptionClose()
 			// 清除全局变量
 			CleanGlobal()
 			// 清空文件锁

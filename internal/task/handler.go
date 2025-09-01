@@ -93,8 +93,9 @@ func initHttpx(parameter string) {
 	FollowRedirects := true
 	bypassHeader := false
 	screenshotTimeout := 10
+	threads := 30
 	if parameter != "" {
-		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh")
+		args, err := utils.Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh", "t")
 		if err != nil {
 		} else {
 			for key, value := range args {
@@ -120,6 +121,8 @@ func initHttpx(parameter string) {
 						if value == "true" {
 							bypassHeader = true
 						}
+					case "t":
+						threads, _ = strconv.Atoi(value)
 					default:
 						continue
 					}
@@ -127,5 +130,9 @@ func initHttpx(parameter string) {
 			}
 		}
 	}
-	utils.InitHttpx(cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, bypassHeader)
+	utils.InitHttpx(cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, bypassHeader, threads)
+}
+
+func OptionClose() {
+	utils.HttpxClose()
 }

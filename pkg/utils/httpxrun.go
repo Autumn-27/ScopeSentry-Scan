@@ -18,7 +18,7 @@ import (
 
 var HttpxRun *runner.Runner
 
-func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, bypassHeader bool) {
+func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe bool, followRedirects bool, bypassHeader bool, threads int) {
 	customHeaders := []string{}
 	if bypassHeader {
 		customHeaders = []string{
@@ -44,7 +44,7 @@ func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe
 		Methods:                   "GET",
 		JSONOutput:                false,
 		TLSProbe:                  tLSProbe,
-		Threads:                   30,
+		Threads:                   threads,
 		RateLimit:                 100,
 		Favicon:                   true,
 		ExtractTitle:              true,
@@ -81,8 +81,16 @@ func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe
 
 func RunAnalyze(target string, resultCallback func(r types.AssetHttp)) {
 	resuFunc := func(r runner.Result) {
+		if r.Host == "" {
+			return
+		}
 		ah := Tools.HttpxResultToAssetHttp(r)
+
 		resultCallback(ah)
 	}
 	HttpxRun.RunAnalyze(target, HttpxRun.HTTPX(), resuFunc)
+}
+
+func HttpxClose() {
+	HttpxRun.Close()
 }
