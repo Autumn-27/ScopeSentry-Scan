@@ -313,23 +313,12 @@ type Request struct {
 	Headers   map[string]string `json:"headers,omitempty"`
 }
 
-type Headers map[string]string
-
 type Response struct {
 	StatusCode    int             `json:"status_code,omitempty"`
-	Headers       Headers         `json:"headers,omitempty"`
 	Body          string          `json:"-"`
-	BodyBytes     json.RawMessage `json:"body,omitempty"`
+	BodyBytes     json.RawMessage `json:"-"`
 	ContentLength int64           `json:"content_length,omitempty"`
-	Forms         []Form          `json:"forms,omitempty"`
 	XhrRequests   []Request       `json:"xhr_requests,omitempty"`
-}
-
-type Form struct {
-	Method     string   `json:"method,omitempty"`
-	Action     string   `json:"action,omitempty"`
-	Enctype    string   `json:"enctype,omitempty"`
-	Parameters []string `json:"parameters,omitempty"`
 }
 
 type PageMonit struct {

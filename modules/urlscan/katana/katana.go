@@ -8,9 +8,7 @@
 package katana
 
 import (
-	"bytes"
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
@@ -20,6 +18,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
+	sonic "github.com/bytedance/sonic"
 	"net/url"
 	"os"
 	"path"
@@ -29,7 +28,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unsafe"
 )
 
 type Plugin struct {
@@ -299,20 +297,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	urlNumber := 0
 	params := make(map[string]map[string]struct{})
 	for result := range resultChan {
-		decoder := json.NewDecoder(bytes.NewReader(result))
 		var katanaResult types.KatanaResult
-		err := decoder.Decode(&katanaResult)
+		err = sonic.Unmarshal(result, &katanaResult)
 		if err != nil {
 			logger.SlogWarnLocal(fmt.Sprintf("JSON parse error: %v", err))
 			continue
-		}
-
-		r := katanaResult.Response // r 类型是 *Response
-		if r != nil && r.BodyBytes != nil {
-			// 零拷贝 string
-			r.Body = *(*string)(unsafe.Pointer(&r.BodyBytes))
-		} else if r != nil {
-			r.Body = ""
 		}
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
 		//parsedURL, err := url.Parse(katanaResult.Request.URL)

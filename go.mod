@@ -52,6 +52,7 @@ require github.com/spaolacci/murmur3 v1.1.0 // indirect
 
 require (
 	github.com/allegro/bigcache/v3 v3.1.0
+	github.com/bytedance/sonic v1.14.1
 	github.com/cckuailong/simHtml v0.0.0-20200120101524-76ba3d3f7f65
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396
@@ -161,7 +162,8 @@ require (
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/bradleyfalzon/ghinstallation/v2 v2.16.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/bytedance/sonic v1.9.1 // indirect
+	github.com/bytedance/gopkg v0.1.3 // indirect
+	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/caddyserver/certmagic v0.19.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
@@ -172,9 +174,9 @@ require (
 	github.com/charmbracelet/x/exp/slice v0.0.0-20250327172914-2fdc97757edf // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
 	github.com/cnf/structhash v0.0.0-20201127153200-e1b16c1ebc08 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
