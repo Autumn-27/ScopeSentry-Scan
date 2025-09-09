@@ -107,11 +107,20 @@ func (r *Runner) ModuleRun() error {
 				nextModuleRun.Wait()
 				return nil
 			}
-			_, ok = data.(types.DomainSkip)
+
+			//发送来的数据 只能是types.DomainSkip
+			domainSkip, ok := data.(types.DomainSkip)
 			if !ok {
 				r.NextModule.GetInput() <- data
 				continue
 			}
+			// 无论有没有选择端口扫描 将原始数据发送到结果处
+			result := types.PortAlive{
+				Host: domainSkip.Domain,
+				IP:   "",
+				Port: "",
+			}
+			resultChan <- result
 			if !firstData {
 				start = time.Now()
 				handler.TaskHandle.ProgressStart(r.GetName(), r.Option.Target, r.Option.ID, len(r.Option.PortScan))
@@ -120,15 +129,6 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-				// 无论有没有选择端口扫描 将原始数据发送到结果处
-				domainSkip, _ := data.(types.DomainSkip)
-				result := types.PortAlive{
-					Host: domainSkip.Domain,
-					IP:   "",
-					Port: "",
-				}
-				resultChan <- result
-				//发送来的数据 只能是types.DomainSkip
 				if len(r.Option.PortScan) != 0 {
 					// 调用插件
 					for _, pluginId := range r.Option.PortScan {

@@ -193,7 +193,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	if strings.HasPrefix(target, "ICP:") {
 		name := strings.Replace(target, "ICP:", "", 1)
-		p.Result <- types.Company{Name: name}
+		p.Result <- types.ICP{ICP: name}
 		return nil, nil
 	}
 
