@@ -74,6 +74,9 @@ func (r *Runner) ModuleRun() error {
 					urlResult.TaskName = r.Option.TaskName
 					hash := utils.Tools.GenerateHash()
 					urlResult.ResultId = hash
+					if strings.Contains(urlResult.Output, "api") {
+						urlResult.Tags = append(urlResult.Tags, "api")
+					}
 					if !urlResult.IsFile {
 						// app文件不存入数据库url result
 						go results.Handler.URL(&urlResult)

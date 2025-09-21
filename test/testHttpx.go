@@ -16,6 +16,7 @@ import (
 
 func main() {
 	logger.NewLogger()
+	utils.InitializeRequests()
 	//gologger.DefaultLogger.SetMaxLevel(levels.LevelWarning)
 	httpxResultsHandler := func(r types.AssetHttp) {
 		fmt.Printf("%v %v\n", r.URL, r.Screenshot)

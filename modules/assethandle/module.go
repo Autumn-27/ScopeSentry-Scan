@@ -78,6 +78,12 @@ func (r *Runner) ModuleRun() error {
 				switch dataTmp := result.(type) {
 				case types.AssetOther:
 					if dataTmp.Type == "http" {
+						tmp := types.AssetHttp{
+							Host: dataTmp.Host,
+							Port: dataTmp.Port,
+							IP:   dataTmp.IP,
+						}
+						resultChan <- tmp
 						continue
 					}
 					// 过滤unknown
