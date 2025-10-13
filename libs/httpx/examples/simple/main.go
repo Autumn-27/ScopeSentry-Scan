@@ -37,5 +37,4 @@ func main() {
 	defer httpxRunner.Close()
 
 	httpxRunner.RunEnumeration()
-
 }

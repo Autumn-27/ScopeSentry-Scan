@@ -7,7 +7,6 @@
 package types
 
 import (
-	"encoding/json"
 	"github.com/dlclark/regexp2"
 	"github.com/projectdiscovery/tlsx/pkg/tlsx/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -314,11 +313,10 @@ type Request struct {
 }
 
 type Response struct {
-	StatusCode    int             `json:"status_code,omitempty"`
-	Body          string          `json:"-"`
-	BodyBytes     json.RawMessage `json:"-"`
-	ContentLength int64           `json:"content_length,omitempty"`
-	XhrRequests   []Request       `json:"xhr_requests,omitempty"`
+	StatusCode    int       `json:"status_code,omitempty"`
+	Body          string    `json:"body"`
+	ContentLength int64     `json:"content_length,omitempty"`
+	XhrRequests   []Request `json:"xhr_requests,omitempty"`
 }
 
 type PageMonit struct {

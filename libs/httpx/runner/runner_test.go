@@ -1,9 +1,11 @@
 package runner
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	_ "github.com/projectdiscovery/fdmax/autofdmax"
 	"github.com/projectdiscovery/httpx/common/httpx"
@@ -180,4 +182,133 @@ func TestRunner_urlWithComma_targets(t *testing.T) {
 		}
 	}
 	require.ElementsMatch(t, expected, got, "could not expected output")
+}
+
+func TestRunner_CSVRow(t *testing.T) {
+	// Create a result with fields that would be vulnerable to CSV injection
+	result := Result{
+		URL:         `=HYPERLINK('https://evil.com','click me')`,
+		Title:       `+CMD('calc')`,
+		ContentType: `-SUM(1+1)`,
+		WebServer:   `@MACRO=Virus()`,
+		StatusCode:  200,
+		Timestamp:   time.Now(),
+	}
+
+	// Call CSVRow to get the sanitized output
+	csvOutput := result.CSVRow(nil)
+
+	// Check that vulnerable fields are properly sanitized with a prefix quote
+	tests := []struct {
+		fieldName string
+		original  string
+		expected  string
+	}{
+		{"URL", result.URL, fmt.Sprintf("'%s", result.URL)},
+		{"Title", result.Title, fmt.Sprintf("'%s", result.Title)},
+		{"ContentType", result.ContentType, fmt.Sprintf("'%s", result.ContentType)},
+		{"WebServer", result.WebServer, fmt.Sprintf("'%s", result.WebServer)},
+	}
+
+	for _, tc := range tests {
+		if !strings.Contains(csvOutput, tc.expected) {
+			t.Errorf("CSV sanitization failed for %s field: expected %q but sanitized value not found in output: %s",
+				tc.fieldName, tc.expected, csvOutput)
+		}
+	}
+
+	// Also check that normal fields remain unsanitized
+	if strings.Contains(csvOutput, "'200") {
+		t.Error("CSV sanitization incorrectly modified non-vulnerable field")
+	}
+}
+
+func TestCreateNetworkpolicyInstance_AllowDenyFlags(t *testing.T) {
+	runner := &Runner{}
+
+	tests := []struct {
+		name        string
+		allow       []string
+		deny        []string
+		testCases   []struct {
+			ip       string
+			expected bool
+			reason   string
+		}
+	}{
+		{
+			name:  "Allow flag blocks IPs outside allowed range",
+			allow: []string{"192.168.1.0/24"},
+			deny:  nil,
+			testCases: []struct {
+				ip       string
+				expected bool
+				reason   string
+			}{
+				{"8.8.8.8", false, "IP outside allowed range should be blocked"},
+				{"192.168.1.10", true, "IP inside allowed range should be allowed"},
+			},
+		},
+		{
+			name:  "Deny flag blocks IPs in denied range",
+			allow: nil,
+			deny:  []string{"127.0.0.0/8"},
+			testCases: []struct {
+				ip       string
+				expected bool
+				reason   string
+			}{
+				{"127.0.0.1", false, "IP in denied range should be blocked"},
+				{"8.8.8.8", true, "IP outside denied range should be allowed"},
+			},
+		},
+		{
+			name:  "Combined Allow and Deny flags",
+			allow: []string{"192.168.0.0/16"},
+			deny:  []string{"192.168.1.0/24"},
+			testCases: []struct {
+				ip       string
+				expected bool
+				reason   string
+			}{
+				{"10.0.0.1", false, "IP outside allowed range should be blocked"},
+				{"192.168.1.100", false, "IP in denied range should be blocked even if in allowed range"},
+				{"192.168.2.50", true, "IP in allowed range but not in denied range should be allowed"},
+			},
+		},
+		{
+			name:  "Multiple Allow and Deny ranges",
+			allow: []string{"10.0.0.0/8", "172.16.0.0/12"},
+			deny:  []string{"10.1.0.0/16", "172.20.0.0/16"},
+			testCases: []struct {
+				ip       string
+				expected bool
+				reason   string
+			}{
+				{"10.0.1.1", true, "10.0.1.1 should be allowed (in allow range, not in deny)"},
+				{"10.1.1.1", false, "10.1.1.1 should be blocked (in deny range)"},
+				{"172.16.1.1", true, "172.16.1.1 should be allowed (in allow range, not in deny)"},
+				{"172.20.1.1", false, "172.20.1.1 should be blocked (in deny range)"},
+				{"192.168.1.1", false, "192.168.1.1 should be blocked (not in any allow range)"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			options := &Options{
+				Allow: tc.allow,
+				Deny:  tc.deny,
+			}
+
+			np, err := runner.createNetworkpolicyInstance(options)
+			require.Nil(t, err, "could not create networkpolicy instance")
+			require.NotNil(t, np, "networkpolicy instance should not be nil")
+
+			for _, testCase := range tc.testCases {
+				allowed := np.Validate(testCase.ip)
+				require.Equal(t, testCase.expected, allowed, testCase.reason)
+			}
+		})
+	}
 }

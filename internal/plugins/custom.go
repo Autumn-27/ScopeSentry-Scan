@@ -45,7 +45,8 @@ func GetCustomPlugin() ([]interfaces.Plugin, error) {
 			plgId := strings.TrimSuffix(filename, extension) // 去掉扩展名
 			plugin, err := LoadCustomPlugin(path, moduleName, plgId)
 			if err != nil {
-				return fmt.Errorf(fmt.Sprintf("module %v plg load error: %v", moduleName, plgId, err))
+				log.Error(fmt.Sprintf("module %v plg load error: %v", moduleName, plgId, err))
+				return nil // 返回 nil，继续遍历
 			}
 			plugins = append(plugins, plugin)
 		}

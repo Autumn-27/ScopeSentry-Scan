@@ -47,6 +47,12 @@ func LoadConfig() error {
 				Password: getEnv("REDIS_PASSWORD", ""),
 			},
 		}
+		debug := getEnv("DEBUG", "false")
+		if debug == "true" {
+			global.AppConfig.Debug = true
+		} else {
+			global.AppConfig.Debug = false
+		}
 		nodeName := global.AppConfig.NodeName
 		if nodeName == "" {
 			hostname, err := os.Hostname()
@@ -117,7 +123,7 @@ func InitFilterUrlRe() {
 }
 
 func Initialize() {
-	global.VERSION = "1.8.3"
+	global.VERSION = "1.8.4"
 	fmt.Printf("version %v\n", global.VERSION)
 	global.AbsolutePath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	global.ConfigDir = filepath.Join(global.AbsolutePath, "config")
