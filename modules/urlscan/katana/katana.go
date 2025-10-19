@@ -272,6 +272,9 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 		"-kf", "all", "-timeout", timeout,
 		"-c", threads,
 		"-p", pValue,
+		"-eof", "raw,body,headers",
+		"-srb",
+		"-srbd", global.TmpDir,
 		"-o", resultFile,
 	}...)
 
@@ -303,6 +306,11 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogWarnLocal(fmt.Sprintf("JSON parse error: %v", err))
 			continue
 		}
+		if katanaResult.Response.StoredResponseBodyPath != "" {
+			optimized, _ := utils.Tools.ReadFileToStringOptimized(katanaResult.Response.StoredResponseBodyPath)
+			katanaResult.Response.Body = optimized
+		}
+		utils.Tools.DeleteFolder(katanaResult.Response.StoredResponseBodyPath)
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
 		//parsedURL, err := url.Parse(katanaResult.Request.URL)
 		//paramMap := url.Values{}

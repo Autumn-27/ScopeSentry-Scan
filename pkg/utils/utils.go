@@ -1044,6 +1044,23 @@ func (t *UtilTools) ReadFileLineReaderBytes(filePath string, lineChan chan<- []b
 	}
 }
 
+func (t *UtilTools) ReadFileToStringOptimized(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	var buf bytes.Buffer
+	// io.Copy 会自动按块读取，比手动循环略快
+	_, err = io.Copy(&buf, file)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
 func (t *UtilTools) CdnCheck(host string) (bool, string) {
 	ip := net.ParseIP(host)
 	matched, val, err := t.CdnCheckClient.CheckCDN(ip)

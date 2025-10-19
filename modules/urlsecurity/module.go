@@ -122,7 +122,6 @@ func (r *Runner) ModuleRun() error {
 			allPluginWg.Add(1)
 			go func(data interface{}) {
 				defer allPluginWg.Done()
-
 				if len(r.Option.URLSecurity) != 0 {
 					// 调用插件
 					for _, pluginId := range r.Option.URLSecurity {
@@ -166,6 +165,7 @@ func (r *Runner) ModuleRun() error {
 						}
 					}
 				}
+
 			}(data)
 		}
 	}
