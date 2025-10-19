@@ -306,11 +306,26 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			logger.SlogWarnLocal(fmt.Sprintf("JSON parse error: %v", err))
 			continue
 		}
-		if katanaResult.Response.StoredResponseBodyPath != "" {
-			optimized, _ := utils.Tools.ReadFileToStringOptimized(katanaResult.Response.StoredResponseBodyPath)
-			katanaResult.Response.Body = optimized
+		// 确保 Response 不为 nil
+		if katanaResult.Response != nil && katanaResult.Response.StoredResponseBodyPath != "" {
+			path := katanaResult.Response.StoredResponseBodyPath
+
+			// 尝试读取文件内容
+			if optimized, err := utils.Tools.ReadFileToStringOptimized(path); err == nil {
+				katanaResult.Response.Body = optimized
+			} else {
+				logger.SlogWarnLocal(fmt.Sprintf("Read file failed: %s, error: %v", path, err))
+			}
+
+			// 删除临时文件（若失败仅警告）
+			if err := utils.Tools.DeleteFolder(path); err != nil {
+				logger.SlogWarnLocal(fmt.Sprintf("Delete file failed: %s, error: %v", path, err))
+			}
+		} else {
+			// 没有 Response 或路径为空
+			logger.SlogDebug(fmt.Sprintf("Skip result, no valid StoredResponseBodyPath (Response: %v)", katanaResult.Response))
 		}
-		utils.Tools.DeleteFolder(katanaResult.Response.StoredResponseBodyPath)
+
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)
 		//parsedURL, err := url.Parse(katanaResult.Request.URL)
 		//paramMap := url.Values{}
