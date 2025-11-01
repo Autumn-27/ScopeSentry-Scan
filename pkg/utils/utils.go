@@ -1143,7 +1143,7 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 		Host:         t.GetDomain(r.URL),
 		IP:           r.Host,
 		FavIconMMH3:  r.FavIconMMH3,
-		FaviconPath:  r.FaviconPath,
+		//FaviconPath:  r.FaviconPath,
 		RawHeaders:   r.RawHeaders,
 		Jarm:         r.JarmHash,
 		Technologies: r.Technologies, // You may need to set an appropriate default value based on the actual type.

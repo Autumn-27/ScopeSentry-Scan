@@ -19,6 +19,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
 )
 
@@ -93,6 +94,49 @@ func (h *handler) AssetChangeLog(result *types.AssetChangeLog) {
 	var interfaceSlice interface{}
 	interfaceSlice = &result
 	ResultQueues["AssetChangeLog"].Queue <- interfaceSlice
+}
+
+func (h *handler) HttpBody(hash string, body string) {
+	if body == "" || hash == "" {
+		return
+	}
+	doc := bson.M{
+		"hash":    hash,
+		"content": body,
+	}
+	_, err := mongodb.MongodbClient.InsertOne("HttpBody", doc)
+	if err != nil {
+		// 如果是唯一索引冲突就忽略
+		if mongo.IsDuplicateKeyError(err) {
+			//logger.SlogDebugLocal(fmt.Sprintf("HttpBody: body hash  %s already exists", hash))
+			return
+		}
+		// 其他错误则记录
+		logger.SlogError(fmt.Sprintf("HttpIcon insert error: %v", err))
+	}
+
+}
+
+func (h *handler) HttpIcon(faviconmmh3 string, icon string) {
+	if faviconmmh3 == "" || icon == "" {
+		return
+	}
+
+	doc := bson.M{
+		"fav3":    faviconmmh3,
+		"content": icon,
+	}
+
+	_, err := mongodb.MongodbClient.InsertOne("icon", doc)
+	if err != nil {
+		// 如果是唯一索引冲突就忽略
+		if mongo.IsDuplicateKeyError(err) {
+			//logger.SlogDebugLocal(fmt.Sprintf("HttpIcon: faviconmmh3 %s already exists", faviconmmh3))
+			return
+		}
+		// 其他错误则记录
+		logger.SlogError(fmt.Sprintf("HttpIcon insert error: %v", err))
+	}
 }
 
 func (h *handler) AssetUpdate(id string, updateData interface{}) {

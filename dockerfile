@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y \
     tzdata \
     libpcap-dev \
     default-jdk \
-    tini \
     && rm -rf /var/lib/apt/lists/*
 
+#    tini \
 # 设置 tini 作为 init 进程（PID 1）
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# ENTRYPOINT ["/usr/bin/tini", "--"]
 
 
 RUN pip install uro
@@ -46,4 +46,4 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 ENV LANG C.UTF-8
 
 # 运行golang程序的命令
-CMD ["/apps/ScopeSentry"]
+ENTRYPOINT ["/apps/ScopeSentry"]

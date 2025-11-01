@@ -27,7 +27,7 @@ func UpdateNode(content string) {
 	name := parts[0]
 	state := parts[1]
 	// 修改状态
-	if state == "True" {
+	if state == "true" {
 		global.AppConfig.State = 1
 	} else {
 		global.AppConfig.State = 2

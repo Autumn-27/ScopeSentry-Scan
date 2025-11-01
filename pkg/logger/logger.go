@@ -239,7 +239,7 @@ func SendPluginLogToRedis(key string, msg string) {
 	default:
 		// 缓冲已满，直接写入
 		ctx := context.Background()
-		_, err := redis.RedisClient.SAdd(ctx, key, msg)
+		err := redis.RedisClient.Publish(ctx, key, msg)
 		if err != nil {
 			SlogError(fmt.Sprintf("SendPluginLogToRedis sadd error %v", err))
 		}

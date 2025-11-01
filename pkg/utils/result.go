@@ -173,22 +173,11 @@ func (r *Result) CompareAssetHttp(old, new types.AssetHttp) types.AssetChangeLog
 			New:       fmt.Sprintf("%v", new.Screenshot),
 		})
 	}
-	bodyMd5, exists := old.Hashes["body_md5"].(string)
-	oldBodyMd5 := ""
-	if exists {
-		oldBodyMd5 = bodyMd5
-	}
-	bodyMd5, exists = new.Hashes["body_md5"].(string)
-	newBodyMd5 := ""
-	if exists {
-		newBodyMd5 = bodyMd5
-	}
-
-	if oldBodyMd5 != newBodyMd5 {
+	if old.ResponseBodyHash != new.ResponseBodyHash {
 		Change.Change = append(Change.Change, types.ChangeLog{
-			FieldName: "BodyMd5",
-			Old:       oldBodyMd5,
-			New:       newBodyMd5,
+			FieldName: "BodyHash",
+			Old:       old.ResponseBodyHash,
+			New:       new.ResponseBodyHash,
 		})
 		simNum := simHtml.GetSimFromStr(old.ResponseBody, new.ResponseBody)
 		Change.Change = append(Change.Change, types.ChangeLog{

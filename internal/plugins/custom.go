@@ -15,6 +15,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/symbols"
 	"github.com/Autumn-27/ScopeSentry-Scan/modules/customplugin"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/cloudflare/cfssl/log"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
@@ -26,7 +27,7 @@ import (
 
 func GetCustomPlugin() ([]interfaces.Plugin, error) {
 	var plugins []interfaces.Plugin
-
+	utils.Tools.EnsureDir(global.PluginDir)
 	// 使用 WalkDir 遍历 global.PluginDir 目录
 	err := filepath.WalkDir(global.PluginDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {

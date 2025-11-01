@@ -51,6 +51,58 @@ func (r *Runner) ModuleRun() error {
 			logger.SlogError(fmt.Sprintf("Next module run error: %v", err))
 		}
 	}()
+	httpAssetHandle := func(dataTmp types.AssetHttp) {
+		dataTmp.TaskName = []string{r.Option.TaskName}
+		dataTmp.ResponseBodyHash = utils.Tools.HashXX64String(dataTmp.ResponseBody)
+		flag, id, bsonData := results.Duplicate.AssetInMongodb(dataTmp.Host, dataTmp.Port)
+		if flag {
+			var oldAssetHttp types.AssetHttp
+			data, _ := bson.Marshal(bsonData)
+			_ = bson.Unmarshal(data, &oldAssetHttp)
+			changeData := utils.Results.CompareAssetHttp(oldAssetHttp, dataTmp)
+			if changeData.Timestamp != "" {
+				// 说明资产存在变化，将结果发送到changelog中
+				changeData.AssetId = id
+				go results.Handler.AssetChangeLog(&changeData)
+			}
+			if dataTmp.Screenshot == "" {
+				dataTmp.Screenshot = oldAssetHttp.Screenshot
+			}
+			t := ""
+			if oldAssetHttp.Time == "" {
+				t = dataTmp.Time
+			} else {
+				t = oldAssetHttp.Time
+			}
+			// 对资产进行更新,设置最新的扫描时间
+			dataTmp.LastScanTime = dataTmp.Time
+			dataTmp.Time = t
+			dataTmp.Project = oldAssetHttp.Project
+			dataTmp.RootDomain = oldAssetHttp.RootDomain
+			dataTmp.TaskName = append(dataTmp.TaskName, oldAssetHttp.TaskName...)
+			dataTmp.TaskName = utils.Tools.RemoveStringDuplicates(dataTmp.TaskName)
+			dataTmp.Tags = append(dataTmp.Tags, oldAssetHttp.Tags...)
+			dataTmp.Tags = utils.Tools.RemoveStringDuplicates(dataTmp.Tags)
+			go func() {
+				results.Handler.HttpIcon(dataTmp.FavIconMMH3, dataTmp.IconContent)
+				dataTmp.IconContent = ""
+				results.Handler.HttpBody(dataTmp.ResponseBodyHash, dataTmp.ResponseBody)
+				dataTmp.ResponseBody = ""
+				results.Handler.AssetUpdate(id, dataTmp)
+			}()
+			// 资产没有变化，不进行操作
+		} else {
+			// 数据库中不存在该资产，直接插入。
+			go func() {
+				results.Handler.HttpIcon(dataTmp.FavIconMMH3, dataTmp.IconContent)
+				dataTmp.IconContent = ""
+				results.Handler.HttpBody(dataTmp.ResponseBodyHash, dataTmp.ResponseBody)
+				dataTmp.ResponseBody = ""
+				results.Handler.AssetHttpInsert(&dataTmp)
+			}()
+		}
+
+	}
 	// 结果处理 goroutine，异步读取插件的结果
 	resultWg.Add(1)
 	go func() {
@@ -83,7 +135,8 @@ func (r *Runner) ModuleRun() error {
 							Port: dataTmp.Port,
 							IP:   dataTmp.IP,
 						}
-						resultChan <- tmp
+						httpAssetHandle(tmp)
+						assetHttpArray = append(assetHttpArray, tmp)
 						continue
 					}
 					// 过滤unknown
@@ -127,42 +180,7 @@ func (r *Runner) ModuleRun() error {
 						assetOtherArray = nil
 					}
 				case types.AssetHttp:
-					dataTmp.TaskName = []string{r.Option.TaskName}
-					flag, id, bsonData := results.Duplicate.AssetInMongodb(dataTmp.Host, dataTmp.Port)
-					if flag {
-						var oldAssetHttp types.AssetHttp
-						data, _ := bson.Marshal(bsonData)
-						_ = bson.Unmarshal(data, &oldAssetHttp)
-						changeData := utils.Results.CompareAssetHttp(oldAssetHttp, dataTmp)
-						if changeData.Timestamp != "" {
-							// 说明资产存在变化，将结果发送到changelog中
-							changeData.AssetId = id
-							go results.Handler.AssetChangeLog(&changeData)
-						}
-						if dataTmp.Screenshot == "" {
-							dataTmp.Screenshot = oldAssetHttp.Screenshot
-						}
-						t := ""
-						if oldAssetHttp.Time == "" {
-							t = dataTmp.Time
-						} else {
-							t = oldAssetHttp.Time
-						}
-						// 对资产进行更新,设置最新的扫描时间
-						dataTmp.LastScanTime = dataTmp.Time
-						dataTmp.Time = t
-						dataTmp.Project = oldAssetHttp.Project
-						dataTmp.RootDomain = oldAssetHttp.RootDomain
-						dataTmp.TaskName = append(dataTmp.TaskName, oldAssetHttp.TaskName...)
-						dataTmp.TaskName = utils.Tools.RemoveStringDuplicates(dataTmp.TaskName)
-						dataTmp.Tags = append(dataTmp.Tags, oldAssetHttp.Tags...)
-						dataTmp.Tags = utils.Tools.RemoveStringDuplicates(dataTmp.Tags)
-						go results.Handler.AssetUpdate(id, dataTmp)
-						// 资产没有变化，不进行操作
-					} else {
-						// 数据库中不存在该资产，直接插入。
-						go results.Handler.AssetHttpInsert(&dataTmp)
-					}
+					httpAssetHandle(dataTmp)
 					assetHttpArray = append(assetHttpArray, dataTmp)
 					if len(assetHttpArray) > 10 {
 						r.NextModule.GetInput() <- assetHttpArray

@@ -28,37 +28,38 @@ type SubdomainResult struct {
 }
 
 type AssetHttp struct {
-	Time          string                 `bson:"time" csv:"time"`
-	LastScanTime  string                 `bson:"lastScanTime"`
-	TLSData       *clients.Response      `bson:"tls" csv:"tls"`
-	Hashes        map[string]interface{} `bson:"hash" csv:"hash"`
-	CDNName       string                 `bson:"cdnname" csv:"cdn_name"`
-	Port          string                 `bson:"port" csv:"port"`
-	URL           string                 `bson:"url" csv:"url"`
-	Title         string                 `bson:"title" csv:"title"`
-	Type          string                 `bson:"type" csv:"type"`
-	Error         string                 `bson:"error" csv:"error"`
-	ResponseBody  string                 `bson:"body" csv:"body"`
-	Host          string                 `bson:"host" csv:"host"`
-	IP            string                 `bson:"ip"`
-	Screenshot    string                 `bson:"screenshot"`
-	FavIconMMH3   string                 `bson:"faviconmmh3" csv:"favicon"`
-	FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
-	RawHeaders    string                 `bson:"rawheaders" csv:"rawheaders"`
-	Jarm          string                 `bson:"jarm" csv:"jarm"`
-	Technologies  []string               `bson:"technologies" csv:"tech"`
-	StatusCode    int                    `bson:"statuscode" csv:"status_code"`
-	ContentLength int                    `bson:"contentlength" csv:"content_length"`
-	CDN           bool                   `bson:"cdn" csv:"cdn"`
-	Webcheck      bool                   `bson:"webcheck" csv:"webcheck"`
-	Project       string                 `bson:"project" csv:"project"`
-	IconContent   string                 `bson:"iconcontent"`
-	Domain        string                 `bson:"domain"`
-	TaskName      []string               `bson:"taskName"`
-	WebServer     string                 `bson:"webServer"`
-	Service       string                 `bson:"service"`
-	RootDomain    string                 `bson:"rootDomain"`
-	Tags          []string               `bson:"tags"`
+	Time             string                 `bson:"time" csv:"time"`
+	LastScanTime     string                 `bson:"lastScanTime"`
+	TLSData          *clients.Response      `bson:"tls" csv:"tls"`
+	Hashes           map[string]interface{} `bson:"hash" csv:"hash"`
+	CDNName          string                 `bson:"cdnname" csv:"cdn_name"`
+	Port             string                 `bson:"port" csv:"port"`
+	URL              string                 `bson:"url" csv:"url"`
+	Title            string                 `bson:"title" csv:"title"`
+	Type             string                 `bson:"type" csv:"type"`
+	Error            string                 `bson:"error" csv:"error"`
+	ResponseBody     string                 `bson:"body" csv:"body"`
+	ResponseBodyHash string                 `bson:"bodyhash" csv:"bodyhash"`
+	Host             string                 `bson:"host" csv:"host"`
+	IP               string                 `bson:"ip"`
+	Screenshot       string                 `bson:"screenshot"`
+	FavIconMMH3      string                 `bson:"faviconmmh3" csv:"favicon"`
+	//FaviconPath   string                 `bson:"faviconpath" csv:"favicon_path"`
+	RawHeaders    string   `bson:"rawheaders" csv:"rawheaders"`
+	Jarm          string   `bson:"jarm" csv:"jarm"`
+	Technologies  []string `bson:"technologies" csv:"tech"`
+	StatusCode    int      `bson:"statuscode" csv:"status_code"`
+	ContentLength int      `bson:"contentlength" csv:"content_length"`
+	CDN           bool     `bson:"cdn" csv:"cdn"`
+	Webcheck      bool     `bson:"webcheck" csv:"webcheck"`
+	Project       string   `bson:"project" csv:"project"`
+	IconContent   string   `bson:"iconcontent"`
+	Domain        string   `bson:"domain"`
+	TaskName      []string `bson:"taskName"`
+	WebServer     string   `bson:"webServer"`
+	Service       string   `bson:"service"`
+	RootDomain    string   `bson:"rootDomain"`
+	Tags          []string `bson:"tags"`
 }
 
 type PortAlive struct {
