@@ -318,12 +318,10 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			}
 
 			// 删除临时文件（若失败仅警告）
-			if err := utils.Tools.DeleteFolder(path); err != nil {
-				logger.SlogWarnLocal(fmt.Sprintf("Delete file failed: %s, error: %v", path, err))
-			}
+			utils.Tools.DeleteFile(path)
 		} else {
 			// 没有 Response 或路径为空
-			logger.SlogDebug(fmt.Sprintf("Skip result, no valid StoredResponseBodyPath (Response: %v)", katanaResult.Response))
+			//logger.SlogDebug(fmt.Sprintf("Skip result, no valid StoredResponseBodyPath (Response: %v)", katanaResult.Response))
 		}
 
 		p.ParseResult(&katanaResult, p.GetTaskId(), &urlNumber, data.URL, urlFilePath, params)

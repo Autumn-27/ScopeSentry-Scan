@@ -135,6 +135,12 @@ func (r *Client) SMembers(ctx context.Context, key string) ([]string, error) {
 	return r.client.SMembers(ctx, key).Result()
 }
 
+// PushToList 将一个或多个元素顺序存入 List（右侧），保持顺序
+func (r *Client) PushToList(ctx context.Context, key string, values ...interface{}) (int64, error) {
+	// 使用 RPUSH 保证元素顺序与传入顺序一致
+	return r.client.RPush(ctx, key, values...).Result()
+}
+
 // LLen 获取列表的长度
 func (r *Client) LLen(ctx context.Context, key string) (int64, error) {
 	if r.client == nil {
