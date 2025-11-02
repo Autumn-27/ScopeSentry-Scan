@@ -1124,9 +1124,9 @@ func (t *UtilTools) HttpxResultToAssetHttp(r runner.Result) types.AssetHttp {
 	Screenshot := ""
 	if r.ScreenshotBytes != nil {
 		if len(r.ScreenshotBytes) <= SizeThreshold {
-			Screenshot = "data:image/png;base64," + base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
+			Screenshot = base64.StdEncoding.EncodeToString(r.ScreenshotBytes)
 		} else {
-			Screenshot = "data:image/png;base64," + Tools.CompressAndEncodeScreenshot(r.ScreenshotBytes, 0.5)
+			Screenshot = Tools.CompressAndEncodeScreenshot(r.ScreenshotBytes, 0.5)
 		}
 	}
 	var ah = types.AssetHttp{

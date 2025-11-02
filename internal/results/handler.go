@@ -121,7 +121,6 @@ func (h *handler) HttpIcon(faviconmmh3 string, icon string) {
 	if faviconmmh3 == "" || icon == "" {
 		return
 	}
-
 	doc := bson.M{
 		"fav3":    faviconmmh3,
 		"content": icon,
@@ -136,6 +135,26 @@ func (h *handler) HttpIcon(faviconmmh3 string, icon string) {
 		}
 		// 其他错误则记录
 		logger.SlogError(fmt.Sprintf("HttpIcon insert error: %v", err))
+	}
+}
+
+func (h *handler) HttpScreenshot(hash string, screenshot string) {
+	if screenshot == "" || hash == "" {
+		return
+	}
+	doc := bson.M{
+		"hash":    hash,
+		"content": screenshot,
+	}
+	_, err := mongodb.MongodbClient.InsertOne("screenshot", doc)
+	if err != nil {
+		// 如果是唯一索引冲突就忽略
+		if mongo.IsDuplicateKeyError(err) {
+			//logger.SlogDebugLocal(fmt.Sprintf("HttpBody: body hash  %s already exists", hash))
+			return
+		}
+		// 其他错误则记录
+		logger.SlogError(fmt.Sprintf("HttpScreenshot insert error: %v", err))
 	}
 }
 

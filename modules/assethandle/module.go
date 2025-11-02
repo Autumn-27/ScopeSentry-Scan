@@ -88,6 +88,8 @@ func (r *Runner) ModuleRun() error {
 				dataTmp.IconContent = ""
 				results.Handler.HttpBody(dataTmp.ResponseBodyHash, dataTmp.ResponseBody)
 				dataTmp.ResponseBody = ""
+				results.Handler.HttpScreenshot(dataTmp.ResponseBodyHash, dataTmp.Screenshot)
+				dataTmp.Screenshot = ""
 				results.Handler.AssetUpdate(id, dataTmp)
 			}()
 			// 资产没有变化，不进行操作
@@ -98,6 +100,8 @@ func (r *Runner) ModuleRun() error {
 				dataTmp.IconContent = ""
 				results.Handler.HttpBody(dataTmp.ResponseBodyHash, dataTmp.ResponseBody)
 				dataTmp.ResponseBody = ""
+				results.Handler.HttpScreenshot(dataTmp.ResponseBodyHash, dataTmp.Screenshot)
+				dataTmp.Screenshot = ""
 				results.Handler.AssetHttpInsert(&dataTmp)
 			}()
 		}
