@@ -223,7 +223,15 @@ type VulnResult struct {
 	RootDomain string   `yaml:"rootDomain"`
 	Tags       []string `bson:"tags"`
 	Status     int      `bson:"status"` // 1表示未处理 2表示处理中 3表示忽略 4表示疑似 5表示确认
+	Hash       string   `bson:"hash" json:"hash"`
 }
+
+type VulnerabilityDetail struct {
+	Hash     string `bson:"hash" json:"hash"`
+	Request  string `bson:"req" json:"req"`
+	Response string `bson:"res" json:"res"`
+}
+
 type TmpPageMonitResult struct {
 	Url      string
 	Content  string

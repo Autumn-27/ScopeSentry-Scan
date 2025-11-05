@@ -112,6 +112,8 @@ func flushBuffer(module string, buffer *[]interface{}) {
 		Results.Update(buffer, "SensitiveBody")
 	} else if module == "RootDomain" {
 		Results.Update(buffer, "RootDomain")
+	} else if module == "VulnerabilityScan" {
+		Results.InsertVulnerabilityScan(buffer)
 	} else {
 		switch module {
 		case "SubdomainScan":
@@ -126,8 +128,6 @@ func flushBuffer(module string, buffer *[]interface{}) {
 			name = "SensitiveResult"
 		case "WebCrawler":
 			name = "crawler"
-		case "VulnerabilityScan":
-			name = "vulnerability"
 		case "DirScan":
 			name = "DirScanResult"
 		case "PageMonitoring":

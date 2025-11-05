@@ -13,7 +13,9 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/types"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
+	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"go.mongodb.org/mongo-driver/mongo"
+	"reflect"
 )
 
 type result struct {
@@ -99,4 +101,49 @@ func (r *result) UpdateNow(op types.BulkUpdateOperation, name string) bool {
 		return false
 	}
 	return true
+}
+
+func (r *result) InsertVulnerabilityScan(result *[]interface{}) {
+	var newVulnResults []interface{}
+	var vulDetails []interface{}
+
+	for _, v := range *result {
+		var vulnResult *types.VulnResult
+
+		// 第一种：*types.VulnResult
+		if vr, ok := v.(*types.VulnResult); ok {
+			vulnResult = vr
+		}
+
+		// 第二种：**types.VulnResult
+		if vrPtr, ok := v.(**types.VulnResult); ok && vrPtr != nil {
+			vulnResult = *vrPtr
+		}
+
+		if vulnResult == nil {
+			fmt.Println("类型断言失败:", reflect.TypeOf(v))
+			continue
+		}
+
+		// 生成唯一 Hash
+		vulnResult.Hash = utils.Tools.GenerateRandomString(16)
+
+		// 保存详细信息
+		vulDetails = append(vulDetails, types.VulnerabilityDetail{
+			Hash:     vulnResult.Hash,
+			Request:  vulnResult.Request,
+			Response: vulnResult.Response,
+		})
+
+		// 清空请求与响应
+		vulnResult.Request = ""
+		vulnResult.Response = ""
+
+		// 放回新的结果集
+		newVulnResults = append(newVulnResults, vulnResult)
+	}
+
+	// 写入数据库
+	r.Insert("vulnerability", &newVulnResults)
+	r.Insert("vulnerabilityDetail", &vulDetails)
 }
