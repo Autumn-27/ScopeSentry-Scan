@@ -26,7 +26,13 @@ type SubdomainResult struct {
 	TaskName   string `bson:"taskName"`
 	RootDomain string `bson:"rootDomain"`
 }
-
+type Machine struct {
+	IP           string
+	Domain       string
+	Server       string
+	Technologies []string `bson:"technologies" csv:"tech"`
+	Port         string
+}
 type AssetHttp struct {
 	Time             string                 `bson:"time" csv:"time"`
 	LastScanTime     string                 `bson:"lastScanTime"`
