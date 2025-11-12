@@ -8,6 +8,7 @@
 package wayback
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/contextmanager"
@@ -222,16 +223,30 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 						defer response.Body.Close()
 
 						r.Status = response.StatusCode
-						bodyBytes, err := io.ReadAll(response.Body)
-						if err != nil {
-							r.Length = 0
-							r.Body = ""
-						} else {
-							r.BodyByte = bodyBytes
-							// 零拷贝把 []byte 转 string
-							r.Body = *(*string)(unsafe.Pointer(&bodyBytes))
-							r.Length = len(bodyBytes)
+
+						var buf bytes.Buffer
+						tmp := make([]byte, 64*1024) // 每次读取 64KB
+						for {
+							n, err := response.Body.Read(tmp)
+							if n > 0 {
+								buf.Write(tmp[:n])
+							}
+							if err != nil {
+								if err == io.EOF {
+									break
+								} else {
+									r.Length = 0
+									r.Body = ""
+									return
+								}
+							}
 						}
+
+						bodyBytes := buf.Bytes()
+						r.BodyByte = bodyBytes
+						// 零拷贝把 []byte 转 string
+						r.Body = *(*string)(unsafe.Pointer(&bodyBytes))
+						r.Length = len(bodyBytes)
 					}()
 				}
 				r.Time = utils.Tools.GetTimeNow()

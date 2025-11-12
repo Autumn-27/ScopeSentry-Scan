@@ -1044,6 +1044,12 @@ func (t *UtilTools) ReadFileLineReaderBytes(filePath string, lineChan chan<- []b
 	}
 }
 
+var builderPool = sync.Pool{
+	New: func() any {
+		return new(strings.Builder)
+	},
+}
+
 func (t *UtilTools) ReadFileToStringOptimized(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -1051,14 +1057,18 @@ func (t *UtilTools) ReadFileToStringOptimized(filePath string) (string, error) {
 	}
 	defer file.Close()
 
-	var buf bytes.Buffer
-	// io.Copy 会自动按块读取，比手动循环略快
-	_, err = io.Copy(&buf, file)
+	builder := builderPool.Get().(*strings.Builder)
+	builder.Reset()
+	defer builderPool.Put(builder)
+
+	// 使用缓冲区
+	buf := make([]byte, 64*1024) // 64KB 缓冲区
+	_, err = io.CopyBuffer(builder, file, buf)
 	if err != nil {
 		return "", err
 	}
 
-	return buf.String(), nil
+	return builder.String(), nil
 }
 
 func (t *UtilTools) CdnCheck(host string) (bool, string) {
