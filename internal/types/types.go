@@ -68,6 +68,17 @@ type AssetHttp struct {
 	Tags          []string `bson:"tags"`
 }
 
+type IPAssetTmp struct {
+	IP           string   `json:"ip" bson:"ip"`
+	Domain       string   `json:"domain" bson:"domain"`
+	Port         string   `json:"port" bson:"port"`
+	Service      string   `json:"service" bson:"service"`
+	WebServer    string   `json:"webServer" bson:"webServer"`
+	Technologies []string `json:"technologies" bson:"technologies"`
+	Project      string   `json:"project" bson:"project"`
+	TaskName     []string `json:"taskName" bson:"taskName"`
+	RootDomain   string   `bson:"rootDomain,omitempty" json:"rootDomain,omitempty"`
+}
 type PortAlive struct {
 	Host string `bson:"host"`
 	IP   string `bson:"ip"`

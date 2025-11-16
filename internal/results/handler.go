@@ -9,6 +9,7 @@ package results
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/mongodb"
@@ -170,6 +171,26 @@ func (h *handler) AssetUpdate(id string, updateData interface{}) {
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("AssetUpdate %v error:%v", id, err))
 	} // 使用 $set 更新字段
+	go func() {
+		if asset, ok := updateData.(types.AssetHttp); ok {
+			ipAssetTmpDoc := types.IPAssetTmp{
+				IP:           asset.IP,
+				Domain:       asset.Host,
+				Port:         asset.Port,
+				Service:      asset.Service,
+				WebServer:    asset.WebServer,
+				Technologies: asset.Technologies,
+				Project:      asset.Project,
+				TaskName:     asset.TaskName,
+				RootDomain:   asset.RootDomain,
+			}
+			_, err = mongodb.MongodbClient.InsertOne("IPAssetTmp", ipAssetTmpDoc)
+			if err != nil {
+				logger.SlogError(fmt.Sprintf("ipAssetTmpDoc error:%v", err))
+			}
+		}
+
+	}()
 }
 
 func (h *handler) AssetOtherInsert(result *types.AssetOther) {
@@ -183,10 +204,35 @@ func (h *handler) AssetOtherInsert(result *types.AssetOther) {
 	if result.Time == "" {
 		result.Time = utils.Tools.GetTimeNow()
 	}
+
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
+	go func() {
+		ipAssetTmpDoc := types.IPAssetTmp{
+			IP:         result.IP,
+			Domain:     result.Host,
+			Port:       result.Port,
+			Service:    result.Service,
+			Project:    result.Project,
+			TaskName:   result.TaskName,
+			RootDomain: result.RootDomain,
+		}
+		_, err = mongodb.MongodbClient.InsertOne("IPAssetTmp", ipAssetTmpDoc)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("ipAssetTmpDoc error:%v", err))
+		}
+	}()
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)
 	if err != nil {
+		var we mongo.WriteException
+		if errors.As(err, &we) {
+			for _, e := range we.WriteErrors {
+				if e.Code == 11000 {
+					// 重复键错误，不打印日志
+					return
+				}
+			}
+		}
 		logger.SlogError(fmt.Sprintf("AssetOtherInsert error:%v", err))
 		return
 	}
@@ -205,11 +251,40 @@ func (h *handler) AssetHttpInsert(result *types.AssetHttp) {
 	}
 	result.Project = h.GetAssetProject(rootDomain)
 	interfaceSlice = &result
+
+	go func() {
+		ipAssetTmpDoc := types.IPAssetTmp{
+			IP:           result.IP,
+			Domain:       result.Host,
+			Port:         result.Port,
+			Service:      result.Service,
+			WebServer:    result.WebServer,
+			Technologies: result.Technologies,
+			Project:      result.Project,
+			TaskName:     result.TaskName,
+			RootDomain:   result.RootDomain,
+		}
+		_, err = mongodb.MongodbClient.InsertOne("IPAssetTmp", ipAssetTmpDoc)
+		if err != nil {
+			logger.SlogError(fmt.Sprintf("ipAssetTmpDoc error:%v", err))
+		}
+	}()
 	_, err = mongodb.MongodbClient.InsertOne("asset", interfaceSlice)
 	if err != nil {
-		logger.SlogError(fmt.Sprintf("AssetOtherInsert error:%v", err))
+		var we mongo.WriteException
+		if errors.As(err, &we) {
+			for _, e := range we.WriteErrors {
+				if e.Code == 11000 {
+					// 重复键错误，不打印日志
+					return
+				}
+			}
+		}
+		// 其他错误正常打印
+		logger.SlogError(fmt.Sprintf("AssetHttpInsert error: %v", err))
 		return
 	}
+
 }
 
 func (h *handler) URL(result *types.UrlResult) {
