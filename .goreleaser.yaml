@@ -16,7 +16,7 @@ builds:
     goarch:
       - amd64
     main: ./cmd/ScopeSentry/main.go
-    binary: "ScopeSentry"
+    binary: "ScopeSentry-Scan"
     ldflags: "-s -w"
 
 dist: ./dist
