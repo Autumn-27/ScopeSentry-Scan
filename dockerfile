@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install uro
 # 拷贝当前目录下的可执行文件到容器中
-COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry /apps/ScopeSentry
-RUN chmod +x /apps/ScopeSentry
+COPY dist/ScopeSentry-Scan_linux_amd64_v1/ScopeSentry-Scan /apps/ScopeSentry-Scan
+RUN chmod +x /apps/ScopeSentry-Scan
 RUN mkdir /apps/ext
 RUN mkdir /apps/ext/rad
 RUN mkdir /apps/ext/ksubdomain
@@ -46,4 +46,4 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 ENV LANG C.UTF-8
 
 # 运行golang程序的命令
-ENTRYPOINT ["/apps/ScopeSentry"]
+ENTRYPOINT ["/apps/ScopeSentry-Scan"]

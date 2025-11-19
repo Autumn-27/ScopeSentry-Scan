@@ -52,6 +52,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 type UtilTools struct {
@@ -1642,4 +1644,26 @@ func (t *UtilTools) ReplaceValuesWithTest(data interface{}, value string) interf
 func (t *UtilTools) HashXX64String(input string) string {
 	hash := xxhash.Sum64String(input)
 	return fmt.Sprintf("%x", hash)
+}
+
+func (t *UtilTools) EscapeInvisibleKeepUnicode(s string) string {
+	hexChars := "0123456789abcdef"
+	s = strings.TrimSpace(s)
+	dst := make([]byte, 0, len(s)*2)
+
+	for _, r := range s {
+		// unicode.IsPrint：判断是否可打印字符（中文、表情、字母、数字都返回 true）
+		if unicode.IsPrint(r) && r != '\uFFFD' {
+			dst = append(dst, string(r)...)
+		} else {
+			// rune -> UTF-8 bytes
+			buf := make([]byte, 4)
+			n := utf8.EncodeRune(buf, r)
+			for _, b := range buf[:n] {
+				dst = append(dst, '\\', 'x', hexChars[b>>4], hexChars[b&0x0F])
+			}
+		}
+	}
+
+	return string(dst)
 }

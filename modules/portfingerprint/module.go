@@ -194,10 +194,10 @@ func (r *Runner) ModuleRun() error {
 							if err != nil {
 								logger.SlogError(fmt.Sprintf("端口转换错误: %v", err))
 							} else {
-								rev, err := utils.Requests.TcpRecv(asset.IP, uint16(portUint64))
+								rev, err := utils.Requests.TcpRecv(asset.Host, uint16(portUint64))
 								if err == nil {
 									rawResponse := string(rev)
-									asset.Banner = strconv.QuoteToASCII(rawResponse)
+									asset.Banner = utils.Tools.EscapeInvisibleKeepUnicode(rawResponse)
 								} else {
 									asset.Banner = ""
 								}
