@@ -143,13 +143,18 @@ func (r *Runner) ModuleRun() error {
 						assetHttpArray = append(assetHttpArray, tmp)
 						continue
 					}
+					dataTmp.TaskName = []string{r.Option.TaskName}
 					// 过滤unknown
 					if dataTmp.Service == "unknown" {
 						if len(dataTmp.Banner) == 0 {
+							logger.SlogInfoLocal(fmt.Sprint("Unknown asset %v port %v ", dataTmp.Host, dataTmp.Port))
+							dataTmp.LastScanTime = dataTmp.Time
+							go results.Handler.AssetOtherInsert(&dataTmp)
+							utils.RunAnalyze(dataTmp.Host+":"+dataTmp.Port, httpAssetHandle)
 							continue
 						}
 					}
-					dataTmp.TaskName = []string{r.Option.TaskName}
+
 					flag, id, bsonData := results.Duplicate.AssetInMongodb(dataTmp.Host, dataTmp.Port)
 					if flag {
 						// 数据库中存在该资产，对该资产信息进行diff

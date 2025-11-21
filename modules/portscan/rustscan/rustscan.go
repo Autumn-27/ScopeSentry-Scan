@@ -25,7 +25,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -245,16 +244,15 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	logger.SlogInfoLocal(fmt.Sprintf("[Plugin %v]begin scan %v", p.GetName(), domainSkip.Domain))
 	cmd := exec.CommandContext(ctx, rustScanExecPath, args...)
 	stdout, err := cmd.StdoutPipe()
-	defer stdout.Close()
 	if err != nil {
 		logger.SlogError(fmt.Sprintf("RustScan StdoutPipe error： %v", err))
 		return nil, err
 	}
+	defer stdout.Close()
 	if err := cmd.Start(); err != nil {
 		logger.SlogWarnLocal(fmt.Sprintf("RustScan cmd.Start error： %v", err))
 		return nil, err
 	}
-	var wg sync.WaitGroup
 	portFlag := 0
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
@@ -277,8 +275,12 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 			if !domainSkip.CIDR {
 				if portFlag > maxPort {
 					p.Log(fmt.Sprintf("target %v open port number > max port: %v", domainSkip.Domain, portFlag), "w")
-					cancel()
-					return nil, nil
+					cancel()           // kill RustScan
+					cmd.Process.Kill() // 立即杀掉子进程，不等待
+					end := time.Now()
+					duration := end.Sub(start)
+					p.Log(fmt.Sprintf("target %v running time:%v", domainSkip.Domain, duration))
+					return nil, nil // 立即退出整个 Execute()
 				}
 			}
 			// 端口开放
@@ -332,17 +334,16 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	}
 	if err := scanner.Err(); err != nil {
 		logger.SlogWarnLocal(fmt.Sprintf("%v RustScan scanner.Err error： %v", domainSkip.Domain, err))
-		wg.Wait()
 		return nil, nil
 	}
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
 		logger.SlogDebugLocal(fmt.Sprintf("%v RustScan cmd.Wait error： %v", domainSkip.Domain, err))
 	}
-	wg.Wait()
 	end := time.Now()
 	duration := end.Sub(start)
 	p.Log(fmt.Sprintf("target %v running time:%v", domainSkip.Domain, duration))
+
 	return nil, nil
 }
 
