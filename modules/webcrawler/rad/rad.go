@@ -186,7 +186,6 @@ func (p *Plugin) GetParameter() string {
 func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 	data, ok := input.(types.UrlFile)
 	if !ok {
-		logger.SlogError(fmt.Sprintf("%v error: %v input is not []string\n", p.Name, input))
 		return nil, errors.New("input is not []string")
 	}
 	if data.Filepath == "" {
