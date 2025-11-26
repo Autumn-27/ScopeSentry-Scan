@@ -217,7 +217,7 @@ func flushBuffer() {
 				args[i] = msg
 			}
 			// 使用SADD批量添加消息
-			_, err := redis.RedisClient.SAdd(ctx, key, args...)
+			_, err := redis.RedisClient.AddToList(ctx, key, args...)
 			if err != nil {
 				SlogError(fmt.Sprintf("批量写入日志到Redis失败 (key: %s): %v", key, err))
 			}

@@ -215,6 +215,8 @@ func RunRedisTask() {
 							logger.SlogError(fmt.Sprintf("task pool error: %v", err))
 							wg.Done()
 						}
+						// 防止单个节点刷新目标太快 导致其他节点没有分配到目标
+						time.Sleep(3 * time.Second)
 						logger.SlogInfoLocal(fmt.Sprintf("task target pool running goroutines: %v", pool.PoolManage.GetModuleRunningGoroutines("task")))
 					}
 				}

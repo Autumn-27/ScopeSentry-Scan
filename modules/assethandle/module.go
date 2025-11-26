@@ -147,10 +147,10 @@ func (r *Runner) ModuleRun() error {
 					// 过滤unknown
 					if dataTmp.Service == "unknown" {
 						if len(dataTmp.Banner) == 0 {
-							logger.SlogInfoLocal(fmt.Sprint("Unknown asset %v port %v ", dataTmp.Host, dataTmp.Port))
+							logger.SlogInfoLocal(fmt.Sprintf("Unknown asset %v port %v ", dataTmp.Host, dataTmp.Port))
 							dataTmp.LastScanTime = dataTmp.Time
 							go results.Handler.AssetOtherInsert(&dataTmp)
-							utils.RunAnalyze(dataTmp.Host+":"+dataTmp.Port, httpAssetHandle)
+							//utils.RunAnalyze(dataTmp.Host+":"+dataTmp.Port, httpAssetHandle)
 							continue
 						}
 					}
