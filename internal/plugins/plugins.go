@@ -73,14 +73,14 @@ func (pm *PluginManager) GetPlugin(module, id string) (interfaces.Plugin, bool) 
 			return plugin.Clone(), ok // 返回新实例
 		} else {
 			// 插件未注册成功
-			plg, err := LoadCustomPlugin(filepath.Join(global.PluginDir, module, id, ".go"), module, id)
+			plg, err := LoadCustomPlugin(filepath.Join(global.PluginDir, module, fmt.Sprintf("%v.go", id)), module, id)
 			if err != nil {
 				err = LoadPlugFromDB(id)
 				if err != nil {
 					logger.SlogErrorLocal(err.Error())
 					return nil, false
 				}
-				plg, err = LoadCustomPlugin(filepath.Join(global.PluginDir, module, id, ".go"), module, id)
+				plg, err = LoadCustomPlugin(filepath.Join(global.PluginDir, module, fmt.Sprintf("%v.go", id)), module, id)
 				if err != nil {
 					logger.SlogErrorLocal(err.Error())
 					return nil, false
