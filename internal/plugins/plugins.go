@@ -64,38 +64,39 @@ func (pm *PluginManager) RegisterPlugin(module string, id string, plugin interfa
 }
 
 func (pm *PluginManager) GetPlugin(module, id string) (interfaces.Plugin, bool) {
+	// 先在读锁下查找已注册的插件
 	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
 	if modPlugins, ok := pm.plugins[module]; ok {
 		plugin, ok := modPlugins[id]
 		if ok {
-			return plugin.Clone(), ok // 返回新实例
-		} else {
-			// 插件未注册成功
-			plg, err := LoadCustomPlugin(filepath.Join(global.PluginDir, module, id, ".go"), module, id)
-			if err != nil {
-				err = LoadPlugFromDB(id)
-				if err != nil {
-					logger.SlogErrorLocal(err.Error())
-					return nil, false
-				}
-				plg, err = LoadCustomPlugin(filepath.Join(global.PluginDir, module, id, ".go"), module, id)
-				if err != nil {
-					logger.SlogErrorLocal(err.Error())
-					return nil, false
-				}
-			}
-			pm.RegisterPlugin(module, id, plg)
-			err = plg.Install()
-			if err != nil {
-				logger.SlogErrorLocal(err.Error())
-				return nil, false
-			}
-			return plg.Clone(), true
+			cloned := plugin.Clone()
+			pm.mu.RUnlock()
+			return cloned, true
 		}
 	}
-	return nil, false
+	pm.mu.RUnlock()
+
+	// 插件未注册，尝试懒加载（无锁状态下进行，避免死锁）
+	plg, err := LoadCustomPlugin(filepath.Join(global.PluginDir, module, fmt.Sprintf("%v.go", id)), module, id)
+	if err != nil {
+		err = LoadPlugFromDB(id)
+		if err != nil {
+			logger.SlogErrorLocal(err.Error())
+			return nil, false
+		}
+		plg, err = LoadCustomPlugin(filepath.Join(global.PluginDir, module, fmt.Sprintf("%v.go", id)), module, id)
+		if err != nil {
+			logger.SlogErrorLocal(err.Error())
+			return nil, false
+		}
+	}
+	pm.RegisterPlugin(module, id, plg)
+	err = plg.Install()
+	if err != nil {
+		logger.SlogErrorLocal(err.Error())
+		return nil, false
+	}
+	return plg.Clone(), true
 }
 
 type PluginInfo struct {
