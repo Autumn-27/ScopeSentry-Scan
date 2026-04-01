@@ -11,13 +11,13 @@ import goahocorasick "github.com/anknown/ahocorasick"
 
 // Fingerprint 指纹定义
 type Fingerprint struct {
-	Name           string `yaml:"name"`
-	ID             string `yaml:"id"`
-	Tags           string `yaml:"tags"` // 关联 POC
-	Category       string `yaml:"category"`
-	ParentCategory string `yaml:"parent_category"`
-	Company        string `yaml:"company"`
-	Rules          []Rule `yaml:"rules"`
+	Name           string   `yaml:"name"`
+	ID             string   `yaml:"id"`
+	Tags           []string `yaml:"tags"` // 关联 POC
+	Category       string   `yaml:"category"`
+	ParentCategory string   `yaml:"parent_category"`
+	Company        string   `yaml:"company"`
+	Rules          []Rule   `yaml:"rules"`
 }
 
 type FingerprintYaml struct {
@@ -48,10 +48,10 @@ type Condition struct {
 }
 
 type PatternInfo struct {
-	Pattern      string // pattern字符串
-	Location     string // title, header, body
+	Pattern       string // pattern字符串
+	Location      string // title, header, body
 	FingerprintID string // 关联的fingerprint ID（优化内存，避免重复存储Fingerprint指针）
-	RuleIndex    int    // 关联的rule索引
+	RuleIndex     int    // 关联的rule索引
 }
 
 type WebFingerCore struct {
@@ -66,7 +66,7 @@ type ACMatcher struct {
 	HeaderPatterns []PatternInfo
 	BodyPatterns   []PatternInfo
 	// Pattern到索引的映射（用于根据匹配结果找到PatternInfo）
-	TitlePatternMap  map[string]int  // pattern字符串 -> PatternInfo索引
+	TitlePatternMap  map[string]int // pattern字符串 -> PatternInfo索引
 	HeaderPatternMap map[string]int
 	BodyPatternMap   map[string]int
 	// Fingerprint ID到Fingerprint的映射（优化内存，避免在PatternInfo中重复存储）
