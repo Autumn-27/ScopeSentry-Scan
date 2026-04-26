@@ -177,6 +177,22 @@ func hasORGroupInConditions(conditions []types.Condition) bool {
 	return false
 }
 
+// hasRequestConditionInConditions 递归检查条件中是否包含request条件
+func hasRequestConditionInConditions(conditions []types.Condition) bool {
+	for _, condition := range conditions {
+		if isConditionGroup(condition) {
+			if hasRequestConditionInConditions(condition.Conditions) {
+				return true
+			}
+			continue
+		}
+		if condition.Location == "request" {
+			return true
+		}
+	}
+	return false
+}
+
 // deduplicatePatterns 去重patterns（基于pattern字符串和location）
 func deduplicatePatterns(patterns []types.PatternInfo) []types.PatternInfo {
 	if len(patterns) <= 1 {
@@ -249,6 +265,20 @@ func BuildACMatcher(fingerprints []*types.Fingerprint) *types.ACMatcher {
 
 	// 遍历所有fingerprint
 	for _, fingerprint := range fingerprints {
+		// request 条件依赖主动请求，不能仅通过 title/header/body 的 AC 预筛可靠覆盖
+		// 一旦存在 request 条件，整条指纹降级为非 AC 流程，避免漏报
+		hasRequestCondition := false
+		for _, rule := range fingerprint.Rules {
+			if hasRequestConditionInConditions(rule.Conditions) {
+				hasRequestCondition = true
+				break
+			}
+		}
+		if hasRequestCondition {
+			matcher.NonACFingerprints = append(matcher.NonACFingerprints, fingerprint)
+			continue
+		}
+
 		// 先检查所有rules是否都能提取到pattern
 		allRulesHavePattern := true
 		allRulePatterns := make([][]types.PatternInfo, 0, len(fingerprint.Rules))

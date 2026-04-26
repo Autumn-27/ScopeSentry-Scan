@@ -53,6 +53,14 @@ func NewPluginManager() *PluginManager {
 	}
 }
 
+func (pm *PluginManager) UnSafeRegisterPlugin(module string, id string, plugin interfaces.Plugin) {
+
+	if _, exists := pm.plugins[module]; !exists {
+		pm.plugins[module] = make(map[string]interfaces.Plugin)
+	}
+	pm.plugins[module][id] = plugin
+}
+
 func (pm *PluginManager) RegisterPlugin(module string, id string, plugin interfaces.Plugin) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -86,7 +94,7 @@ func (pm *PluginManager) GetPlugin(module, id string) (interfaces.Plugin, bool) 
 					return nil, false
 				}
 			}
-			pm.RegisterPlugin(module, id, plg)
+			pm.UnSafeRegisterPlugin(module, id, plg)
 			err = plg.Install()
 			if err != nil {
 				logger.SlogErrorLocal(err.Error())

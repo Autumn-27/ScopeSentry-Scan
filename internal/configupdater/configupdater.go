@@ -311,7 +311,7 @@ func UpdateNotification() {
 func LoadPlugin() {
 	logger.SlogInfoLocal("load plugin load begin")
 	var result []PluginInfo
-	err := mongodb.MongodbClient.FindAll("plugins", bson.M{"isSystem": false, "type": bson.M{"$ne": "server"}}, bson.M{"module": 1, "hash": 1, "source": 1}, &result)
+	err := mongodb.MongodbClient.FindAll("plugins", bson.M{"issystem": false, "type": bson.M{"$ne": "server"}}, bson.M{"module": 1, "hash": 1, "source": 1}, &result)
 	if err != nil {
 		logger.SlogErrorLocal(fmt.Sprintf("find plugin error: %v", err))
 		return
