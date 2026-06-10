@@ -157,7 +157,7 @@ func (p *Plugin) Execute(input interface{}) (interface{}, error) {
 				return
 			default:
 				// 正常逻辑，只跑一次
-				utils.RunAnalyze(t, httpxResultsHandler)
+				utils.RunAnalyze(t, httpxResultsHandler, p.Parameter)
 			}
 		}(target)
 	}

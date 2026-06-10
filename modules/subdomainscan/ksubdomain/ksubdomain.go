@@ -156,7 +156,7 @@ func (p *Plugin) Install() error {
 }
 
 func (p *Plugin) Check() error {
-	rawSubdomain := []string{"scope-sentry.top"}
+	rawSubdomain := []string{"baidu.com"}
 	subdomainVerificationResult := make(chan string, 1)
 	verificationCount := 0
 	go utils.DNS.KsubdomainVerify(rawSubdomain, subdomainVerificationResult, 5*time.Minute, context.Background())

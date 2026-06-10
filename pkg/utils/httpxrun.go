@@ -13,6 +13,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/projectdiscovery/httpx/runner"
 	"math"
+	"strconv"
 	"time"
 )
 
@@ -79,7 +80,7 @@ func InitHttpx(cdncheck string, screenshot bool, screenshotTimeout int, tLSProbe
 	//fmt.Println(options)
 }
 
-func RunAnalyze(target string, resultCallback func(r types.AssetHttp)) {
+func RunAnalyze(target string, resultCallback func(r types.AssetHttp), parameter string) {
 	resuFunc := func(r runner.Result) {
 		if r.Host == "" {
 			return
@@ -88,7 +89,55 @@ func RunAnalyze(target string, resultCallback func(r types.AssetHttp)) {
 
 		resultCallback(ah)
 	}
-	HttpxRun.RunAnalyze(target, HttpxRun.HTTPX(), resuFunc)
+	if HttpxRun == nil {
+		cdncheck := "false"
+		screenshot := false
+		tlsprobe := false
+		FollowRedirects := true
+		bypassHeader := false
+		screenshotTimeout := 10
+		threads := 30
+		if parameter != "" {
+			args, err := Tools.ParseArgs(parameter, "cdncheck", "screenshot", "st", "tlsprobe", "fr", "et", "bh", "t")
+			if err != nil {
+			} else {
+				for key, value := range args {
+					if value != "" {
+						switch key {
+						case "cdncheck":
+							cdncheck = value
+						case "screenshot":
+							if value == "true" {
+								screenshot = true
+							}
+						case "tlsprobe":
+							if value == "true" {
+								tlsprobe = true
+							}
+						case "st":
+							screenshotTimeout, _ = strconv.Atoi(value)
+						case "fr":
+							if value == "false" {
+								FollowRedirects = false
+							}
+						case "bh":
+							if value == "true" {
+								bypassHeader = true
+							}
+						case "t":
+							threads, _ = strconv.Atoi(value)
+						default:
+							continue
+						}
+					}
+				}
+			}
+		}
+		InitHttpx(cdncheck, screenshot, screenshotTimeout, tlsprobe, FollowRedirects, bypassHeader, threads)
+	}
+	if HttpxRun != nil {
+		HttpxRun.RunAnalyze(target, HttpxRun.HTTPX(), resuFunc)
+	}
 }
 
 func HttpxClose() {

@@ -219,20 +219,52 @@ func Updatedictionary(content string) {
 	}
 }
 
+func parsePocContent(content string) (addIDs, deleteIDs []string) {
+	parts := strings.SplitN(content, ":", 2)
+	if len(parts) < 2 {
+		return
+	}
+	ids := strings.Split(parts[1], ",")
+	if parts[0] == "delete" {
+		deleteIDs = ids
+	} else {
+		addIDs = ids
+	}
+	return
+}
+
+func uniqueStrings(items []string) []string {
+	seen := make(map[string]struct{}, len(items))
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		if item == "" {
+			continue
+		}
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		result = append(result, item)
+	}
+	return result
+}
+
 func UpdatePoc(content string) {
 	parts := strings.SplitN(content, ":", 2)
+	if len(parts) < 2 {
+		return
+	}
 	t := parts[0]
 	if t == "delete" {
 		for _, id := range strings.Split(parts[1], ",") {
-			filePath := filepath.Join(global.PocDir, string(id)+".yaml")
+			if id == "" {
+				continue
+			}
+			filePath := filepath.Join(global.PocDir, id+".yaml")
 			utils.Tools.DeleteFile(filePath)
 		}
 	} else {
-		var ids []string
-		for _, id := range strings.Split(parts[1], ",") {
-			ids = append(ids, id)
-		}
-		LoadPoc(ids)
+		LoadPoc(uniqueStrings(strings.Split(parts[1], ",")))
 	}
 }
 
