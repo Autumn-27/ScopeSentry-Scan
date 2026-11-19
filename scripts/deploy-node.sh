@@ -19,10 +19,12 @@ CONTAINER="${NODE_CONTAINER:-scopesentry-scan}"
 IMAGE="${IMAGE_PREFIX:-autumn27/scopesentry-scan}"
 
 MODE="deploy"
+DRY=0
 BUILD=1
 for a in "$@"; do
   [ "$a" = "--no-build" ] && BUILD=0
   [ "$a" = "--rollback" ] && MODE="rollback"
+  [ "$a" = "--dry-run" ] && DRY=1
 done
 
 SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10"
@@ -95,6 +97,12 @@ SIZE="$(wc -c < "$BIN" | tr -d " ")"
 VER="$(grep -oE 'global[.]VERSION = "[0-9.]+"' internal/config/config.go | grep -oE '[0-9]+[.][0-9]+[.][0-9]+' | head -1 || true)"
 echo "   sha=${SHA:0:16} size=$SIZE version=${VER:-unknown}"
 
+if [ "$DRY" = "1" ]; then
+  echo "== DRY RUN：将部署到以下节点（不执行写操作）"
+  for H in $NODES; do echo "  - $H"; done
+  exit 0
+fi
+
 echo "== [2/5] 逐台部署"
 FAILED=0
 for H in $NODES; do
@@ -124,7 +132,13 @@ for H in $NODES; do
   echo "   已换镜像并重启（tag ${VER:-latest}）"
 
   if wait_register "$H"; then
-    echo "   节点已注册成功"
+    GOT_VER="$(run_remote "$H" "docker logs --tail 40 $CONTAINER" 2>&1 | grep Register | tail -1 | grep -oE "[0-9]+[.][0-9]+[.][0-9]+" | tail -1 || true)"
+    if [ -n "$VER" ] && [ -n "$GOT_VER" ] && [ "$GOT_VER" != "$VER" ]; then
+      echo "   版本不一致：期望 $VER，实际 $GOT_VER"
+      FAILED=1
+      continue
+    fi
+    echo "   节点已注册成功（version ${GOT_VER:-?}）"
   else
     echo "   60 秒内没看到 Register Success，自动回滚"
     rollback_host "$H" || true
