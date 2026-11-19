@@ -14,7 +14,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/global"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/panjf2000/ants/v2"
-	"log"
 	"sort"
 	"sync"
 	"time"
@@ -50,7 +49,10 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	for _, moduleName := range modules {
 		pm.pools[moduleName], err = ants.NewPool(cfg.GetGoroutineCount(moduleName))
 		if err != nil {
-			log.Fatalf("Failed to create pool for %s: %v", moduleName, err)
+			// 单个模块的协程池建不起来不该让整个节点退出：
+			// 用保守默认值兜底，并在日志里留痕（2026-11-20）。
+			logger.SlogWarnLocal(fmt.Sprintf("create pool for %s failed, fallback to 10: %v", moduleName, err))
+			pm.pools[moduleName], _ = ants.NewPool(10)
 		}
 		pm.locks[moduleName] = &sync.Mutex{}
 	}
@@ -123,7 +125,8 @@ func (pm *Manager) CustomSubmitTask(name string, size int, task func()) error {
 		}
 		pm.pools[name], err = ants.NewPool(size)
 		if err != nil {
-			log.Fatalf("Failed to create pool for %s: %v", name, err)
+			logger.SlogWarnLocal(fmt.Sprintf("create pool for %s failed, fallback to 10: %v", name, err))
+			pm.pools[name], _ = ants.NewPool(10)
 		}
 		pm.locks[name] = &sync.Mutex{}
 	}
