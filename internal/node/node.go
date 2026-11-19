@@ -42,6 +42,7 @@ func Register() {
 				"state":         1, //1运行中 2暂停 3未连接
 				"version":       global.VERSION,
 				"cmdFail":       utils.Tools.EventFailureCount(),
+				"cmdFail10m":    utils.Tools.EventFailureRecent(10 * time.Minute),
 				"modulesConfig": modulesConfig,
 			}
 			err = redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
@@ -72,7 +73,8 @@ func Register() {
 				"state":      hbState,
 				"version":    global.VERSION,
 				// 外部工具失败累计（ksubdomain/rad/katana 等非零退出），界面可见
-				"cmdFail": utils.Tools.EventFailureCount(),
+				"cmdFail":    utils.Tools.EventFailureCount(),
+				"cmdFail10m": utils.Tools.EventFailureRecent(10 * time.Minute),
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {

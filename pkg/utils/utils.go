@@ -625,7 +625,7 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		CommandFailureCount.Add(1)
+		recordFailure()
 		logger.SlogErrorLocal(fmt.Sprintf("command start failed: %s %v err=%v", command, args, err))
 		return fmt.Errorf("failed to start command: %w", err)
 	}
@@ -669,7 +669,7 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 		if len(tail) > 400 {
 			tail = tail[len(tail)-400:]
 		}
-		CommandFailureCount.Add(1)
+		recordFailure()
 		logger.SlogErrorLocal(fmt.Sprintf("command exited %d: %s %v stderr=%q", code, command, args, tail))
 		return err
 	}
@@ -1697,4 +1697,42 @@ func (t *UtilTools) EscapeInvisibleKeepUnicode(s string) string {
 // EventFailureCount 返回外部工具失败累计次数（供节点心跳上报）。
 func (t *UtilTools) EventFailureCount() int64 {
 	return CommandFailureCount.Load()
+}
+
+// failureWindow 记录最近的失败时间点，用于「近 N 分钟新增失败」。
+// 累计数看不出"刚跑这批任务有没有问题"，窗口内的增量才有意义（2026-11-20）。
+var (
+	failureMu    sync.Mutex
+	failureTimes []time.Time
+)
+
+func recordFailure() {
+	recordFailure()
+	now := time.Now()
+	failureMu.Lock()
+	failureTimes = append(failureTimes, now)
+	// 只保留最近 30 分钟，避免无限增长
+	cut := now.Add(-30 * time.Minute)
+	i := 0
+	for i < len(failureTimes) && failureTimes[i].Before(cut) {
+		i++
+	}
+	if i > 0 {
+		failureTimes = failureTimes[i:]
+	}
+	failureMu.Unlock()
+}
+
+// EventFailureRecent 返回最近 window 内外部工具失败次数。
+func (t *UtilTools) EventFailureRecent(window time.Duration) int64 {
+	cut := time.Now().Add(-window)
+	failureMu.Lock()
+	defer failureMu.Unlock()
+	var n int64
+	for _, ts := range failureTimes {
+		if ts.After(cut) {
+			n++
+		}
+	}
+	return n
 }
