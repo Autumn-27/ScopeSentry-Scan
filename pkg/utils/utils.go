@@ -37,6 +37,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -582,6 +583,11 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	return true, nil
 }
 
+// CommandFailureCount 自进程启动以来子进程非零退出 / 启动失败的累计次数。
+// 让节点心跳能上报「这个节点调外部工具挂了多少次」，界面一眼可见，
+// 不用去翻日志（2026-11-20）。
+var CommandFailureCount atomic.Int64
+
 func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration, externalCtx context.Context) error {
 	logger.SlogInfo(fmt.Sprintf("ExecuteCommandWithTimeout cmd: %v args %v", command, args))
 	// 创建一个带有超时的上下文
@@ -619,6 +625,8 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
+		CommandFailureCount.Add(1)
+		logger.SlogErrorLocal(fmt.Sprintf("command start failed: %s %v err=%v", command, args, err))
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 	//
@@ -661,6 +669,7 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 		if len(tail) > 400 {
 			tail = tail[len(tail)-400:]
 		}
+		CommandFailureCount.Add(1)
 		logger.SlogErrorLocal(fmt.Sprintf("command exited %d: %s %v stderr=%q", code, command, args, tail))
 		return err
 	}
@@ -1683,4 +1692,9 @@ func (t *UtilTools) EscapeInvisibleKeepUnicode(s string) string {
 	}
 
 	return string(dst)
+}
+
+// EventFailureCount 返回外部工具失败累计次数（供节点心跳上报）。
+func (t *UtilTools) EventFailureCount() int64 {
+	return CommandFailureCount.Load()
 }
