@@ -608,7 +608,10 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	stderr, _ := cmd.StderrPipe()
 
 	go io.Copy(io.Discard, stdout)
-	go io.Copy(io.Discard, stderr)
+	// 保留最后 4KB stderr：以前直接丢掉，子进程失败时完全看不到原因，
+	// 只能看到「任务跑完了但资产少了」（2026-11-20）。
+	var stderrTail bytes.Buffer
+	go io.Copy(&stderrTail, io.LimitReader(stderr, 4096))
 	//stderrPipe, err := cmd.StderrPipe()
 	//if err != nil {
 	//	return fmt.Errorf("failed to get stderr: %w", err)
@@ -646,6 +649,19 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 			logger.SlogWarnLocal(fmt.Sprintf("command execution timed out: %v", command))
 			return nil
 		}
+
+		// 非零退出：明确记录退出码 + 命令 + stderr 片段。
+		// 这类失败以前只丢给调用方各自写一条模糊日志，排查时无从下手。
+		code := -1
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			code = exitErr.ExitCode()
+		}
+		tail := strings.TrimSpace(stderrTail.String())
+		if len(tail) > 400 {
+			tail = tail[len(tail)-400:]
+		}
+		logger.SlogErrorLocal(fmt.Sprintf("command exited %d: %s %v stderr=%q", code, command, args, tail))
 		return err
 	}
 	// 如果没有错误，说明命令执行成功
