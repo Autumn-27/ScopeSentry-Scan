@@ -148,4 +148,18 @@ done
 
 echo "== [5/5] 汇总"
 if [ "$FAILED" = "1" ]; then echo "有节点部署失败（已尝试回滚）" >&2; exit 1; fi
+
+# 整体断言：从服务端视角确认「所有节点在线且版本一致」。
+# 只看各机自己的启动日志，发现不了"漏部署某台"或"版本分叉"（2026-11-20 加）。
+SERVER_HOST="${SERVER_HOST:-prod-tx-sh-app-01}"
+NODES_JSON="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$SERVER_HOST" "python3 /opt/scopesentry/nodecheck.py --json 2>/dev/null" || echo "")"
+if [ -n "$NODES_JSON" ]; then
+  HERE="$(cd -- "$(dirname -- "$0")/.." >/dev/null 2>&1 && pwd -P)"
+  if ! echo "$NODES_JSON" | python3 "$HERE/scripts/node_assert.py" "${VER:-}"; then
+    exit 1
+  fi
+else
+  echo "   ! 无法从 $SERVER_HOST 获取节点状态，请手工确认"
+fi
+
 echo "全部节点部署完成，版本 ${VER:-unknown}"
