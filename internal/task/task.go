@@ -25,7 +25,6 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	goRedis "github.com/redis/go-redis/v9"
-	"os"
 	"sync"
 	"time"
 )
@@ -119,8 +118,10 @@ func RunRedisTask() {
 							// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
 							if !errors.Is(err, goRedis.Nil) {
 								logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
-								// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-								os.Exit(0)
+								// 以前这里直接 os.Exit(0)：Redis 抖动一次节点就自杀，
+								// 任务停在「运行中」等人来救。改成退避重试，进程不退出。
+								time.Sleep(3 * time.Second)
+								continue
 							}
 							break
 						}
@@ -177,8 +178,9 @@ func RunRedisTask() {
 							// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
 							if !errors.Is(err, goRedis.Nil) {
 								logger.SlogError(fmt.Sprintf("GetRedisTask redis error: %v", err))
-								// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-								os.Exit(0)
+								// 同上：Redis 短暂不可用不该让节点退出，退避后继续取目标。
+								time.Sleep(3 * time.Second)
+								continue loop
 							}
 							break loop
 						}

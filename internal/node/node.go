@@ -54,6 +54,13 @@ func Register() {
 			key = "node:" + global.AppConfig.NodeName
 			cpuNum, memNum := utils.Tools.GetSystemUsage()
 			run, fin := handler.TaskHandle.GetRunFin()
+			// 心跳里的 state 不能直接写配置值：配置未设置时为 0，
+			// 会把「在线」覆盖成 0，服务端据此判定节点离线（界面 0/2 在线）。
+			// 1=运行中 2=暂停 3=未连接，0 视为未配置 → 默认在线。
+			hbState := global.AppConfig.State
+			if hbState == 0 {
+				hbState = 1
+			}
 			nodeInfo := map[string]interface{}{
 				"updateTime": utils.Tools.GetTimeNow(),
 				"cpuNum":     cpuNum,
@@ -61,7 +68,7 @@ func Register() {
 				"maxTaskNum": config.ModulesConfig.MaxGoroutineCount,
 				"running":    run,
 				"finished":   fin,
-				"state":      global.AppConfig.State,
+				"state":      hbState,
 				"version":    global.VERSION,
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
