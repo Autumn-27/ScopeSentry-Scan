@@ -29,6 +29,9 @@ import (
 	"time"
 )
 
+// taskFailStart 记录每个任务开始时的外部工具失败计数（用于算任务期增量）。
+var taskFailStart sync.Map
+
 func GetTask() {
 	// 运行本地缓存的任务
 	//RunPebbledbTask()
@@ -106,6 +109,9 @@ func RunRedisTask() {
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v %v", runnerOption.ID, runnerOption.TaskName))
+			// 记录任务开始时的失败计数，任务结束算增量写回服务端，
+			// 让「本次任务期间工具失败几次」在任务记录里可见（2026-11-20）。
+			taskFailStart.Store(runnerOption.ID, utils.Tools.EventFailureCount())
 			if runnerOption.Type == "page_monitoring" {
 				// 运行页面监控程序
 				go func() {
@@ -230,6 +236,17 @@ func RunRedisTask() {
 				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
 			logger.SlogInfo(fmt.Sprintf("Task end: %v - %v", runnerOption.ID, runnerOption.TaskName))
+			if v, ok := taskFailStart.Load(runnerOption.ID); ok {
+				if start, ok2 := v.(int64); ok2 {
+					delta := utils.Tools.EventFailureCount() - start
+					taskFailStart.Delete(runnerOption.ID)
+					if delta > 0 {
+						key := "TaskInfo:cmdfail:" + runnerOption.ID
+						_ = redis.RedisClient.HSet(context.Background(), key, global.AppConfig.NodeName, delta)
+						logger.SlogInfo(fmt.Sprintf("Task %v tool failures: %d", runnerOption.ID, delta))
+					}
+				}
+			}
 			handler.CloseNucleiEngine()
 			// 目标运行完毕 删除任务信息
 			// 删除本地缓存任务信息
