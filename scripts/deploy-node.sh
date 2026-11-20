@@ -111,23 +111,32 @@ for H in $NODES; do
 
   # 大文件单连接会被中途 reset（2026-11-20 实测 164MB 传到 ~8MB 就断）。
   # 分片上传（每片 4MB、独立连接、单片重试 3 次）再远端拼接，配合后面的 sha256 校验。
+  # 先 gzip 再分片：164MB → ~50MB，片数从 40 降到 13，跨境上传时间省一半以上。
+  # 4MB 分片保持不变（实测 6MB 更慢，瓶颈是带宽）。远端解压后再校验原始 sha256。
+  GZ_PAYLOAD=$(mktemp -t node-upload-XXXXXX.gz)
+  gzip -9 -c "$BIN" > "$GZ_PAYLOAD"
   ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$H" "rm -rf /tmp/ss-node-chunks && mkdir -p /tmp/ss-node-chunks" 2>/dev/null || true
   CHUNK_DIR=$(mktemp -d)
-  split -b 4m "$BIN" "$CHUNK_DIR/part_"
-  UP_FAIL=0
+  split -b 4m "$GZ_PAYLOAD" "$CHUNK_DIR/part_"
+  TOTAL_CHUNKS=$(ls "$CHUNK_DIR"/part_* | wc -l | tr -d ' ')
+  IDX=0; UP_FAIL=0; UP_START=$(date +%s)
   for f in "$CHUNK_DIR"/part_*; do
     base=$(basename "$f")
+    IDX=$((IDX + 1))
     for attempt in 1 2 3; do
       scp -q -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 "$f" "$H:/tmp/ss-node-chunks/$base" 2>/dev/null && break
       [[ $attempt -eq 3 ]] && UP_FAIL=1
     done
+    if (( IDX % 5 == 0 || IDX == TOTAL_CHUNKS )); then
+      echo "   上传 $IDX/$TOTAL_CHUNKS  已用 $(( $(date +%s) - UP_START ))s"
+    fi
   done
-  rm -rf "$CHUNK_DIR"
+  rm -rf "$CHUNK_DIR" "$GZ_PAYLOAD"
   if [[ $UP_FAIL -ne 0 ]]; then
     echo "   分片上传失败" >&2
     exit 1
   fi
-  ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$H" "cat /tmp/ss-node-chunks/part_* > /tmp/ss-node && rm -rf /tmp/ss-node-chunks" || exit 1
+  ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$H" "cat /tmp/ss-node-chunks/part_* | gunzip > /tmp/ss-node && chmod +x /tmp/ss-node && rm -rf /tmp/ss-node-chunks" || exit 1
   if false; then
     echo "   上传失败"; FAILED=1; continue
   fi
