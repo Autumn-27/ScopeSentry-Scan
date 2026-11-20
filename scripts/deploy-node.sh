@@ -197,4 +197,32 @@ else
   echo "   ! 无法从 $SERVER_HOST 获取节点状态，请手工确认"
 fi
 
+
+# 稳定性冒烟：部署完 90 秒内看每个节点的心跳是否还在更新。
+# 「部署成功」和「部署完就把节点弄掉了」是两件事——2026-11-21 一天里发生过 7 次掉线，
+# 每次都得靠人肉发现；这里让脚本自己盯 90 秒。
+echo "== 稳定性观察（90 秒）"
+sleep 90
+STABLE_FAIL=0
+for NAME in $(printf "%s\n" "$NODES" | while read -r h; do
+  [ -z "$h" ] && continue
+  case "$h" in
+    *app-01*) echo node-sh-01 ;;
+    *app-02*) echo node-tx-sh-02 ;;
+    *188.143*) echo node-dev-02 ;;
+  esac
+done); do
+  LINE="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$SERVER_HOST" \
+    "sg docker -c 'docker exec scopesentry-redis redis-cli -a ac6b0cf473fb8d23a0e13ff3 --no-auth-warning hmget node:$NAME updateTime state containerMem' 2>/dev/null" | tr '\n' ' ')"
+  echo "   $NAME: $LINE"
+  case "$LINE" in
+    *" 1 "*|*" 1") ;;
+    *) echo "   ! $NAME 心跳或状态异常（不在线/心跳停滞）" >&2; STABLE_FAIL=1 ;;
+  esac
+done
+if [ "$STABLE_FAIL" = "1" ]; then
+  echo "稳定性观察未通过：有节点在部署后 90 秒内掉线" >&2
+  exit 1
+fi
+
 echo "全部节点部署完成，版本 ${VER:-unknown}"
