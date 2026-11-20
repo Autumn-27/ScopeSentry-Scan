@@ -72,6 +72,9 @@ func main() {
 	utils.InitializeProxyRequestsPool()
 	// 初始化通知模块
 	notification.InitializeNotification()
+	// 让 Go 运行时知道 cgroup 上限（否则 RSS 会顶到容器上限被限流）
+	node.ApplyContainerMemoryLimit()
+
 	// 初始化协程池
 	pool.Initialize()
 	// 初始化个模块的协程池
