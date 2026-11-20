@@ -30,6 +30,16 @@ func ApplyContainerMemoryLimit() {
 	logger.SlogInfoLocal(fmt.Sprintf("memory limit: container=%dMiB soft-limit=%dMiB", limit>>20, target>>20))
 }
 
+// SoftLimitMiB 返回当前生效的 Go 软内存目标（MiB），供心跳上报——
+// 排查内存问题时「软上限设成了多少」是关键参数（2026-11-21）。
+func SoftLimitMiB() int64 {
+	limit := containerMemoryBytes()
+	if limit <= 0 {
+		return 0
+	}
+	return int64(float64(limit)*0.8) >> 20
+}
+
 func containerMemoryBytes() int64 {
 	if b, err := os.ReadFile("/sys/fs/cgroup/memory.max"); err == nil {
 		s := strings.TrimSpace(string(b))

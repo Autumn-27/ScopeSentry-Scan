@@ -79,15 +79,16 @@ func Register() {
 				cfgStr = s
 			}
 			nodeInfo := map[string]interface{}{
-				"updateTime":   utils.Tools.GetTimeNow(),
-				"cpuNum":       cpuNum,
-				"memNum":       memNum,
-				"containerMem": ContainerMemoryPercent(),
-				"maxTaskNum":   ObserveMemoryPressure(),
-				"running":      run,
-				"finished":     fin,
-				"state":        hbState,
-				"version":      global.VERSION,
+				"updateTime":     utils.Tools.GetTimeNow(),
+				"cpuNum":         cpuNum,
+				"memNum":         memNum,
+				"containerMem":   ContainerMemoryPercent(),
+				"memSoftLimitMB": SoftLimitMiB(),
+				"maxTaskNum":     ObserveMemoryPressure(),
+				"running":        run,
+				"finished":       fin,
+				"state":          hbState,
+				"version":        global.VERSION,
 				// 外部工具失败累计（ksubdomain/rad/katana 等非零退出），界面可见
 				"cmdFail":    utils.Tools.EventFailureCount(),
 				"cmdFail10m": utils.Tools.EventFailureRecent(10 * time.Minute),
