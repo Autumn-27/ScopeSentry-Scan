@@ -1707,7 +1707,8 @@ var (
 )
 
 func recordFailure() {
-	recordFailure()
+	// 曾经这里多写了一行 recordFailure()，每次工具失败都会无限递归 → 栈溢出 →
+	// 节点进程直接崩（2026-11-20 复查发现）。累计计数由调用方加，这里只记时间点。
 	now := time.Now()
 	failureMu.Lock()
 	failureTimes = append(failureTimes, now)

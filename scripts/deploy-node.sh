@@ -109,7 +109,26 @@ for H in $NODES; do
   echo "-- $H"
   ssh $SSH_OPTS "$H" "rm -f /tmp/n19* /tmp/ss-node 2>/dev/null; true" || true
 
-  if ! scp -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -q "$BIN" "$H:/tmp/ss-node"; then
+  # 大文件单连接会被中途 reset（2026-11-20 实测 164MB 传到 ~8MB 就断）。
+  # 分片上传（每片 4MB、独立连接、单片重试 3 次）再远端拼接，配合后面的 sha256 校验。
+  ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$H" "rm -rf /tmp/ss-node-chunks && mkdir -p /tmp/ss-node-chunks" 2>/dev/null || true
+  CHUNK_DIR=$(mktemp -d)
+  split -b 4m "$BIN" "$CHUNK_DIR/part_"
+  UP_FAIL=0
+  for f in "$CHUNK_DIR"/part_*; do
+    base=$(basename "$f")
+    for attempt in 1 2 3; do
+      scp -q -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 "$f" "$H:/tmp/ss-node-chunks/$base" 2>/dev/null && break
+      [[ $attempt -eq 3 ]] && UP_FAIL=1
+    done
+  done
+  rm -rf "$CHUNK_DIR"
+  if [[ $UP_FAIL -ne 0 ]]; then
+    echo "   分片上传失败" >&2
+    exit 1
+  fi
+  ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$H" "cat /tmp/ss-node-chunks/part_* > /tmp/ss-node && rm -rf /tmp/ss-node-chunks" || exit 1
+  if false; then
     echo "   上传失败"; FAILED=1; continue
   fi
   RSHA="$(ssh $SSH_OPTS "$H" "sha256sum /tmp/ss-node | cut -d' ' -f1")"
