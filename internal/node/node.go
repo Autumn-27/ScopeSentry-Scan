@@ -72,7 +72,7 @@ func Register() {
 				"cpuNum":       cpuNum,
 				"memNum":       memNum,
 				"containerMem": ContainerMemoryPercent(),
-				"maxTaskNum":   config.ModulesConfig.MaxGoroutineCount,
+				"maxTaskNum":   ObserveMemoryPressure(),
 				"running":      run,
 				"finished":     fin,
 				"state":        hbState,
