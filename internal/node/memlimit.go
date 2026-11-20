@@ -22,7 +22,7 @@ func ApplyContainerMemoryLimit() {
 		return
 	}
 	// 80%：留给运行时栈、CGO/子进程（nuclei 等外部工具）和其它开销
-	target := int64(float64(limit) * 0.8)
+	target := int64(float64(limit) * 0.7)
 	if target < 256<<20 {
 		return
 	}
@@ -37,7 +37,7 @@ func SoftLimitMiB() int64 {
 	if limit <= 0 {
 		return 0
 	}
-	return int64(float64(limit)*0.8) >> 20
+	return int64(float64(limit)*0.7) >> 20
 }
 
 func containerMemoryBytes() int64 {
