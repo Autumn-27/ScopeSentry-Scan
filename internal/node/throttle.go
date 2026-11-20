@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Autumn-27/ScopeSentry-Scan/internal/config"
@@ -24,6 +25,27 @@ var (
 	memLowStreak  int
 	throttled     bool
 )
+
+// applyCh / applyOnce：池调整**绝不能**在心跳 goroutine 里做。
+// ants.Tune 会等在跑的任务结束，而任务又依赖心跳上报 → 两边互等，心跳线程卡死，
+// 服务端判定节点离线（2026-11-20 实测三台全部 0/3，就是这条导致的）。
+// 心跳只负责算「目标并发」并投递，真正调池放在独立 goroutine 里慢慢做。
+var (
+	applyCh   = make(chan int, 1)
+	applyOnce sync.Once
+)
+
+func ensureApplyLoop() {
+	applyOnce.Do(func() {
+		go func() {
+			for n := range applyCh {
+				if err := pool.PoolManage.SetGoroutineCount("task", n); err != nil {
+					logger.SlogErrorLocal(fmt.Sprintf("set task concurrency %d: %v", n, err))
+				}
+			}
+		}()
+	})
+}
 
 // decide 把「采样到多少内存 → 要不要改并发」抽成纯函数，便于单测。
 // 返回 (新并发, 是否已throttle, 是否发生了变化)。
@@ -70,9 +92,13 @@ func ObserveMemoryPressure() int {
 		if nowThrottled {
 			next = 1
 		}
-		if err := pool.PoolManage.SetGoroutineCount("task", next); err == nil {
+		ensureApplyLoop()
+		select {
+		case applyCh <- next: // 非阻塞：心跳不被池调整拖住
 			throttled = nowThrottled
 			logger.SlogInfoLocal(fmt.Sprintf("container memory %.1f%%: task concurrency -> %d (base %d, throttled=%v)", mem, next, base, nowThrottled))
+		default:
+			// 上一次调整还没被消费，跳过这次（下一拍再试）
 		}
 	}
 
