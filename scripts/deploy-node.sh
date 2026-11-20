@@ -146,11 +146,11 @@ for H in $NODES; do
   fi
 done
 
-# 清理旧节点镜像：每次部署都 docker commit 一个新 tag，每个约 3.9GB，
-# 不清理会一台机器堆几十 GB（2026-11-20 实测服务端 461 个镜像 / 42GB）。
-# 保留当前 + 上一个，供 --rollback 用。
+# 清理旧节点镜像：每次部署都 commit 一个新 tag（约 3.9GB），不清理一台机可堆 20+ 个
+# （2026-11-20 实测 tx02 26 个镜像占 44G / 磁盘 78%）。逻辑在 scripts/remote/prune-node-images.sh。
 for H in $NODES; do
-  run_remote "$H" "docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" | grep -E ":1[.][0-9]+[.][0-9]+\$" | sed "s/.*://" | sort -V | head -n -2 | while read -r t; do docker rmi $IMAGE:\$t >/dev/null 2>&1 || true; done; docker image prune -f >/dev/null 2>&1 || true" || true
+  scp -q -o BatchMode=yes -o StrictHostKeyChecking=no "$ROOT/scripts/remote/prune-node-images.sh" "$H:/tmp/prune-node-images.sh" 2>/dev/null || true
+  run_remote "$H" "bash /tmp/prune-node-images.sh $IMAGE" >/dev/null 2>&1 || true
 done
 
 echo "== [5/5] 汇总"
