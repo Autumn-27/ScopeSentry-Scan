@@ -17,6 +17,10 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/shirou/gopsutil/v3/mem"
+	"math"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -64,14 +68,15 @@ func Register() {
 				hbState = 1
 			}
 			nodeInfo := map[string]interface{}{
-				"updateTime": utils.Tools.GetTimeNow(),
-				"cpuNum":     cpuNum,
-				"memNum":     memNum,
-				"maxTaskNum": config.ModulesConfig.MaxGoroutineCount,
-				"running":    run,
-				"finished":   fin,
-				"state":      hbState,
-				"version":    global.VERSION,
+				"updateTime":   utils.Tools.GetTimeNow(),
+				"cpuNum":       cpuNum,
+				"memNum":       memNum,
+				"containerMem": ContainerMemoryPercent(),
+				"maxTaskNum":   config.ModulesConfig.MaxGoroutineCount,
+				"running":      run,
+				"finished":     fin,
+				"state":        hbState,
+				"version":      global.VERSION,
 				// 外部工具失败累计（ksubdomain/rad/katana 等非零退出），界面可见
 				"cmdFail":    utils.Tools.EventFailureCount(),
 				"cmdFail10m": utils.Tools.EventFailureRecent(10 * time.Minute),
@@ -84,4 +89,36 @@ func Register() {
 		}
 		<-ticker
 	}
+}
+
+// ContainerMemoryPercent 读取容器自身的 cgroup 内存用量百分比。
+// 心跳里的 memNum 是**宿主机**内存占用，容器的 limit 和它无关：
+// 实测宿主机 22% 时容器已 97%（2026-11-20 节点被压死却看不出来）。
+// 拿不到（非容器环境/cgroup 缺字段）时返回 -1，调用方当「未知」处理。
+func ContainerMemoryPercent() float64 {
+	// cgroup v2
+	if cur, err := os.ReadFile("/sys/fs/cgroup/memory.current"); err == nil {
+		if lim, lerr := os.ReadFile("/sys/fs/cgroup/memory.max"); lerr == nil {
+			usage := strings.TrimSpace(string(cur))
+			limit := strings.TrimSpace(string(lim))
+			if limit != "" && limit != "max" {
+				u, e1 := strconv.ParseFloat(usage, 64)
+				l, e2 := strconv.ParseFloat(limit, 64)
+				if e1 == nil && e2 == nil && l > 0 {
+					return math.Round(u/l*1000) / 10
+				}
+			}
+		}
+	}
+	// cgroup v1
+	if cur, err := os.ReadFile("/sys/fs/cgroup/memory/memory.usage_in_bytes"); err == nil {
+		if lim, lerr := os.ReadFile("/sys/fs/cgroup/memory/memory.limit_in_bytes"); lerr == nil {
+			u, e1 := strconv.ParseFloat(strings.TrimSpace(string(cur)), 64)
+			l, e2 := strconv.ParseFloat(strings.TrimSpace(string(lim)), 64)
+			if e1 == nil && e2 == nil && l > 0 && l < 1e18 {
+				return math.Round(u/l*1000) / 10
+			}
+		}
+	}
+	return -1
 }
