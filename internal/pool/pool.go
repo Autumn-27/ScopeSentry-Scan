@@ -47,7 +47,18 @@ func (pm *Manager) InitializeModulesPools(cfg *config.ModulesConfigStruct) {
 	}
 
 	for _, moduleName := range modules {
-		pm.pools[moduleName], err = ants.NewPool(cfg.GetGoroutineCount(moduleName))
+		count := 0
+		if cfg != nil {
+			count = cfg.GetGoroutineCount(moduleName)
+		}
+		// ants.NewPool 对 size<=0 会 panic（不是返回 error），而配置被清空时
+		// GetGoroutineCount 正好返回 0 —— 2026-11-20 三台节点就是这么连环崩溃的。
+		// 这里先兜底，保证「配置丢了」也只是一次告警，不是集群停摆。
+		if count <= 0 {
+			logger.SlogWarnLocal(fmt.Sprintf("pool %s goroutine count is %d (config missing?), fallback to 2", moduleName, count))
+			count = 2
+		}
+		pm.pools[moduleName], err = ants.NewPool(count)
 		if err != nil {
 			// 单个模块的协程池建不起来不该让整个节点退出：
 			// 用保守默认值兜底，并在日志里留痕（2026-11-20）。
