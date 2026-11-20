@@ -243,6 +243,8 @@ func RunRedisTask() {
 					if delta > 0 {
 						key := "TaskInfo:cmdfail:" + runnerOption.ID
 						_ = redis.RedisClient.HSet(context.Background(), key, global.AppConfig.NodeName, delta)
+						// 必须设 TTL：否则任务记录被删/节点异常退出后这个键永久留在 Redis 里
+						_ = redis.RedisClient.Expire(context.Background(), key, 7*24*time.Hour)
 						logger.SlogInfo(fmt.Sprintf("Task %v tool failures: %d", runnerOption.ID, delta))
 					}
 				}

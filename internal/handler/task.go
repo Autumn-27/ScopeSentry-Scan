@@ -57,6 +57,11 @@ func (h *Handle) GetRunFin() (int, int) {
 	return h.RunningNum, h.FinNum
 }
 
+// progressTTL 进度 hash 的存活时间：任务结束 7 天后自动清理，
+// 避免每个任务每个目标都永久占着 Redis（参数名 time 在 ProgressEnd 里会遮蔽包名，
+// 所以这里用包级常量而不是内联 time.Hour）。
+const progressTTL = 7 * 24 * time.Hour
+
 func (h *Handle) ProgressStart(typ string, target string, taskId string, flag int) {
 	if flag == 0 {
 		return
@@ -75,6 +80,8 @@ func (h *Handle) ProgressStart(typ string, target string, taskId string, flag in
 		logger.SlogError(fmt.Sprintf("ProgressStart redis error: %s", err))
 		return
 	}
+	// 进度 hash 必须带 TTL：否则每个任务每个目标都会永久留在 Redis 里（实测大量 key 无 TTL）
+	_ = redis.RedisClient.Expire(context.Background(), key, progressTTL)
 }
 
 func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int, time time.Duration) {
@@ -92,6 +99,7 @@ func (h *Handle) ProgressEnd(typ string, target string, taskId string, flag int,
 		logger.SlogError(fmt.Sprintf("ProgressEnd redis error: %s", err))
 		return
 	}
+	_ = redis.RedisClient.Expire(context.Background(), key, progressTTL)
 }
 
 func (h *Handle) TaskEnd(target string, taskId string) {
