@@ -204,7 +204,7 @@ fi
 echo "== 稳定性观察（90 秒）"
 sleep 90
 STABLE_FAIL=0
-for NAME in $(printf "%s\n" "$NODES" | while read -r h; do
+for NAME in $(for h in $NODES; do
   [ -z "$h" ] && continue
   case "$h" in
     *app-01*) echo node-sh-01 ;;
