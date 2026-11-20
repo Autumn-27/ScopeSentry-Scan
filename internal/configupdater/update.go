@@ -191,13 +191,15 @@ func UpdateModuleConfig(content string) {
 	}
 
 	modulesConfigRedis, err := utils.Tools.MarshalYAMLToString(config.ModulesConfig)
-	if err != nil {
-
-	}
-
 	nodeInfo := map[string]interface{}{
-		"state":         global.AppConfig.State, //1运行中 2暂停 3未连接
-		"modulesConfig": modulesConfigRedis,
+		"state": global.AppConfig.State, //1运行中 2暂停 3未连接
+	}
+	// 序列化失败时绝不能把空串写进 modulesConfig：HMSet 会把已有的配置覆盖成空，
+	// 节点下次启动读不到并发数直接 panic（2026-11-20 事故的同一类问题）。
+	if err != nil {
+		logger.SlogErrorLocal(fmt.Sprintf("marshal modulesConfig error, keep existing: %v", err))
+	} else if modulesConfigRedis != "" {
+		nodeInfo["modulesConfig"] = modulesConfigRedis
 	}
 	key := "node:" + global.AppConfig.NodeName
 	err = redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
