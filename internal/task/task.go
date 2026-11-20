@@ -25,6 +25,7 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	goRedis "github.com/redis/go-redis/v9"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -89,7 +90,11 @@ func RunRedisTask() {
 		if exists {
 			var wg sync.WaitGroup
 
-			taskInfo, err := redis.RedisClient.GetFirstFromList(context.Background(), TaskNodeName)
+			// 原子出队：原来是 LINDEX 0 再另行 LRem，两台节点可能同时读到同一条消息,
+			// 于是同一个任务在两台上各跑一遍（2026-11-20 复查发现）。
+			// 目标本身是从 TaskInfo:<id> 里原子 RPOP 的，所以不会重复扫目标，
+			// 但重复执行会双倍占资源、还会互相盖进度。改成 LPOP 后天然互斥。
+			taskInfo, err := redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("GetTask info error: %v", err))
 				continue
@@ -269,6 +274,10 @@ func RunRedisTask() {
 			CleanGlobal()
 			// 清空文件锁
 			utils.Tools.ClearAllLocks()
+			// 任务跑完把堆还给操作系统：任务期间的模板/结果对象会一直占着 RSS，
+			// 而我们给 Go 设了软内存上限——不主动归还的话，空闲时容器内存也不降
+			// （2026-11-21 实测：任务结束后 running=0 但内存仍 80%）。
+			debug.FreeOSMemory()
 			// 运行任务结束相关的方法
 			logger.SlogInfo(fmt.Sprintf("Task clean end: %v", runnerOption.ID))
 		}
