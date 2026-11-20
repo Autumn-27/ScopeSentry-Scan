@@ -24,6 +24,9 @@ import (
 	"time"
 )
 
+// 上一次上报过的 modulesConfig 快照：只有变化时才随心跳重发
+var lastReportedModulesConfig string
+
 func Register() {
 	nodeName := global.AppConfig.NodeName
 	key := "node:" + nodeName
@@ -67,6 +70,14 @@ func Register() {
 			if hbState == 0 {
 				hbState = 1
 			}
+			// 配置变更后重新上报：服务端只在节点启动时收到过一次 modulesConfig，
+			// 之后改了并发数界面仍显示旧值（2026-11-20 实测：改完 maxGoroutineCount
+			// 界面还是 3，直到重启节点）。检测到变化就带上新配置。
+			cfgStr := ""
+			if s, cerr := utils.Tools.MarshalYAMLToString(config.ModulesConfig); cerr == nil && s != lastReportedModulesConfig {
+				lastReportedModulesConfig = s
+				cfgStr = s
+			}
 			nodeInfo := map[string]interface{}{
 				"updateTime":   utils.Tools.GetTimeNow(),
 				"cpuNum":       cpuNum,
@@ -80,6 +91,11 @@ func Register() {
 				// 外部工具失败累计（ksubdomain/rad/katana 等非零退出），界面可见
 				"cmdFail":    utils.Tools.EventFailureCount(),
 				"cmdFail10m": utils.Tools.EventFailureRecent(10 * time.Minute),
+			}
+			// 只在配置真的变化时才带 modulesConfig：写空字符串会把服务端存的配置清空
+			// （2026-11-20 实测：无条件带上后，节点配置在界面变成空白）
+			if cfgStr != "" {
+				nodeInfo["modulesConfig"] = cfgStr
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {
