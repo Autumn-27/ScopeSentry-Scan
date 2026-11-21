@@ -74,6 +74,7 @@ func main() {
 	notification.InitializeNotification()
 	// 让 Go 运行时知道 cgroup 上限（否则 RSS 会顶到容器上限被限流）
 	node.ApplyContainerMemoryLimit()
+	node.StartMemoryWatchdog(95, 5)
 
 	// 初始化协程池
 	pool.Initialize()
