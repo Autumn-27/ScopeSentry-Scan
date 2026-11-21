@@ -184,7 +184,19 @@ func (h *handler) AssetUpdate(id string, updateData interface{}) {
 				TaskName:     asset.TaskName,
 				RootDomain:   asset.RootDomain,
 			}
-			_, err = mongodb.MongodbClient.InsertOne("IPAssetTmp", ipAssetTmpDoc)
+			// IPAssetTmp 上有 (ip,port,domain) 唯一索引：同一资产被多个任务/目标
+			// 重复写入时会抛 E11000 并刷错误日志（2026-11-20 实测 23 次）。
+			// 改成 upsert，重复写入变成更新，不再产生噪声错误。
+			sel := bson.M{"ip": ipAssetTmpDoc.IP, "port": ipAssetTmpDoc.Port, "domain": ipAssetTmpDoc.Domain}
+			upd := bson.M{"$set": bson.M{
+				"service":      ipAssetTmpDoc.Service,
+				"webserver":    ipAssetTmpDoc.WebServer,
+				"technologies": ipAssetTmpDoc.Technologies,
+				"project":      ipAssetTmpDoc.Project,
+				"taskname":     ipAssetTmpDoc.TaskName,
+				"rootdomain":   ipAssetTmpDoc.RootDomain,
+			}}
+			_, err = mongodb.MongodbClient.Upsert("IPAssetTmp", sel, upd)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("ipAssetTmpDoc error:%v", err))
 			}
@@ -217,7 +229,15 @@ func (h *handler) AssetOtherInsert(result *types.AssetOther) {
 			TaskName:   result.TaskName,
 			RootDomain: result.RootDomain,
 		}
-		_, err = mongodb.MongodbClient.InsertOne("IPAssetTmp", ipAssetTmpDoc)
+		// 同上：用 upsert 避免 (ip,port,domain) 唯一索引冲突刷错误日志
+		sel := bson.M{"ip": ipAssetTmpDoc.IP, "port": ipAssetTmpDoc.Port, "domain": ipAssetTmpDoc.Domain}
+		upd := bson.M{"$set": bson.M{
+			"service":    ipAssetTmpDoc.Service,
+			"project":    ipAssetTmpDoc.Project,
+			"taskname":   ipAssetTmpDoc.TaskName,
+			"rootdomain": ipAssetTmpDoc.RootDomain,
+		}}
+		_, err = mongodb.MongodbClient.Upsert("IPAssetTmp", sel, upd)
 		if err != nil {
 			logger.SlogError(fmt.Sprintf("ipAssetTmpDoc error:%v", err))
 		}

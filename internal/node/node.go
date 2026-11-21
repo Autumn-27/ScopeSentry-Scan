@@ -17,8 +17,15 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	"github.com/shirou/gopsutil/v3/mem"
+	"math"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
+
+// 上一次上报过的 modulesConfig 快照：只有变化时才随心跳重发
+var lastReportedModulesConfig string
 
 func Register() {
 	nodeName := global.AppConfig.NodeName
@@ -41,6 +48,8 @@ func Register() {
 				"memNum":        0,
 				"state":         1, //1运行中 2暂停 3未连接
 				"version":       global.VERSION,
+				"cmdFail":       utils.Tools.EventFailureCount(),
+				"cmdFail10m":    utils.Tools.EventFailureRecent(10 * time.Minute),
 				"modulesConfig": modulesConfig,
 			}
 			err = redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
@@ -54,15 +63,40 @@ func Register() {
 			key = "node:" + global.AppConfig.NodeName
 			cpuNum, memNum := utils.Tools.GetSystemUsage()
 			run, fin := handler.TaskHandle.GetRunFin()
+			// 心跳里的 state 不能直接写配置值：配置未设置时为 0，
+			// 会把「在线」覆盖成 0，服务端据此判定节点离线（界面 0/2 在线）。
+			// 1=运行中 2=暂停 3=未连接，0 视为未配置 → 默认在线。
+			hbState := global.AppConfig.State
+			if hbState == 0 {
+				hbState = 1
+			}
+			// 配置变更后重新上报：服务端只在节点启动时收到过一次 modulesConfig，
+			// 之后改了并发数界面仍显示旧值（2026-11-20 实测：改完 maxGoroutineCount
+			// 界面还是 3，直到重启节点）。检测到变化就带上新配置。
+			cfgStr := ""
+			if s, cerr := utils.Tools.MarshalYAMLToString(config.ModulesConfig); cerr == nil && s != lastReportedModulesConfig {
+				lastReportedModulesConfig = s
+				cfgStr = s
+			}
 			nodeInfo := map[string]interface{}{
-				"updateTime": utils.Tools.GetTimeNow(),
-				"cpuNum":     cpuNum,
-				"memNum":     memNum,
-				"maxTaskNum": config.ModulesConfig.MaxGoroutineCount,
-				"running":    run,
-				"finished":   fin,
-				"state":      global.AppConfig.State,
-				"version":    global.VERSION,
+				"updateTime":     utils.Tools.GetTimeNow(),
+				"cpuNum":         cpuNum,
+				"memNum":         memNum,
+				"containerMem":   ContainerMemoryPercent(),
+				"memSoftLimitMB": SoftLimitMiB(),
+				"maxTaskNum":     ObserveMemoryPressure(),
+				"running":        run,
+				"finished":       fin,
+				"state":          hbState,
+				"version":        global.VERSION,
+				// 外部工具失败累计（ksubdomain/rad/katana 等非零退出），界面可见
+				"cmdFail":    utils.Tools.EventFailureCount(),
+				"cmdFail10m": utils.Tools.EventFailureRecent(10 * time.Minute),
+			}
+			// 只在配置真的变化时才带 modulesConfig：写空字符串会把服务端存的配置清空
+			// （2026-11-20 实测：无条件带上后，节点配置在界面变成空白）
+			if cfgStr != "" {
+				nodeInfo["modulesConfig"] = cfgStr
 			}
 			err := redis.RedisClient.HMSet(context.Background(), key, nodeInfo)
 			if err != nil {
@@ -72,4 +106,36 @@ func Register() {
 		}
 		<-ticker
 	}
+}
+
+// ContainerMemoryPercent 读取容器自身的 cgroup 内存用量百分比。
+// 心跳里的 memNum 是**宿主机**内存占用，容器的 limit 和它无关：
+// 实测宿主机 22% 时容器已 97%（2026-11-20 节点被压死却看不出来）。
+// 拿不到（非容器环境/cgroup 缺字段）时返回 -1，调用方当「未知」处理。
+func ContainerMemoryPercent() float64 {
+	// cgroup v2
+	if cur, err := os.ReadFile("/sys/fs/cgroup/memory.current"); err == nil {
+		if lim, lerr := os.ReadFile("/sys/fs/cgroup/memory.max"); lerr == nil {
+			usage := strings.TrimSpace(string(cur))
+			limit := strings.TrimSpace(string(lim))
+			if limit != "" && limit != "max" {
+				u, e1 := strconv.ParseFloat(usage, 64)
+				l, e2 := strconv.ParseFloat(limit, 64)
+				if e1 == nil && e2 == nil && l > 0 {
+					return math.Round(u/l*1000) / 10
+				}
+			}
+		}
+	}
+	// cgroup v1
+	if cur, err := os.ReadFile("/sys/fs/cgroup/memory/memory.usage_in_bytes"); err == nil {
+		if lim, lerr := os.ReadFile("/sys/fs/cgroup/memory/memory.limit_in_bytes"); lerr == nil {
+			u, e1 := strconv.ParseFloat(strings.TrimSpace(string(cur)), 64)
+			l, e2 := strconv.ParseFloat(strings.TrimSpace(string(lim)), 64)
+			if e1 == nil && e2 == nil && l > 0 && l < 1e18 {
+				return math.Round(u/l*1000) / 10
+			}
+		}
+	}
+	return -1
 }

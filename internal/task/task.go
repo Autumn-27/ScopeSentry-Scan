@@ -25,10 +25,13 @@ import (
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/logger"
 	"github.com/Autumn-27/ScopeSentry-Scan/pkg/utils"
 	goRedis "github.com/redis/go-redis/v9"
-	"os"
+	"runtime/debug"
 	"sync"
 	"time"
 )
+
+// taskFailStart 记录每个任务开始时的外部工具失败计数（用于算任务期增量）。
+var taskFailStart sync.Map
 
 func GetTask() {
 	// 运行本地缓存的任务
@@ -87,7 +90,11 @@ func RunRedisTask() {
 		if exists {
 			var wg sync.WaitGroup
 
-			taskInfo, err := redis.RedisClient.GetFirstFromList(context.Background(), TaskNodeName)
+			// 原子出队：原来是 LINDEX 0 再另行 LRem，两台节点可能同时读到同一条消息,
+			// 于是同一个任务在两台上各跑一遍（2026-11-20 复查发现）。
+			// 目标本身是从 TaskInfo:<id> 里原子 RPOP 的，所以不会重复扫目标，
+			// 但重复执行会双倍占资源、还会互相盖进度。改成 LPOP 后天然互斥。
+			taskInfo, err := redis.RedisClient.PopFirstFromList(context.Background(), TaskNodeName)
 			if err != nil {
 				logger.SlogError(fmt.Sprintf("GetTask info error: %v", err))
 				continue
@@ -107,6 +114,9 @@ func RunRedisTask() {
 			taskKey := fmt.Sprintf("task:%v", runnerOption.ID)
 
 			logger.SlogInfo(fmt.Sprintf("Task begin: %v %v", runnerOption.ID, runnerOption.TaskName))
+			// 记录任务开始时的失败计数，任务结束算增量写回服务端，
+			// 让「本次任务期间工具失败几次」在任务记录里可见（2026-11-20）。
+			taskFailStart.Store(runnerOption.ID, utils.Tools.EventFailureCount())
 			if runnerOption.Type == "page_monitoring" {
 				// 运行页面监控程序
 				go func() {
@@ -119,8 +129,10 @@ func RunRedisTask() {
 							// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
 							if !errors.Is(err, goRedis.Nil) {
 								logger.SlogError(fmt.Sprintf("GetRedisTask BatchGetAndDelete error: %v", err))
-								// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-								os.Exit(0)
+								// 以前这里直接 os.Exit(0)：Redis 抖动一次节点就自杀，
+								// 任务停在「运行中」等人来救。改成退避重试，进程不退出。
+								time.Sleep(3 * time.Second)
+								continue
 							}
 							break
 						}
@@ -177,8 +189,9 @@ func RunRedisTask() {
 							// 如果 err 不为空，并且不是 redis.Nil 错误，则打印错误信息
 							if !errors.Is(err, goRedis.Nil) {
 								logger.SlogError(fmt.Sprintf("GetRedisTask redis error: %v", err))
-								// 如果获取任务出错了 直接退出 防止删除本地任务 重启之后重新获取本地任务开始执行
-								os.Exit(0)
+								// 同上：Redis 短暂不可用不该让节点退出，退避后继续取目标。
+								time.Sleep(3 * time.Second)
+								continue loop
 							}
 							break loop
 						}
@@ -228,6 +241,19 @@ func RunRedisTask() {
 				contextmanager.GlobalContextManagers.DeleteContext(runnerOption.ID)
 			}
 			logger.SlogInfo(fmt.Sprintf("Task end: %v - %v", runnerOption.ID, runnerOption.TaskName))
+			if v, ok := taskFailStart.Load(runnerOption.ID); ok {
+				if start, ok2 := v.(int64); ok2 {
+					delta := utils.Tools.EventFailureCount() - start
+					taskFailStart.Delete(runnerOption.ID)
+					if delta > 0 {
+						key := "TaskInfo:cmdfail:" + runnerOption.ID
+						_ = redis.RedisClient.HSet(context.Background(), key, global.AppConfig.NodeName, delta)
+						// 必须设 TTL：否则任务记录被删/节点异常退出后这个键永久留在 Redis 里
+						_ = redis.RedisClient.Expire(context.Background(), key, 7*24*time.Hour)
+						logger.SlogInfo(fmt.Sprintf("Task %v tool failures: %d", runnerOption.ID, delta))
+					}
+				}
+			}
 			handler.CloseNucleiEngine()
 			// 目标运行完毕 删除任务信息
 			// 删除本地缓存任务信息
@@ -248,6 +274,10 @@ func RunRedisTask() {
 			CleanGlobal()
 			// 清空文件锁
 			utils.Tools.ClearAllLocks()
+			// 任务跑完把堆还给操作系统：任务期间的模板/结果对象会一直占着 RSS，
+			// 而我们给 Go 设了软内存上限——不主动归还的话，空闲时容器内存也不降
+			// （2026-11-21 实测：任务结束后 running=0 但内存仍 80%）。
+			debug.FreeOSMemory()
 			// 运行任务结束相关的方法
 			logger.SlogInfo(fmt.Sprintf("Task clean end: %v", runnerOption.ID))
 		}

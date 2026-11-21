@@ -119,8 +119,21 @@ func (p *Plugin) Install() error {
 	id := ssconfig.GetDictId("trufflehog", "config")
 	var Detectors []detectors.Detector
 	Detectors = defaults.DefaultDetectors()
-	filePath := filepath.Join(global.DictPath, id)
+	// 没有自定义字典时 id 为空，Join 出来就是 /apps/dictionaries 这个目录，
+	// os.ReadFile 必然报 "is a directory"（实测每次 init 刷一条 warn）。
+	// 先判空，再确认目标是普通文件。
+	filePath := ""
+	if id != "" {
+		filePath = filepath.Join(global.DictPath, id)
+	}
 	if filePath != "" {
+		if fi, statErr := os.Stat(filePath); statErr != nil || fi.IsDir() {
+			logger.SlogInfoLocal(fmt.Sprintf("[%v] no custom trufflehog dict, use defaults", p.Name))
+			getAllScanners(Detectors)
+			BuildKeywordMatcher()
+			logger.SlogInfoLocal(fmt.Sprintf("[%v] init scanner number %v", p.Name, len(AllScanners)))
+			return nil
+		}
 		input, err := os.ReadFile(filePath)
 		if err != nil {
 			logger.SlogWarn(fmt.Sprintf("[%v] trufflehog get custom file error %v", p.Name, err))

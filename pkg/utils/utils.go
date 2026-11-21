@@ -37,6 +37,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -582,6 +583,11 @@ func (t *UtilTools) HttpGetDownloadFile(url, filePath string) (bool, error) {
 	return true, nil
 }
 
+// CommandFailureCount 自进程启动以来子进程非零退出 / 启动失败的累计次数。
+// 让节点心跳能上报「这个节点调外部工具挂了多少次」，界面一眼可见，
+// 不用去翻日志（2026-11-20）。
+var CommandFailureCount atomic.Int64
+
 func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, timeout time.Duration, externalCtx context.Context) error {
 	logger.SlogInfo(fmt.Sprintf("ExecuteCommandWithTimeout cmd: %v args %v", command, args))
 	// 创建一个带有超时的上下文
@@ -608,7 +614,10 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 	stderr, _ := cmd.StderrPipe()
 
 	go io.Copy(io.Discard, stdout)
-	go io.Copy(io.Discard, stderr)
+	// 保留最后 4KB stderr：以前直接丢掉，子进程失败时完全看不到原因，
+	// 只能看到「任务跑完了但资产少了」（2026-11-20）。
+	var stderrTail bytes.Buffer
+	go io.Copy(&stderrTail, io.LimitReader(stderr, 4096))
 	//stderrPipe, err := cmd.StderrPipe()
 	//if err != nil {
 	//	return fmt.Errorf("failed to get stderr: %w", err)
@@ -616,6 +625,8 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
+		recordFailure()
+		logger.SlogErrorLocal(fmt.Sprintf("command start failed: %s %v err=%v", command, args, err))
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 	//
@@ -646,6 +657,20 @@ func (t *UtilTools) ExecuteCommandWithTimeout(command string, args []string, tim
 			logger.SlogWarnLocal(fmt.Sprintf("command execution timed out: %v", command))
 			return nil
 		}
+
+		// 非零退出：明确记录退出码 + 命令 + stderr 片段。
+		// 这类失败以前只丢给调用方各自写一条模糊日志，排查时无从下手。
+		code := -1
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			code = exitErr.ExitCode()
+		}
+		tail := strings.TrimSpace(stderrTail.String())
+		if len(tail) > 400 {
+			tail = tail[len(tail)-400:]
+		}
+		recordFailure()
+		logger.SlogErrorLocal(fmt.Sprintf("command exited %d: %s %v stderr=%q", code, command, args, tail))
 		return err
 	}
 	// 如果没有错误，说明命令执行成功
@@ -1667,4 +1692,48 @@ func (t *UtilTools) EscapeInvisibleKeepUnicode(s string) string {
 	}
 
 	return string(dst)
+}
+
+// EventFailureCount 返回外部工具失败累计次数（供节点心跳上报）。
+func (t *UtilTools) EventFailureCount() int64 {
+	return CommandFailureCount.Load()
+}
+
+// failureWindow 记录最近的失败时间点，用于「近 N 分钟新增失败」。
+// 累计数看不出"刚跑这批任务有没有问题"，窗口内的增量才有意义（2026-11-20）。
+var (
+	failureMu    sync.Mutex
+	failureTimes []time.Time
+)
+
+func recordFailure() {
+	// 曾经这里多写了一行 recordFailure()，每次工具失败都会无限递归 → 栈溢出 →
+	// 节点进程直接崩（2026-11-20 复查发现）。累计计数由调用方加，这里只记时间点。
+	now := time.Now()
+	failureMu.Lock()
+	failureTimes = append(failureTimes, now)
+	// 只保留最近 30 分钟，避免无限增长
+	cut := now.Add(-30 * time.Minute)
+	i := 0
+	for i < len(failureTimes) && failureTimes[i].Before(cut) {
+		i++
+	}
+	if i > 0 {
+		failureTimes = failureTimes[i:]
+	}
+	failureMu.Unlock()
+}
+
+// EventFailureRecent 返回最近 window 内外部工具失败次数。
+func (t *UtilTools) EventFailureRecent(window time.Duration) int64 {
+	cut := time.Now().Add(-window)
+	failureMu.Lock()
+	defer failureMu.Unlock()
+	var n int64
+	for _, ts := range failureTimes {
+		if ts.After(cut) {
+			n++
+		}
+	}
+	return n
 }
